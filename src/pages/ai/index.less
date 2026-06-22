@@ -1,0 +1,33 @@
+// AI小助手页面样式
+@import '../../styles/variables.less';
+@import '../../styles/common.less';
+
+.ai-page {
+  .page-base();
+  padding: @spacing-xl;
+  background: linear-gradient(180deg, @bg-gradient-start 0%, @bg-gradient-end 100%);
+  
+  .ai-header {
+    .flex-column-center();
+    margin-bottom: 60px;
+    
+    .ai-avatar {
+      width: 200px;
+      height: 200px;
+      margin-bottom: @spacing-md;
+    }
+    
+    .ai-title {
+      font-size: @font-size-title;
+      font-weight: bold;
+      color: @color-primary;
+    }
+  }
+  
+  .ai-content {
+    .card();
+    text-align: center;
+    color: @text-color-light;
+    font-size: @font-size-md;
+  }
+}

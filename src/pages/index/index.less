@@ -1,0 +1,73 @@
+// 首页样式
+@import '../../styles/variables.less';
+
+.home-page {
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+  overflow: hidden;
+}
+
+.background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+
+.audio-btn {
+  position: absolute;
+  top: 100px;
+  right: 30px;
+  width: 80px;
+  height: 80px;
+  background-color: @bg-color;
+  background-size: 160%;
+  background-position: 57% 43%;
+  background-repeat: no-repeat;
+  border-radius: @radius-circle;
+  z-index: 3;
+  box-shadow: @shadow-sm;
+}
+
+.panda {
+  position: absolute;
+  top: 60px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 300px;
+  height: 600px;
+  z-index: 2;
+}
+
+.main-btn {
+  position: absolute;
+  bottom: 200px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 300px;
+  height: 80px;
+  background: #FF9F00;
+  border-radius: @radius-xl;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+  box-shadow: @shadow-btn;
+  border: 5px solid white;
+
+  .btn-icon {
+    width: 80px;
+    height: 80px;
+    margin-right: @spacing-md;
+  }
+
+  .btn-text {
+    font-size: 30px;
+    font-weight: bold;
+    color: @text-color-inverse;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  }
+}

@@ -1,0 +1,62 @@
+// 公共样式
+@import './variables.less';
+
+// 页面基础样式
+.page-base {
+  min-height: 100vh;
+  width: 100%;
+}
+
+// 背景渐变
+.gradient-bg {
+  background: linear-gradient(180deg, @bg-gradient-start 0%, @bg-gradient-end 100%);
+}
+
+// 卡片样式
+.card {
+  background: @bg-color;
+  border-radius: @radius-lg;
+  padding: @spacing-xl;
+}
+
+// 居中布局
+.flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+// 垂直居中布局
+.flex-column-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+// 标题样式
+.page-title {
+  display: block;
+  text-align: center;
+  font-size: @font-size-title;
+  font-weight: bold;
+  color: @color-primary;
+  margin-bottom: 60px;
+}
+
+// 文本样式
+.text-center {
+  text-align: center;
+}
+
+.text-primary {
+  color: @color-primary;
+}
+
+.text-grey {
+  color: @text-color-grey;
+}
+
+// 头像样式
+.avatar {
+  border-radius: @radius-circle;
+}

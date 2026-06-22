@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="theme-color" content="#87CEEB" />
+    <title>3D中国地理</title>
+    <!--preload-links-->
+    <!--app-context-->
+    <script>
+      (function () {
+        var doc = document.documentElement;
+        var resizeEvent = 'orientationchange' in window ? 'orientationchange' : 'resize';
+        
+        function setFontSize() {
+          var clientWidth = doc.clientWidth;
+          if (!clientWidth) return;
+          // 设计稿750px，1rem = clientWidth / 7.5
+          doc.style.fontSize = (clientWidth / 7.5) + 'px';
+        }
+        
+        setFontSize();
+        window.addEventListener(resizeEvent, setFontSize, false);
+        document.addEventListener('DOMContentLoaded', setFontSize, false);
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="app"><!--app-html--></div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

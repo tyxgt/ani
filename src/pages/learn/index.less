@@ -1,0 +1,35 @@
+// 学习中心页面样式
+@import '../../styles/variables.less';
+@import '../../styles/common.less';
+
+.learn-page {
+  .page-base();
+  padding: @spacing-xl;
+  background: linear-gradient(180deg, @bg-gradient-start 0%, @bg-gradient-end 100%);
+  
+  .learn-title {
+    .page-title();
+  }
+  
+  .learn-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: @spacing-lg;
+    
+    .learn-item {
+      .card();
+      .flex-column-center();
+      
+      .learn-icon {
+        width: 120px;
+        height: 120px;
+        margin-bottom: @spacing-md;
+      }
+      
+      .learn-name {
+        font-size: @font-size-md;
+        color: @text-color;
+      }
+    }
+  }
+}

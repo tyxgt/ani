@@ -1,0 +1,51 @@
+// 我的页面样式
+@import '../../styles/variables.less';
+@import '../../styles/common.less';
+
+.mine-page {
+  .page-base();
+  background: linear-gradient(180deg, @bg-gradient-start 0%, @bg-gradient-end 100%);
+  
+  .user-info {
+    .flex-column-center();
+    padding: 80px 0 60px;
+    
+    .avatar {
+      width: 160px;
+      height: 160px;
+      border-radius: 80px;
+      margin-bottom: @spacing-md;
+    }
+    
+    .nickname {
+      font-size: @font-size-lg;
+      color: @text-color;
+      font-weight: bold;
+    }
+  }
+  
+  .menu-list {
+    margin: 0 @spacing-lg;
+    background: @bg-color;
+    border-radius: @radius-lg;
+    overflow: hidden;
+    
+    .menu-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: @spacing-xl @spacing-lg;
+      border-bottom: 1px solid @border-color;
+      font-size: @font-size-md;
+      color: @text-color;
+      
+      &:last-child {
+        border-bottom: none;
+      }
+      
+      .arrow {
+        color: #CCCCCC;
+      }
+    }
+  }
+}
