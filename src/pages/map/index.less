@@ -1,0 +1,142 @@
+@import '../../styles/variables.less';
+
+.map-page {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+
+.header {
+  position: absolute;
+  top: 60px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  .title {
+    font-size: 40px;
+    font-weight: bold;
+    color: #1565C0;
+    text-shadow: 2px 2px 4px rgba(255, 255, 255, 0.8),
+                 -1px -1px 0 #fff,
+                 1px -1px 0 #fff,
+                 -1px 1px 0 #fff,
+                 1px 1px 0 #fff;
+    letter-spacing: 4px;
+  }
+
+  .location-icon {
+    font-size: 32px;
+  }
+}
+
+.error-msg {
+  position: absolute;
+  top: 120px;
+  left: 20px;
+  right: 20px;
+  z-index: 10;
+  color: #e53935;
+  font-size: 28px;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 20px;
+  border-radius: 16px;
+}
+
+.map-container {
+  position: absolute;
+  top: 120px;
+  left: 0;
+  right: 0;
+  bottom: 300px;
+  z-index: 2;
+}
+
+.info-card {
+  position: absolute;
+  bottom: 120px;
+  left: 20px;
+  right: 20px;
+  z-index: 3;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 24px;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  border: 3px solid #fff;
+
+  .info-left {
+    flex-shrink: 0;
+
+    .region-image {
+      width: 120px;
+      height: 120px;
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+
+      .region-img {
+        width: 100%;
+        height: 100%;
+      }
+    }
+  }
+
+  .info-right {
+    height: 80px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+
+    .region-title-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+
+      .sound-btn {
+        font-size: 28px;
+        cursor: pointer;
+      }
+    }
+
+    .region-desc {
+      font-size: 24px;
+      color: @text-color;
+      line-height: 1.5;
+    }
+
+    .more-btn {
+      align-self: flex-start;
+      background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
+      padding: 8px 24px;
+      border-radius: 30px;
+      box-shadow: 0 4px 12px rgba(33, 150, 243, 0.4);
+      border: 2px solid #fff;
+
+      .more-btn-text {
+        color: #fff;
+        font-size: 24px;
+        font-weight: bold;
+      }
+    }
+  }
+}

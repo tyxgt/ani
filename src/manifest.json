@@ -68,5 +68,16 @@
     "uniStatistics": {  
         "enable": false
     },
+    /* H5特有相关 */
+    "h5" : {
+        "title" : "3D中国地理",
+        "router" : {
+            "mode" : "hash"
+        },
+        "castApi" : true,
+        "sdkConfigs" : {
+            "casts" : []
+        }
+    },
     "vueVersion" : "3"
 }

@@ -1,43 +1,57 @@
 <template>
   <view class="home-page">
     <image class="background" :src="backgroundUrl" mode="aspectFill" />
-    
-    <view class="audio-btn" :style="{ backgroundImage: `url(${audioIconUrl})` }" @click="toggleAudio"></view>
-    
+
     <image class="panda" :src="pandaUrl" mode="aspectFit" />
-    
+
     <view class="main-btn" @click="startExplore">
       <image class="btn-icon" :src="btnIconUrl" mode="aspectFit" />
-      <text class="btn-text">开始探索吧！</text>
+      <PinyinText 
+        text="开始探索吧" 
+        display-mode="vertical"
+        :charStyle="{ fontSize: '28px', fontWeight: 'bold', color: '#fff', textShadow: '0 2px 4px rgba(0, 0, 0, 0.2)' }"
+        :pinyinStyle="{ fontSize: '18px', color: '#fff', textShadow: '0 1px 2px rgba(0, 0, 0, 0.2)' }"
+      />
     </view>
-    
+
     <CustomTabBar :current="0" />
   </view>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
-import CustomTabBar from '../../components/CustomTabBar.vue'
+import { ref } from "vue";
+import CustomTabBar from "../../components/CustomTabBar";
+import PinyinText from "../../components/PinyinText";
 
-const backgroundUrl = ref('../../static/image.png')
-const pandaUrl = ref('../../static/doctor.png')
-const audioIconUrl = ref('../../static/icons/voiceSwitch.png')
-const btnIconUrl = ref('../../static/icons/moutain.png')
+const backgroundUrl = ref(
+  "https://tt4ee93854d08d513101-env-6dufeblnzf.tos-cn-beijing.volces.com/image.png"
+);
+const pandaUrl = ref(
+  "https://tt4ee93854d08d513101-env-6dufeblnzf.tos-cn-beijing.volces.com/doctorpanda.png"
+);
+const audioIconUrl = ref(
+  "https://tt4ee93854d08d513101-env-6dufeblnzf.tos-cn-beijing.volces.com/voiceSwitch.png"
+);
+const btnIconUrl = ref(
+  "https://tt4ee93854d08d513101-env-6dufeblnzf.tos-cn-beijing.volces.com/moutain.png"
+);
 
-const isAudioPlaying = ref(false)
+const isAudioPlaying = ref(false);
 
 const toggleAudio = () => {
-  isAudioPlaying.value = !isAudioPlaying.value
+  isAudioPlaying.value = !isAudioPlaying.value;
   if (isAudioPlaying.value) {
-    uni.showToast({ title: '播放中', icon: 'none' })
+    uni.showToast({ title: "播放中", icon: "none" });
   } else {
-    uni.showToast({ title: '已暂停', icon: 'none' })
+    uni.showToast({ title: "已暂停", icon: "none" });
   }
-}
+};
 
 const startExplore = () => {
-  uni.showToast({ title: '开始探索！', icon: 'none' })
-}
+  uni.navigateTo({
+    url: "/pages/map/index"
+  });
+};
 </script>
 
 <style lang="less" src="./index.less"></style>
