@@ -32,7 +32,8 @@
 			"path": "pages/map/index",
 			"style": {
 				"navigationStyle": "custom",
-				"navigationBarTitleText": "中国地图"
+				"navigationBarTitleText": "中国地图",
+				"disableScroll": true
 			}
 		}
 	],

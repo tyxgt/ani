@@ -1,33 +1,28 @@
 <template>
-  <view class="custom-tab-bar">
-    <view class="tab-bar-wrapper">
+  <view :class="styles.customTabBar">
+    <view :class="styles.tabBarWrapper">
       <view
         v-for="(item, index) in tabList"
         :key="index"
-        class="tab-item"
-        :class="{ active: currentIndex === index }"
+        :class="[styles.tabItem, { [styles.active]: currentIndex === index }]"
         @click="navigateTo(index)"
       >
-        <view class="tab-icon">
+        <view :class="styles.tabIcon">
           <view
             v-if="index === 0"
-            class="icon-home"
-            :class="{ active: currentIndex === index }"
+            :class="[styles.iconHome, { [styles.active]: currentIndex === index }]"
           ></view>
           <view
             v-else-if="index === 1"
-            class="icon-ai"
-            :class="{ active: currentIndex === index }"
+            :class="[styles.iconAi, { [styles.active]: currentIndex === index }]"
           ></view>
           <view
             v-else-if="index === 2"
-            class="icon-book"
-            :class="{ active: currentIndex === index }"
+            :class="[styles.iconBook, { [styles.active]: currentIndex === index }]"
           ></view>
           <view
             v-else-if="index === 3"
-            class="icon-panda"
-            :class="{ active: currentIndex === index }"
+            :class="[styles.iconPanda, { [styles.active]: currentIndex === index }]"
           ></view>
         </view>
       </view>
@@ -52,7 +47,12 @@ const tabList = [
 ];
 
 const navigateTo = (index: number) => {
-  if (currentIndex.value === index) return;
+  // 检查当前页面路径是否与目标相同，不同页面即使 tab index 相同也应允许跳转
+  const pages = getCurrentPages();
+  if (pages.length > 0) {
+    const currentPage = '/' + pages[pages.length - 1].route;
+    if (currentPage === tabList[index].pagePath) return;
+  }
   currentIndex.value = index;
   uni.navigateTo({
     url: tabList[index].pagePath,
@@ -64,4 +64,4 @@ onMounted(() => {
 });
 </script>
 
-<style lang="less" src="./index.less" scoped></style>
+<style lang="less" src="./index.less" module="styles"></style>

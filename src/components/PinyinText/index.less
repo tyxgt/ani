@@ -1,4 +1,6 @@
-.pinyin-text {
+@import '../../styles/variables.less';
+
+.pinyinText {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -8,26 +10,26 @@
     flex-direction: row;
   }
 
-  &.align-left {
+  &.alignLeft {
     align-items: flex-start;
 
-    .pinyin-row,
-    .text-row {
+    .pinyinRow,
+    .textRow {
       justify-content: flex-start;
     }
   }
 
-  &.align-right {
+  &.alignRight {
     align-items: flex-end;
 
-    .pinyin-row,
-    .text-row {
+    .pinyinRow,
+    .textRow {
       justify-content: flex-end;
     }
   }
 }
 
-.char-group {
+.charGroup {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -40,12 +42,12 @@
   }
 }
 
-.text-row {
+.textRow {
   display: flex;
   justify-content: center;
 }
 
-.pinyin-row {
+.pinyinRow {
   display: flex;
   justify-content: center;
   white-space: pre-wrap;
@@ -55,12 +57,12 @@
 
 .char {
   font-size: 26px;
-  color: #fff;
+  color: @text-color;
   font-weight: bold;
 }
 
 .pinyin {
   font-size: 20px;
-  color: #fff;
+  color: #666;
   margin-bottom: 4px;
 }

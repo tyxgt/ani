@@ -1,14 +1,14 @@
 <template>
-  <view class="mine-page">
-    <view class="content">
-      <view class="user-section">
-        <view class="avatar-wrapper" @click="changeAvatar">
-          <image class="avatar" :src="userInfo.avatar" mode="aspectFill" />
-          <view class="avatar-edit-icon">
-            <text class="edit-icon">+</text>
+  <view :class="styles.minePage">
+    <view :class="styles.content">
+      <view :class="styles.userSection">
+        <view :class="styles.avatarWrapper" @click="changeAvatar">
+          <image :class="styles.avatar" :src="userInfo.avatar" mode="aspectFill" />
+          <view :class="styles.avatarEditIcon">
+            <text :class="styles.editIcon">+</text>
           </view>
         </view>
-        <view class="user-info">
+        <view :class="styles.userInfo">
           <PinyinText
             text="小黄鸭"
             :charStyle="{ fontSize: '48rpx', fontWeight: 'bold', color: '#2C3E50' }"
@@ -16,20 +16,20 @@
           />
         </view>
       </view>
-      <view class="menu-card">
+      <view :class="styles.menuCard">
         <view
-          class="menu-item"
+          :class="styles.menuItem"
           v-for="item in menuList"
           :key="item.id"
           @click="handleMenuClick(item)"
         >
-          <view class="menu-icon" :class="item.iconClass">
-            <image v-if="item.icon === 'settings'" src="/static/icons/settings.svg" mode="aspectFit" class="icon-image" />
-            <image v-else-if="item.icon === 'about'" src="/static/icons/about.svg" mode="aspectFit" class="icon-image" />
-            <image v-else-if="item.icon === 'feedback'" src="/static/icons/feedback.svg" mode="aspectFit" class="icon-image" />
-            <image v-else-if="item.icon === 'share'" src="/static/icons/share.svg" mode="aspectFit" class="icon-image" />
+          <view :class="[styles.menuIcon, iconStyleMap[item.icon]]">
+            <image v-if="item.icon === 'settings'" src="/static/icons/settings.svg" mode="aspectFit" :class="styles.iconImage" />
+            <image v-else-if="item.icon === 'about'" src="/static/icons/about.svg" mode="aspectFit" :class="styles.iconImage" />
+            <image v-else-if="item.icon === 'feedback'" src="/static/icons/feedback.svg" mode="aspectFit" :class="styles.iconImage" />
+            <image v-else-if="item.icon === 'share'" src="/static/icons/share.svg" mode="aspectFit" :class="styles.iconImage" />
           </view>
-          <view class="menu-text">
+          <view :class="styles.menuText">
             <PinyinText
               :text="item.name"
               align="left"
@@ -37,7 +37,7 @@
               :pinyinStyle="{ fontSize: '34rpx', color: '#666' }"
             />
           </view>
-          <text class="arrow">›</text>
+          <text :class="styles.arrow">›</text>
         </view>
       </view>
     </view>
@@ -46,35 +46,23 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, useCssModule } from "vue";
 import CustomTabBar from "../../components/CustomTabBar";
 import PinyinText from "../../components/PinyinText";
+import { DEFAULT_USER_INFO, MENU_LIST, ICON_STYLE_MAP } from "../../constants";
+import type { UserInfo, MenuItem } from "../../types";
 
-const userInfo = ref({
-  avatar:
-    "https://neeko-copilot.bytedance.net/api/text_to_image?prompt=cute%20yellow%20duck%20wearing%20explorer%20hat%20cartoon%20style&image_size=square",
-  nickname: "小黄鸭",
-  description: "热爱探索的小探险家",
+const styles = useCssModule('styles') as Record<string, string>
+
+const iconStyleMap = ICON_STYLE_MAP
+
+const userInfo = ref<UserInfo>({
+  avatar: DEFAULT_USER_INFO.avatar,
+  nickname: DEFAULT_USER_INFO.nickname,
+  description: DEFAULT_USER_INFO.description,
 });
 
-const menuList = ref([
-  {
-    id: 1,
-    name: "设置",
-    icon: "settings",
-    iconClass: "icon-settings",
-    action: "settings",
-  },
-  { id: 2, name: "关于我们", icon: "about", iconClass: "icon-about", action: "about" },
-  {
-    id: 3,
-    name: "意见反馈",
-    icon: "feedback",
-    iconClass: "icon-feedback",
-    action: "feedback",
-  },
-  { id: 4, name: "分享", icon: "share", iconClass: "icon-share", action: "share" },
-]);
+const menuList = ref<MenuItem[]>([...MENU_LIST]);
 
 const changeAvatar = () => {
   uni.showActionSheet({
@@ -141,4 +129,4 @@ const handleMenuClick = (item: { action: string; name: string }) => {
 };
 </script>
 
-<style lang="less" src="./index.less"></style>
+<style lang="less" src="./index.less" module="styles"></style>
