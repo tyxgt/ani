@@ -2,7 +2,7 @@ import type { UserInfo, MenuItem } from '../types'
 
 // ─── 地图常量 ──────────────────────────────────────────────────
 export const MAP_BACKGROUND_URL =
-  'https://tt4ee93854d08d513101-env-6dufeblnzf.tos-cn-beijing.volces.com/mapBackground.png'
+  'https://tt3ccf4a72a2ab53a201-env-a22yxzsttq.tos-cn-beijing.volces.com/mapBackground.png'
 
 export const REGION_COLORS: Record<string, string> = {
   东北地区: '#7CB342',
@@ -13,6 +13,33 @@ export const REGION_COLORS: Record<string, string> = {
   华东地区: '#FF7043',
   华南地区: '#AB47BC',
   台湾: '#4CAF50',
+}
+
+export const REGION_IMAGE_URLS: Record<string, string> = {
+  东北地区: 'https://tt3ccf4a72a2ab53a201-env-a22yxzsttq.tos-cn-beijing.volces.com/map/northeast.png',
+  华北地区: 'https://tt3ccf4a72a2ab53a201-env-a22yxzsttq.tos-cn-beijing.volces.com/map/north.png',
+  华东地区: 'https://tt3ccf4a72a2ab53a201-env-a22yxzsttq.tos-cn-beijing.volces.com/map/east.png',
+  华中地区: 'https://tt3ccf4a72a2ab53a201-env-a22yxzsttq.tos-cn-beijing.volces.com/map/central.png',
+  华南地区: 'https://tt3ccf4a72a2ab53a201-env-a22yxzsttq.tos-cn-beijing.volces.com/map/south.png',
+  西南地区: 'https://tt3ccf4a72a2ab53a201-env-a22yxzsttq.tos-cn-beijing.volces.com/map/southwest.png',
+  西北地区: 'https://tt3ccf4a72a2ab53a201-env-a22yxzsttq.tos-cn-beijing.volces.com/map/northwest.png',
+}
+
+export interface RegionImageConfig {
+  offsetX: number
+  offsetY: number
+  scale: number
+  fit: 'cover' | 'contain' | 'fill'
+}
+
+export const REGION_IMAGE_CONFIG: Record<string, RegionImageConfig> = {
+  东北地区: { offsetX: 0, offsetY: 0, scale: 1, fit: 'cover' },
+  华北地区: { offsetX: 0, offsetY: 0, scale: 1, fit: 'cover' },
+  华东地区: { offsetX: 0, offsetY: 0, scale: 1, fit: 'cover' },
+  华中地区: { offsetX: 0, offsetY: 0, scale: 1, fit: 'cover' },
+  华南地区: { offsetX: 0, offsetY: 0, scale: 1, fit: 'cover' },
+  西南地区: { offsetX: 0, offsetY: 0, scale: 1, fit: 'cover' },
+  西北地区: { offsetX: 0, offsetY: 0, scale: 1, fit: 'cover' },
 }
 
 export const SELECTED_COLOR = '#FFD54F'
@@ -33,8 +60,8 @@ export const REGIONS = [
   },
   {
     name: '西北地区',
-    description: '这里有大片的沙漠和美丽的绿洲，还有高高的天山呢！',
-    image: '',
+    description: '这里有大片的沙漠和美丽的绿洲,还有高高的天山呢!',
+    image: '/static/one.png',
   },
   {
     name: '西南地区',
@@ -88,13 +115,13 @@ export const LAT_STRETCH = 1.3
 
 // ─── 首页常量 ──────────────────────────────────────────────────
 export const HOME_BACKGROUND_URL =
-  'https://tt4ee93854d08d513101-env-6dufeblnzf.tos-cn-beijing.volces.com/backgroundView.png'
+  'https://tt3ccf4a72a2ab53a201-env-a22yxzsttq.tos-cn-beijing.volces.com/backgroundView.png'
 export const HOME_PANDA_URL =
-  'https://tt4ee93854d08d513101-env-6dufeblnzf.tos-cn-beijing.volces.com/doctorpanda.png'
+  'https://tt3ccf4a72a2ab53a201-env-a22yxzsttq.tos-cn-beijing.volces.com/doctorpanda.png'
 export const AUDIO_ICON_URL =
-  'https://tt4ee93854d08d513101-env-6dufeblnzf.tos-cn-beijing.volces.com/voiceSwitch.png'
+  'https://tt3ccf4a72a2ab53a201-env-a22yxzsttq.tos-cn-beijing.volces.com/voiceSwitch.png'
 export const BTN_ICON_URL =
-  'https://tt4ee93854d08d513101-env-6dufeblnzf.tos-cn-beijing.volces.com/moutain.png'
+  'https://tt3ccf4a72a2ab53a201-env-a22yxzsttq.tos-cn-beijing.volces.com/moutain.png'
 
 // ─── AI 助手常量 ──────────────────────────────────────────────────
 export const AI_PANDA_URL =

@@ -32,27 +32,31 @@
       @touchend.stop
     >
       <view :class="styles.infoLeft">
-        <view
-          :class="styles.regionImage"
-          :style="{ backgroundColor: regionColors[selectedRegion.name] || '#ccc' }"
-        >
+        <view :class="styles.regionImage">
           <image
-            v-if="selectedRegion.image"
-            :src="selectedRegion.image"
+            :src="REGION_IMAGE_URLS[selectedRegion.name]"
             mode="aspectFill"
             :class="styles.regionImg"
           />
         </view>
       </view>
       <view :class="styles.infoRight">
-        <view :class="styles.regionTitleRow">
-          <PinyinText :text="selectedRegion.name" display-mode="horizontal" />
-          <text :class="styles.soundBtn" @click="playSound">🔊</text>
+        <view :class="styles.titleRow">
+          <view :class="styles.regionTitleRow">
+            <PinyinText
+              :text="selectedRegion.name"
+              display-mode="horizontal"
+              :char-style="{ fontSize: '20px' }"
+              :pinyin-style="{ fontSize: '14px', marginBottom: '0px' }"
+              :pinyin-class="styles.compactPinyin"
+              :char-class="styles.compactChar"
+            />
+          </view>
+          <view :class="styles.moreBtn" @click="learnMore">
+            <text :class="styles.moreBtnText">📖 了解更多</text>
+          </view>
         </view>
         <text :class="styles.regionDesc">{{ selectedRegion.description }}</text>
-        <view :class="styles.moreBtn" @click="learnMore">
-          <text :class="styles.moreBtnText">📖 了解更多</text>
-        </view>
       </view>
     </view>
 
@@ -68,6 +72,8 @@ import PinyinText from "../../components/PinyinText";
 import {
   MAP_BACKGROUND_URL,
   REGION_COLORS,
+  REGION_IMAGE_URLS,
+  REGION_IMAGE_CONFIG,
   SELECTED_COLOR,
   BORDER_COLOR,
   BORDER_WIDTH,
@@ -97,6 +103,9 @@ const error = ref<string | null>(null);
 // ─── Canvas internals ─────────────────────────────────────────
 let canvas: any = null;
 let ctx: CanvasRenderingContext2D | null = null;
+
+// ─── Region background images ─────────────────────────────────
+const regionImages: Record<string, any> = {};
 
 /** Canvas logical size (CSS pixels) */
 let canvasW = 0;
@@ -286,6 +295,34 @@ function computeAngle(polygons: Polygon[]): number {
   return Math.atan2(2 * xy, xx - yy) / 2;
 }
 
+/** 计算多边形的包围盒 */
+function getPolygonBBox(polygons: Polygon[]) {
+  let minX = Infinity,
+    minY = Infinity,
+    maxX = -Infinity,
+    maxY = -Infinity;
+  polygons.forEach((pg) =>
+    pg.forEach((ring) => {
+      ring.forEach((pt) => {
+        minX = Math.min(minX, pt.x);
+        minY = Math.min(minY, pt.y);
+        maxX = Math.max(maxX, pt.x);
+        maxY = Math.max(maxY, pt.y);
+      });
+    })
+  );
+  return {
+    minX,
+    minY,
+    maxX,
+    maxY,
+    width: maxX - minX,
+    height: maxY - minY,
+    centerX: (minX + maxX) / 2,
+    centerY: (minY + maxY) / 2,
+  };
+}
+
 // ─── Drawing ─────────────────────────────────────────────────
 
 function draw() {
@@ -308,26 +345,96 @@ function draw() {
 
     projectedFeatures.forEach((pf) => {
       const isSelected = selectedRegion.value?.name === pf.name;
-      const fillColor = isSelected ? SELECTED_COLOR : regionColors[pf.name] || "#ccc";
+      const regionImage = regionImages[pf.name];
+      const imageConfig = REGION_IMAGE_CONFIG[pf.name];
       const borderWidth = isSelected ? SELECTED_BORDER_WIDTH : BORDER_WIDTH;
 
-      pf.polygons.forEach((pg) => {
-        pg.forEach((ring) => {
-          if (ring.length < 3) return;
-          ctx!.beginPath();
-          ring.forEach((pt, i) => {
-            i === 0 ? ctx!.moveTo(pt.x, pt.y) : ctx!.lineTo(pt.x, pt.y);
+      const buildPath = () => {
+        ctx!.beginPath();
+        pf.polygons.forEach((pg) => {
+          pg.forEach((ring) => {
+            if (ring.length < 3) return;
+            ring.forEach((pt, i) => {
+              i === 0 ? ctx!.moveTo(pt.x, pt.y) : ctx!.lineTo(pt.x, pt.y);
+            });
+            ctx!.closePath();
           });
-          ctx!.closePath();
-
-          ctx!.fillStyle = fillColor;
-          ctx!.fill();
-
-          ctx!.strokeStyle = BORDER_COLOR;
-          ctx!.lineWidth = borderWidth;
-          ctx!.stroke();
         });
-      });
+      };
+
+      const strokePath = () => {
+        pf.polygons.forEach((pg) => {
+          pg.forEach((ring) => {
+            if (ring.length < 3) return;
+            ctx!.beginPath();
+            ring.forEach((pt, i) => {
+              i === 0 ? ctx!.moveTo(pt.x, pt.y) : ctx!.lineTo(pt.x, pt.y);
+            });
+            ctx!.closePath();
+            ctx!.strokeStyle = BORDER_COLOR;
+            ctx!.lineWidth = borderWidth;
+            ctx!.stroke();
+          });
+        });
+      };
+
+      if (regionImage && imageConfig) {
+        const bbox = getPolygonBBox(pf.polygons);
+        const imgW = regionImage.width;
+        const imgH = regionImage.height;
+        let targetW: number, targetH: number;
+
+        switch (imageConfig.fit) {
+          case 'fill':
+            targetW = bbox.width;
+            targetH = bbox.height;
+            break;
+          case 'contain': {
+            const ratio = Math.min(bbox.width / imgW, bbox.height / imgH);
+            targetW = imgW * ratio;
+            targetH = imgH * ratio;
+            break;
+          }
+          case 'cover':
+          default: {
+            const ratio = Math.max(bbox.width / imgW, bbox.height / imgH);
+            targetW = imgW * ratio;
+            targetH = imgH * ratio;
+            break;
+          }
+        }
+
+        targetW *= imageConfig.scale;
+        targetH *= imageConfig.scale;
+
+        const drawX = bbox.centerX - targetW / 2 + imageConfig.offsetX;
+        const drawY = bbox.centerY - targetH / 2 + imageConfig.offsetY;
+
+        ctx!.save();
+        buildPath();
+        ctx!.clip();
+        ctx!.drawImage(regionImage, drawX, drawY, targetW, targetH);
+        ctx!.restore();
+
+        strokePath();
+      } else {
+        const fillColor = regionColors[pf.name] || "#ccc";
+        pf.polygons.forEach((pg) => {
+          pg.forEach((ring) => {
+            if (ring.length < 3) return;
+            ctx!.beginPath();
+            ring.forEach((pt, i) => {
+              i === 0 ? ctx!.moveTo(pt.x, pt.y) : ctx!.lineTo(pt.x, pt.y);
+            });
+            ctx!.closePath();
+            ctx!.fillStyle = fillColor;
+            ctx!.fill();
+            ctx!.strokeStyle = BORDER_COLOR;
+            ctx!.lineWidth = borderWidth;
+            ctx!.stroke();
+          });
+        });
+      }
 
       drawLabel(ctx!, pf, isSelected);
     });
@@ -363,7 +470,7 @@ function drawLabel(
   c.rotate(angle);
 
   // -- Pinyin line (smaller, above) --
-  c.font = `6px "PingFang SC", "Microsoft YaHei", sans-serif`;
+  c.font = `bold 6px "PingFang SC", "Microsoft YaHei", sans-serif`;
   c.textAlign = "center";
   c.textBaseline = "bottom";
   c.shadowColor = "rgba(0,0,0,0.6)";
@@ -480,6 +587,9 @@ function onCanvasReady() {
 
   draw();
 
+  // Load all region background images
+  loadRegionImages();
+
   // Auto-select 华中地区 after a brief delay
   setTimeout(() => {
     const region = regions.find((r) => r.name === "华中地区");
@@ -488,6 +598,44 @@ function onCanvasReady() {
       draw();
     }
   }, 300);
+}
+
+function loadRegionImages() {
+  // #ifdef H5
+  Object.entries(REGION_IMAGE_URLS).forEach(([name, url]) => {
+    const img = new Image();
+    img.onload = () => {
+      regionImages[name] = img;
+      draw();
+    };
+    img.onerror = () => {
+      console.error(`Failed to load ${name} image`);
+    };
+    img.src = url;
+  });
+  // #endif
+
+  // #ifndef H5
+  Object.entries(REGION_IMAGE_URLS).forEach(([name, url]) => {
+    uni.getImageInfo({
+      src: url,
+      success: (res) => {
+        const img = canvas.createImage();
+        img.onload = () => {
+          regionImages[name] = img;
+          draw();
+        };
+        img.onerror = () => {
+          console.error(`Failed to load ${name} image in canvas`);
+        };
+        img.src = res.path;
+      },
+      fail: (err) => {
+        console.error(`Failed to get ${name} image info:`, err);
+      }
+    });
+  });
+  // #endif
 }
 
 // ─── Resize ──────────────────────────────────────────────────
@@ -773,11 +921,6 @@ onUnmounted(() => {
 });
 
 // ─── Placeholder actions ─────────────────────────────────────
-
-const playSound = () => {
-  uni.showToast({ title: "播放中...", icon: "none" });
-};
-
 const learnMore = () => {
   uni.showToast({ title: "了解更多", icon: "none" });
 };
