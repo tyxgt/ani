@@ -125,7 +125,7 @@ export const BTN_ICON_URL =
 
 // ─── AI 助手常量 ──────────────────────────────────────────────────
 export const AI_PANDA_URL =
-  'https://tt3ccf4a72a2ab53a201-env-a22yxzsttq.tos-cn-beijing.volces.com/panda.png'
+  'https://tt3ccf4a72a2ab53a201-env-a22yxzsttq.tos-cn-beijing.volces.com/chatsys.png'
 
 export const AI_BACKGROUND_URL =
   'https://tt3ccf4a72a2ab53a201-env-a22yxzsttq.tos-cn-beijing.volces.com/aiback.png'

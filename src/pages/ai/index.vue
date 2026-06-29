@@ -6,7 +6,7 @@
     <!-- 头部导航 -->
     <view :class="styles.aiHeader">
       <view :class="styles.backBtn" @click="goBack">
-        <text :class="styles.backArrow">&#x3c;</text>
+        <image :class="styles.backIcon" src="/static/icons/back.svg" mode="aspectFit" />
       </view>
       <view :class="styles.headerTitle">
         <PinyinText text="与大熊猫博士聊天" :charStyle="titleCharStyle" :pinyinStyle="titlePinyinStyle" />

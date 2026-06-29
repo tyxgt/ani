@@ -46,7 +46,7 @@
             <PinyinText
               :text="selectedRegion.name"
               display-mode="horizontal"
-              :char-style="{ fontSize: '20px' }"
+              :char-style="{ fontSize: '16px' }"
               :pinyin-style="{ fontSize: '14px', marginBottom: '0px' }"
               :pinyin-class="styles.compactPinyin"
               :char-class="styles.compactChar"

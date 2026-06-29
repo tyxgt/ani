@@ -18,13 +18,13 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 60px 20px 16px;
+  margin-top: env(safe-area-inset-top);
+  padding: 10px 20px 8px;
   z-index: 10;
 
-  .backBtn,
-  .locationBtn {
-    width: 56px;
-    height: 56px;
+  .backBtn {
+    width: 36px;
+    height: 36px;
     border-radius: 50%;
     background: #fff;
     display: flex;
@@ -35,13 +35,9 @@
   }
 
   .backIcon {
-    font-size: 28px;
+    width: 24px;
+    height: 24px;
     color: #2E7D32;
-    font-weight: bold;
-  }
-
-  .locationIcon {
-    font-size: 28px;
   }
 
   .titleWrap {
@@ -90,7 +86,7 @@
   margin: 20px;
   background: rgba(255, 255, 255, 0.9);
   border-radius: 24px;
-  padding: 20px;
+  padding: 10px 16px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
   border: 3px solid #fff;
 
@@ -99,24 +95,21 @@
     align-items: center;
     justify-content: center;
     gap: 12px;
-    margin-bottom: 16px;
+    margin-bottom: 4px;
   }
 
   .titleIcon {
     font-size: 24px;
   }
 
-  .titleText {
-    font-size: 26px;
-    font-weight: bold;
-    color: #2E7D32;
-  }
-
   .introText {
-    font-size: 18px;
-    color: #5D4037;
-    line-height: 1.8;
     text-align: center;
+    line-height: 1.4;
+
+    :global(.charRow) {
+      justify-content: center;
+      flex-wrap: wrap;
+    }
   }
 }
 
@@ -124,7 +117,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 8px 20px;
+  padding: 4px 16px;
   gap: 12px;
 
   .dashLine {
@@ -142,12 +135,6 @@
 
   .dividerIcon {
     font-size: 28px;
-  }
-
-  .dividerText {
-    font-size: 26px;
-    font-weight: bold;
-    color: #2E7D32;
   }
 }
 
@@ -170,13 +157,6 @@
 
   .geoFeatureIcon {
     font-size: 40px;
-  }
-
-  .geoFeatureName {
-    font-size: 16px;
-    font-weight: bold;
-    color: #2E7D32;
-    text-align: center;
   }
 }
 
@@ -245,11 +225,6 @@
 
   .locationDot {
     font-size: 12px;
-  }
-
-  .locationText {
-    font-size: 13px;
-    font-weight: bold;
   }
 }
 
