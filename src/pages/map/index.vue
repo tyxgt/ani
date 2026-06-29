@@ -922,7 +922,10 @@ onUnmounted(() => {
 
 // ─── Placeholder actions ─────────────────────────────────────
 const learnMore = () => {
-  uni.showToast({ title: "了解更多", icon: "none" });
+  if (!selectedRegion.value) return;
+  uni.navigateTo({
+    url: `/pages/regionDetail/index?name=${encodeURIComponent(selectedRegion.value.name)}`,
+  });
 };
 </script>
 

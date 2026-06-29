@@ -13,8 +13,7 @@
   &.alignLeft {
     align-items: flex-start;
 
-    .pinyinRow,
-    .textRow {
+    .charRow {
       justify-content: flex-start;
     }
   }
@@ -22,41 +21,32 @@
   &.alignRight {
     align-items: flex-end;
 
-    .pinyinRow,
-    .textRow {
+    .charRow {
       justify-content: flex-end;
     }
   }
+}
+
+.charRow {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
 }
 
 .charGroup {
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin: 0 4px;
+  margin: 0 2px;
 
   .pinyin {
     line-height: 1;
-    margin-bottom: 0;
+    margin-bottom: 2px;
   }
 
   .char {
     line-height: 1;
   }
-}
-
-.textRow {
-  display: flex;
-  justify-content: center;
-}
-
-.pinyinRow {
-  display: flex;
-  justify-content: center;
-  white-space: pre-wrap;
-  height: auto;
-  line-height: 1;
-  gap: 4px;
 }
 
 .char {

@@ -1,0 +1,60 @@
+@import '../../styles/variables.less';
+
+.messageItem {
+  display: flex;
+  align-items: flex-start;
+
+  &.userMsg {
+    flex-direction: row;
+
+    .messageContent {
+      align-items: flex-start;
+    }
+  }
+
+  &.assistantMsg {
+    flex-direction: row-reverse;
+
+    .messageContent {
+      align-items: flex-end;
+    }
+  }
+}
+
+.avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #fff;
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.messageContent {
+  display: flex;
+  flex-direction: column;
+  max-width: 85%;
+  gap: 4px;
+}
+
+.bubble {
+  padding: 10px 12px;
+  border-radius: 12px;
+  position: relative;
+  word-break: break-all;
+}
+
+.assistantBubble {
+  background: #E8D5F7;
+  margin-right: 4px;
+}
+
+.userBubble {
+  background: #FFF9C4;
+  margin-left: 4px;
+}
+
+.msgTime {
+  font-size: 12px;
+  color: rgb(111, 111, 111);
+}

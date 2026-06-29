@@ -1,0 +1,287 @@
+import type { RegionDetail } from '../types'
+
+const img = (prompt: string) =>
+  `https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=${encodeURIComponent(prompt)}&image_size=square_hd`
+
+export const REGION_DETAILS: Record<string, RegionDetail> = {
+  东北地区: {
+    name: '东北地区',
+    pinyin: 'dōng běi dì qū',
+    description: '这里有茂密的森林和肥沃的黑土地，冬天会下大雪哦！',
+    geoFeatures: [
+      { name: '林海雪原', icon: '🌲', bgColor: '#E8F5E9' },
+      { name: '黑土肥沃', icon: '🌾', bgColor: '#FFF3E0' },
+      { name: '冰雪世界', icon: '❄️', bgColor: '#E3F2FD' },
+    ],
+    animals: [
+      {
+        name: '东北虎',
+        pinyin: 'dōng běi hǔ',
+        image: img('cute siberian tiger cartoon style chibi friendly'),
+        location: '黑龙江·吉林',
+        locationColor: '#FF7043',
+      },
+      {
+        name: '丹顶鹤',
+        pinyin: 'dān dǐng hè',
+        image: img('cute red crowned crane cartoon style chibi friendly'),
+        location: '黑龙江·吉林',
+        locationColor: '#42A5F5',
+      },
+      {
+        name: '梅花鹿',
+        pinyin: 'méi huā lù',
+        image: img('cute sika deer cartoon style chibi friendly'),
+        location: '吉林·辽宁',
+        locationColor: '#66BB6A',
+      },
+      {
+        name: '紫貂',
+        pinyin: 'zǐ diāo',
+        image: img('cute sable marten cartoon style chibi friendly'),
+        location: '黑龙江·内蒙古',
+        locationColor: '#AB47BC',
+      },
+    ],
+  },
+  华北地区: {
+    name: '华北地区',
+    pinyin: 'huá běi dì qū',
+    description: '这里有雄伟的长城和广阔的平原，是中华文明的发源地之一。',
+    geoFeatures: [
+      { name: '长城雄伟', icon: '🏯', bgColor: '#FFF3E0' },
+      { name: '平原广阔', icon: '🌾', bgColor: '#E8F5E9' },
+      { name: '古都文化', icon: '🏛️', bgColor: '#F3E5F5' },
+    ],
+    animals: [
+      {
+        name: '褐马鸡',
+        pinyin: 'hè mǎ jī',
+        image: img('cute brown eared pheasant cartoon style chibi friendly'),
+        location: '山西·河北',
+        locationColor: '#8D6E63',
+      },
+      {
+        name: '金钱豹',
+        pinyin: 'jīn qián bào',
+        image: img('cute north china leopard cartoon style chibi friendly'),
+        location: '山西·陕西',
+        locationColor: '#FFA726',
+      },
+      {
+        name: '猕猴',
+        pinyin: 'mí hóu',
+        image: img('cute rhesus macaque monkey cartoon style chibi friendly'),
+        location: '河南·山西',
+        locationColor: '#A1887F',
+      },
+      {
+        name: '大鸨',
+        pinyin: 'dà bǎo',
+        image: img('cute great bustard bird cartoon style chibi friendly'),
+        location: '内蒙古·河北',
+        locationColor: '#90A4AE',
+      },
+    ],
+  },
+  西北地区: {
+    name: '西北地区',
+    pinyin: 'xī běi dì qū',
+    description: '这里有大片的沙漠和美丽的绿洲，还有高高的天山呢！',
+    geoFeatures: [
+      { name: '沙漠绿洲', icon: '🏜️', bgColor: '#FFF8E1' },
+      { name: '天山巍峨', icon: '🏔️', bgColor: '#E3F2FD' },
+      { name: '草原辽阔', icon: '🐎', bgColor: '#E8F5E9' },
+    ],
+    animals: [
+      {
+        name: '雪豹',
+        pinyin: 'xuě bào',
+        image: img('cute snow leopard cartoon style chibi friendly'),
+        location: '新疆·青海',
+        locationColor: '#7E57C2',
+      },
+      {
+        name: '藏羚羊',
+        pinyin: 'zàng líng yáng',
+        image: img('cute tibetan antelope cartoon style chibi friendly'),
+        location: '青海·西藏',
+        locationColor: '#EC407A',
+      },
+      {
+        name: '野骆驼',
+        pinyin: 'yě luò tuó',
+        image: img('cute wild bactrian camel cartoon style chibi friendly'),
+        location: '新疆·甘肃',
+        locationColor: '#FFB74D',
+      },
+      {
+        name: '普氏野马',
+        pinyin: 'pǔ shì yě mǎ',
+        image: img('cute przewalski horse cartoon style chibi friendly'),
+        location: '新疆·甘肃',
+        locationColor: '#8D6E63',
+      },
+    ],
+  },
+  西南地区: {
+    name: '西南地区',
+    pinyin: 'xī nán dì qū',
+    description: '这里山高谷深，森林茂密，有很多可爱的动物朋友！',
+    geoFeatures: [
+      { name: '高山连绵', icon: '🏔️', bgColor: '#E8F5E9' },
+      { name: '雨林茂密', icon: '🌴', bgColor: '#C8E6C9' },
+      { name: '动物众多', icon: '🐼', bgColor: '#FFF3E0' },
+    ],
+    animals: [
+      {
+        name: '大熊猫',
+        pinyin: 'dà xióng māo',
+        image: img('cute giant panda eating bamboo cartoon style chibi friendly'),
+        location: '四川·陕西',
+        locationColor: '#4CAF50',
+      },
+      {
+        name: '金丝猴',
+        pinyin: 'jīn sī hóu',
+        image: img('cute golden snub nosed monkey cartoon style chibi friendly'),
+        location: '云南·四川',
+        locationColor: '#00ACC1',
+      },
+      {
+        name: '小熊猫',
+        pinyin: 'xiǎo xióng māo',
+        image: img('cute red panda cartoon style chibi friendly tree'),
+        location: '四川·西藏',
+        locationColor: '#F4511E',
+      },
+      {
+        name: '雪豹',
+        pinyin: 'xuě bào',
+        image: img('cute snow leopard cartoon style chibi friendly mountain'),
+        location: '西藏·青海',
+        locationColor: '#7E57C2',
+      },
+    ],
+  },
+  华中地区: {
+    name: '华中地区',
+    pinyin: 'huá zhōng dì qū',
+    description: '这里有很多湖泊和大河，是鱼米之乡，物产丰富！',
+    geoFeatures: [
+      { name: '江河纵横', icon: '🌊', bgColor: '#E3F2FD' },
+      { name: '湖泊众多', icon: '🏞️', bgColor: '#B3E5FC' },
+      { name: '鱼米之乡', icon: '🐟', bgColor: '#FFF9C4' },
+    ],
+    animals: [
+      {
+        name: '白鱀豚',
+        pinyin: 'bái jì tún',
+        image: img('cute yangtze river dolphin baiji cartoon style chibi friendly'),
+        location: '湖北·湖南',
+        locationColor: '#42A5F5',
+      },
+      {
+        name: '麋鹿',
+        pinyin: 'mí lù',
+        image: img('cute milu deer pere david cartoon style chibi friendly'),
+        location: '湖北·江苏',
+        locationColor: '#8D6E63',
+      },
+      {
+        name: '扬子鳄',
+        pinyin: 'yáng zǐ è',
+        image: img('cute chinese alligator cartoon style chibi friendly'),
+        location: '安徽·浙江',
+        locationColor: '#66BB6A',
+      },
+      {
+        name: '大鲵',
+        pinyin: 'dà ní',
+        image: img('cute chinese giant salamander cartoon style chibi friendly'),
+        location: '湖南·湖北',
+        locationColor: '#78909C',
+      },
+    ],
+  },
+  华东地区: {
+    name: '华东地区',
+    pinyin: 'huá dōng dì qū',
+    description: '这里有江南水乡和美丽的海岸，经济发达，风景如画！',
+    geoFeatures: [
+      { name: '江南水乡', icon: '🏘️', bgColor: '#E3F2FD' },
+      { name: '海岸秀美', icon: '🌊', bgColor: '#B2EBF2' },
+      { name: '山水如画', icon: '⛰️', bgColor: '#E8F5E9' },
+    ],
+    animals: [
+      {
+        name: '朱鹮',
+        pinyin: 'zhū huán',
+        image: img('cute crested ibis bird pink cartoon style chibi friendly'),
+        location: '陕西·浙江',
+        locationColor: '#EC407A',
+      },
+      {
+        name: '黄山猴',
+        pinyin: 'huáng shān hóu',
+        image: img('cute tibetan macaque huangshan monkey cartoon style chibi friendly'),
+        location: '安徽·江西',
+        locationColor: '#A1887F',
+      },
+      {
+        name: '中华鲟',
+        pinyin: 'zhōng huá xún',
+        image: img('cute chinese sturgeon fish cartoon style chibi friendly'),
+        location: '上海·江苏',
+        locationColor: '#5C6BC0',
+      },
+      {
+        name: '白额雁',
+        pinyin: 'bái é yàn',
+        image: img('cute white fronted goose cartoon style chibi friendly'),
+        location: '江苏·安徽',
+        locationColor: '#78909C',
+      },
+    ],
+  },
+  华南地区: {
+    name: '华南地区',
+    pinyin: 'huá nán dì qū',
+    description: '这里天气炎热，有很多热带水果，还有美丽的海滩！',
+    geoFeatures: [
+      { name: '热带风情', icon: '🌴', bgColor: '#C8E6C9' },
+      { name: '海滩美丽', icon: '🏖️', bgColor: '#FFF9C4' },
+      { name: '雨林神秘', icon: '🌿', bgColor: '#DCEDC8' },
+    ],
+    animals: [
+      {
+        name: '华南虎',
+        pinyin: 'huá nán hǔ',
+        image: img('cute south china tiger cartoon style chibi friendly'),
+        location: '广东·福建',
+        locationColor: '#FF7043',
+      },
+      {
+        name: '绿孔雀',
+        pinyin: 'lǜ kǒng què',
+        image: img('cute green peacock cartoon style chibi friendly'),
+        location: '云南·广西',
+        locationColor: '#26A69A',
+      },
+      {
+        name: '亚洲象',
+        pinyin: 'yà zhōu xiàng',
+        image: img('cute asian elephant cartoon style chibi friendly'),
+        location: '云南·广西',
+        locationColor: '#90A4AE',
+      },
+      {
+        name: '长臂猿',
+        pinyin: 'cháng bì yuán',
+        image: img('cute gibbon ape cartoon style chibi friendly tree'),
+        location: '云南·海南',
+        locationColor: '#FFB74D',
+      },
+    ],
+  },
+}

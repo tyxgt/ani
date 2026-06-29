@@ -125,7 +125,13 @@ export const BTN_ICON_URL =
 
 // ─── AI 助手常量 ──────────────────────────────────────────────────
 export const AI_PANDA_URL =
-  'https://neeko-copilot.bytedance.net/api/text_to_image?prompt=cute%20panda%20wearing%20doctor%20coat%20stethoscope%20friendly%20waving%20cartoon%20style%20transparent%20background&image_size=square'
+  'https://tt3ccf4a72a2ab53a201-env-a22yxzsttq.tos-cn-beijing.volces.com/panda.png'
+
+export const AI_BACKGROUND_URL =
+  'https://tt3ccf4a72a2ab53a201-env-a22yxzsttq.tos-cn-beijing.volces.com/aiback.png'
+
+export const AI_INPUT_PANDA_URL =
+  'https://tt3ccf4a72a2ab53a201-env-a22yxzsttq.tos-cn-beijing.volces.com/panda.png'
 
 // ─── 用户数据 ──────────────────────────────────────────────────
 export const DEFAULT_USER_INFO: UserInfo = {

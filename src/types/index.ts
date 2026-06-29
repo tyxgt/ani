@@ -33,3 +33,34 @@ export interface MenuItem {
   icon: string
   action: string
 }
+
+// ─── 地区详情相关类型 ───────────────────────────────────────────
+export interface RegionGeoFeature {
+  name: string
+  icon: string
+  bgColor: string
+}
+
+export interface RegionAnimal {
+  name: string
+  pinyin: string
+  image: string
+  location: string
+  locationColor: string
+}
+
+export interface RegionDetail {
+  name: string
+  pinyin: string
+  description: string
+  geoFeatures: RegionGeoFeature[]
+  animals: RegionAnimal[]
+}
+
+// ─── 聊天消息相关类型 ───────────────────────────────────────────
+export interface ChatMessage {
+  id: number
+  role: 'user' | 'assistant'
+  content: string
+  time: string
+}

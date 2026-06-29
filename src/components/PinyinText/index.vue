@@ -7,13 +7,11 @@
       </view>
     </template>
     <template v-else>
-      <view :class="styles.pinyinRow">
-        <text :class="[styles.pinyin, pinyinClass]" :style="pinyinStyle" v-for="(item, index) in pinyinData" :key="index">
-          {{ item.pinyin || '\u00A0' }}
-        </text>
-      </view>
-      <view :class="styles.textRow">
-        <text :class="[styles.char, charClass]" :style="charStyle">{{ text }}</text>
+      <view :class="styles.charRow">
+        <view :class="styles.charGroup" v-for="(item, index) in pinyinData" :key="index">
+          <text :class="[styles.pinyin, pinyinClass]" :style="pinyinStyle">{{ item.pinyin || '\u00A0' }}</text>
+          <text :class="[styles.char, charClass]" :style="charStyle">{{ item.char }}</text>
+        </view>
       </view>
     </template>
   </view>
