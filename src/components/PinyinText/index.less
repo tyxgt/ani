@@ -28,20 +28,23 @@
 }
 
 .charRow {
+  width: 100%;
   display: flex;
   flex-wrap: wrap;
-  justify-content: center;
+  justify-content: space-evenly;
 }
 
 .charGroup {
+  justify-items: center;
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin: 0 2px;
+  margin: 0 4px;
+  min-width: 12px;
 
   .pinyin {
     line-height: 1;
-    margin-bottom: 2px;
+    margin-bottom: 4px;
   }
 
   .char {

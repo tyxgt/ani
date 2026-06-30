@@ -8,7 +8,25 @@
     <image :class="styles.background" :src="backgroundUrl" mode="aspectFill" />
 
     <view :class="styles.header" @touchstart.stop @touchmove.stop @touchend.stop>
-      <text :class="styles.title">中国地图</text>
+      <PinyinText
+        :class="styles.title"
+        text="中国地图"
+        :char-style="{
+          fontSize: '40px',
+          fontWeight: 'bold',
+          color: '#1565C0',
+          textShadow: '2px 2px 4px rgba(255, 255, 255, 0.8), -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff',
+          letterSpacing: '4px'
+        }"
+        :pinyin-style="{
+          fontSize: '20px',
+          fontWeight: 'bold',
+          color: '#1565C0',
+          textShadow: '2px 2px 4px rgba(255, 255, 255, 0.8), -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff',
+          letterSpacing: '4px',
+          marginBottom: '4px'
+        }"
+      />
     </view>
 
     <view :class="styles.errorMsg" v-if="error">{{ error }}</view>
@@ -48,12 +66,10 @@
               display-mode="horizontal"
               :char-style="{ fontSize: '16px' }"
               :pinyin-style="{ fontSize: '14px', marginBottom: '0px' }"
-              :pinyin-class="styles.compactPinyin"
-              :char-class="styles.compactChar"
             />
           </view>
           <view :class="styles.moreBtn" @click="learnMore">
-            <text :class="styles.moreBtnText">📖 了解更多</text>
+            <text :class="styles.moreBtnText">了解更多</text>
           </view>
         </view>
         <text :class="styles.regionDesc">{{ selectedRegion.description }}</text>

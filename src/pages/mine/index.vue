@@ -2,24 +2,53 @@
   <view :class="styles.minePage">
     <view :class="styles.content">
       <view :class="styles.userSection">
-        <view :class="styles.avatarWrapper" @click="changeAvatar">
-          <image :class="styles.avatar" :src="userInfo.avatar" mode="aspectFill" />
-          <view :class="styles.avatarEditIcon">
+        <view :class="styles.avatarWrapper" @click="handleAvatarClick">
+          <image
+            :class="styles.avatar"
+            :src="displayAvatar"
+            mode="aspectFill"
+          />
+          <view v-if="isLoggedIn" :class="styles.avatarEditIcon">
             <text :class="styles.editIcon">+</text>
           </view>
         </view>
         <view :class="styles.userInfo">
           <PinyinText
-            text="小黄鸭"
+            v-if="isLoggedIn && douyinUserInfo?.nickName"
+            :text="douyinUserInfo.nickName"
             :charStyle="{ fontSize: '48rpx', fontWeight: 'bold', color: '#2C3E50' }"
             :pinyinStyle="{ fontSize: '28rpx', color: '#5D6D7E' }"
           />
+          <text v-else :class="styles.loginTip" @click="handleLogin">
+            {{ isLoggedIn ? '设置昵称' : '点击登录' }}
+          </text>
+        </view>
+
+        <view v-if="isLoggedIn" :class="styles.authButtons">
+          <view
+            v-if="!hasProfile"
+            :class="styles.authBtn"
+            @click="handleGetUserProfile"
+          >
+            <text :class="styles.authBtnText">完善资料</text>
+          </view>
+          <!-- #ifdef MP-TOUTIAO -->
+          <button
+            v-if="!hasPhone"
+            :class="styles.authBtn"
+            open-type="getPhoneNumber"
+            @getphonenumber="handleGetPhoneNumber"
+          >
+            绑定手机号
+          </button>
+          <!-- #endif -->
         </view>
       </view>
+
       <view :class="styles.menuCard">
         <view
           :class="styles.menuItem"
-          v-for="item in menuList"
+          v-for="item in displayMenuList"
           :key="item.id"
           @click="handleMenuClick(item)"
         >
@@ -28,13 +57,14 @@
             <image v-else-if="item.icon === 'about'" src="/static/icons/about.svg" mode="aspectFit" :class="styles.iconImage" />
             <image v-else-if="item.icon === 'feedback'" src="/static/icons/feedback.svg" mode="aspectFit" :class="styles.iconImage" />
             <image v-else-if="item.icon === 'share'" src="/static/icons/share.svg" mode="aspectFit" :class="styles.iconImage" />
+            <image v-else-if="item.icon === 'logout'" src="/static/icons/settings.svg" mode="aspectFit" :class="styles.iconImage" />
           </view>
           <view :class="styles.menuText">
             <PinyinText
               :text="item.name"
               align="left"
-              :charStyle="{ fontSize: '40rpx', color: '#666' }"
-              :pinyinStyle="{ fontSize: '34rpx', color: '#666' }"
+              :charStyle="{ fontSize: '40rpx', color: item.action === 'logout' ? '#E74C3C' : '#666' }"
+              :pinyinStyle="{ fontSize: '34rpx', color: item.action === 'logout' ? '#E74C3C' : '#666' }"
             />
           </view>
           <text :class="styles.arrow">›</text>
@@ -46,23 +76,140 @@
 </template>
 
 <script setup lang="ts">
-import { ref, useCssModule } from "vue";
+import { ref, computed, onMounted } from "vue";
+import { onShow } from "@dcloudio/uni-app";
 import CustomTabBar from "../../components/CustomTabBar";
 import PinyinText from "../../components/PinyinText";
 import { DEFAULT_USER_INFO, MENU_LIST, ICON_STYLE_MAP } from "../../constants";
-import type { UserInfo, MenuItem } from "../../types";
+import { authManager } from "../../utils/auth";
+import type { DouyinUserInfo, MenuItem } from "../../types";
 
 const styles = useCssModule('styles') as Record<string, string>
 
 const iconStyleMap = ICON_STYLE_MAP
 
-const userInfo = ref<UserInfo>({
-  avatar: DEFAULT_USER_INFO.avatar,
-  nickname: DEFAULT_USER_INFO.nickname,
-  description: DEFAULT_USER_INFO.description,
-});
+const isLoggedIn = ref(false)
+const douyinUserInfo = ref<DouyinUserInfo | null>(null)
 
-const menuList = ref<MenuItem[]>([...MENU_LIST]);
+const displayAvatar = computed(() => {
+  if (douyinUserInfo.value?.avatarUrl) {
+    return douyinUserInfo.value.avatarUrl
+  }
+  return DEFAULT_USER_INFO.avatar
+})
+
+const hasProfile = computed(() => {
+  return !!(douyinUserInfo.value?.nickName && douyinUserInfo.value?.avatarUrl)
+})
+
+const hasPhone = computed(() => {
+  return !!douyinUserInfo.value?.phoneNumber
+})
+
+const displayMenuList = computed<MenuItem[]>(() => {
+  const baseList = [...MENU_LIST]
+  if (isLoggedIn.value) {
+    baseList.push({
+      id: 999,
+      name: '退出登录',
+      icon: 'logout',
+      action: 'logout',
+    })
+  }
+  return baseList
+})
+
+const refreshLoginState = () => {
+  isLoggedIn.value = authManager.isLoggedIn()
+  douyinUserInfo.value = authManager.getUserInfo()
+}
+
+onMounted(() => {
+  refreshLoginState()
+})
+
+onShow(() => {
+  refreshLoginState()
+})
+
+const handleAvatarClick = () => {
+  if (!isLoggedIn.value) {
+    handleLogin()
+    return
+  }
+  changeAvatar()
+}
+
+const handleLogin = async () => {
+  try {
+    uni.showLoading({ title: '登录中...' })
+    const userInfo = await authManager.login()
+    if (userInfo) {
+      refreshLoginState()
+      uni.showToast({ title: '登录成功', icon: 'success' })
+    } else {
+      uni.showToast({ title: '登录失败', icon: 'none' })
+    }
+  } catch (error) {
+    console.error('登录失败:', error)
+    uni.showToast({ title: (error as Error).message || '登录失败', icon: 'none' })
+  } finally {
+    uni.hideLoading()
+  }
+}
+
+const handleGetUserProfile = async () => {
+  // #ifdef MP-TOUTIAO
+  try {
+    const res = await new Promise<any>((resolve, reject) => {
+      tt.getUserProfile({
+        desc: '用于完善用户资料',
+        success: resolve,
+        fail: reject,
+      })
+    })
+
+    const { encryptedData, iv } = res
+    uni.showLoading({ title: '更新中...' })
+    const userInfo = await authManager.updateProfile(encryptedData, iv)
+    if (userInfo) {
+      refreshLoginState()
+      uni.showToast({ title: '资料更新成功', icon: 'success' })
+    }
+  } catch (error) {
+    console.error('获取用户信息失败:', error)
+    uni.showToast({ title: (error as Error).message || '获取失败', icon: 'none' })
+  } finally {
+    uni.hideLoading()
+  }
+  // #endif
+
+  // #ifndef MP-TOUTIAO
+  uni.showToast({ title: '当前平台不支持', icon: 'none' })
+  // #endif
+}
+
+const handleGetPhoneNumber = async (e: any) => {
+  if (e.detail.errMsg !== 'getPhoneNumber:ok') {
+    uni.showToast({ title: '授权失败', icon: 'none' })
+    return
+  }
+
+  try {
+    uni.showLoading({ title: '绑定中...' })
+    const phoneCode = e.detail.code
+    const userInfo = await authManager.bindPhone(phoneCode)
+    if (userInfo) {
+      refreshLoginState()
+      uni.showToast({ title: '绑定成功', icon: 'success' })
+    }
+  } catch (error) {
+    console.error('手机号绑定失败:', error)
+    uni.showToast({ title: (error as Error).message || '绑定失败', icon: 'none' })
+  } finally {
+    uni.hideLoading()
+  }
+}
 
 const changeAvatar = () => {
   uni.showActionSheet({
@@ -74,7 +221,9 @@ const changeAvatar = () => {
           sizeType: ["compressed"],
           sourceType: ["camera"],
           success: (res) => {
-            userInfo.value.avatar = res.tempFilePaths[0];
+            if (douyinUserInfo.value) {
+              douyinUserInfo.value.avatarUrl = res.tempFilePaths[0]
+            }
           },
         });
       } else {
@@ -83,7 +232,9 @@ const changeAvatar = () => {
           sizeType: ["compressed"],
           sourceType: ["album"],
           success: (res) => {
-            userInfo.value.avatar = res.tempFilePaths[0];
+            if (douyinUserInfo.value) {
+              douyinUserInfo.value.avatarUrl = res.tempFilePaths[0]
+            }
           },
         });
       }
@@ -124,6 +275,19 @@ const handleMenuClick = (item: { action: string; name: string }) => {
           });
         },
       });
+      break;
+    case "logout":
+      uni.showModal({
+        title: "提示",
+        content: "确定要退出登录吗？",
+        success: (res) => {
+          if (res.confirm) {
+            authManager.logout()
+            refreshLoginState()
+            uni.showToast({ title: '已退出登录', icon: 'success' })
+          }
+        },
+      })
       break;
   }
 };

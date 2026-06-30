@@ -32,8 +32,8 @@
           <text :class="styles.titleIcon">🍃</text>
           <PinyinText
             :text="'地区介绍'"
-            :char-style="{ fontSize: '26px', fontWeight: 'bold', color: '#2E7D32' }"
-            :pinyin-style="{ fontSize: '16px', color: '#81C784' }"
+            :char-style="{ fontSize: '26px', fontWeight: 'bold', color: '#2E7D32', lineHeight: '1.2' }"
+            :pinyin-style="{ fontSize: '16px', color: '#81C784', lineHeight: '1.2' }"
           />
           <text :class="styles.titleIcon">🍃</text>
         </view>
@@ -67,8 +67,8 @@
           <text :class="styles.geoFeatureIcon">{{ feature.icon }}</text>
           <PinyinText
             :text="feature.name"
-            :char-style="{ fontSize: '16px', fontWeight: 'bold', color: '#2E7D32' }"
-            :pinyin-style="{ fontSize: '11px', color: '#81C784' }"
+            :char-style="{ fontSize: '14px', fontWeight: 'bold', color: '#2E7D32' }"
+            :pinyin-style="{ fontSize: '12px', color: '#81C784' }"
           />
         </view>
       </view>

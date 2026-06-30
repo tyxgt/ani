@@ -1,4 +1,15 @@
-import type { UserInfo, MenuItem } from '../types'
+import type { UserInfo, MenuItem, KnowledgeCategory, KnowledgeAnimal } from '../types'
+
+// ─── 登录相关常量 ─────────────────────────────────────────────
+export const TOKEN_KEY = 'token'
+export const USER_INFO_KEY = 'userInfo'
+export const LOGIN_CLOUD_FUNCTION = 'login'
+
+export const ERROR_CODE = {
+  SUCCESS: 0,
+  GENERAL_ERROR: -1,
+  UNAUTHORIZED: 401,
+}
 
 // ─── 地图常量 ──────────────────────────────────────────────────
 export const MAP_BACKGROUND_URL =
@@ -186,5 +197,90 @@ export const LEARN_LIST = [
     id: 4,
     name: '趣味问答',
     icon: 'https://neeko-copilot.bytedance.net/api/text_to_image?prompt=question%20quiz%20puzzle%20icon%20cartoon&image_size=square',
+  },
+]
+
+// ─── 知识库数据 ──────────────────────────────────────────────────
+
+export const KNOWLEDGE_CATEGORIES: KnowledgeCategory[] = [
+  {
+    id: 1,
+    name: '地形',
+    icon: '🏔️',
+    color: '#4CAF50',
+    bgColor: '#E8F5E9',
+  },
+  {
+    id: 2,
+    name: '气候',
+    icon: '🌤️',
+    color: '#42A5F5',
+    bgColor: '#E3F2FD',
+  },
+  {
+    id: 3,
+    name: '动物',
+    icon: '🦊',
+    color: '#FF9800',
+    bgColor: '#FFF3E0',
+  },
+]
+
+const PANDA_IMG =
+  'https://neeko-copilot.bytedance.net/api/text_to_image?prompt=cute%20giant%20panda%20sitting%20eating%20bamboo%20watercolor%20cartoon%20style%20green%20forest%20background&image_size=square_hd'
+const TIGER_IMG =
+  'https://neeko-copilot.bytedance.net/api/text_to_image?prompt=cute%20siberian%20tiger%20cub%20sitting%20grass%20watercolor%20cartoon%20style%20warm%20colors&image_size=square_hd'
+const MONKEY_IMG =
+  'https://neeko-copilot.bytedance.net/api/text_to_image?prompt=cute%20golden%20snub%20nosed%20monkey%20sitting%20on%20branch%20snow%20mountain%20background%20watercolor%20cartoon%20style&image_size=square_hd'
+const ELEPHANT_IMG =
+  'https://neeko-copilot.bytedance.net/api/text_to_image?prompt=cute%20asian%20elephant%20standing%20grassland%20watercolor%20cartoon%20style%20green%20trees%20background&image_size=square_hd'
+const CRANE_IMG =
+  'https://neeko-copilot.bytedance.net/api/text_to_image?prompt=cute%20red%20crowned%20crane%20standing%20in%20water%20reeds%20watercolor%20cartoon%20style%20blue%20sky%20background&image_size=square_hd'
+
+export const KNOWLEDGE_ANIMALS: KnowledgeAnimal[] = [
+  {
+    id: 1,
+    name: '大熊猫',
+    image: PANDA_IMG,
+    protectionLevel: '国家一级保护动物',
+    protectionBgColor: '#E8F5E9',
+    protectionTextColor: '#2E7D32',
+    borderColor: '#66BB6A',
+  },
+  {
+    id: 2,
+    name: '东北虎',
+    image: TIGER_IMG,
+    protectionLevel: '国家一级保护动物',
+    protectionBgColor: '#FFF3E0',
+    protectionTextColor: '#E65100',
+    borderColor: '#FFA726',
+  },
+  {
+    id: 3,
+    name: '金丝猴',
+    image: MONKEY_IMG,
+    protectionLevel: '国家一级保护动物',
+    protectionBgColor: '#E3F2FD',
+    protectionTextColor: '#1565C0',
+    borderColor: '#42A5F5',
+  },
+  {
+    id: 4,
+    name: '亚洲象',
+    image: ELEPHANT_IMG,
+    protectionLevel: '国家一级保护动物',
+    protectionBgColor: '#EDE7F6',
+    protectionTextColor: '#4527A0',
+    borderColor: '#9575CD',
+  },
+  {
+    id: 5,
+    name: '丹顶鹤',
+    image: CRANE_IMG,
+    protectionLevel: '国家一级保护动物',
+    protectionBgColor: '#FCE4EC',
+    protectionTextColor: '#C2185B',
+    borderColor: '#F48FB1',
   },
 ]

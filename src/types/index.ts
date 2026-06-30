@@ -27,6 +27,26 @@ export interface UserInfo {
   description: string
 }
 
+export interface DouyinUserInfo {
+  openid: string
+  unionid?: string
+  nickName: string
+  avatarUrl: string
+  phoneNumber?: string
+  gender?: number
+}
+
+export interface CloudFunctionResult<T = any> {
+  errCode: number
+  errMsg: string
+  data: T
+}
+
+export interface LoginData {
+  token: string
+  user: DouyinUserInfo
+}
+
 export interface MenuItem {
   id: number
   name: string
@@ -63,4 +83,23 @@ export interface ChatMessage {
   role: 'user' | 'assistant'
   content: string
   time: string
+}
+
+// ─── 知识库相关类型 ───────────────────────────────────────────
+export interface KnowledgeCategory {
+  id: number
+  name: string
+  icon: string
+  color: string
+  bgColor: string
+}
+
+export interface KnowledgeAnimal {
+  id: number
+  name: string
+  image: string
+  protectionLevel: string
+  protectionBgColor: string
+  protectionTextColor: string
+  borderColor: string
 }
