@@ -1,19 +1,12 @@
 <script setup lang="ts">
 import { onLaunch, onShow, onHide } from "@dcloudio/uni-app";
-import { authManager } from "./utils/auth";
+import { initCloud } from "./utils/cloud";
 
-onLaunch(async () => {
+onLaunch(() => {
   console.log("App Launch");
-  try {
-    const userInfo = await authManager.silentLogin();
-    if (userInfo) {
-      console.log("静默登录成功:", userInfo);
-    } else {
-      console.log("未登录，等待用户主动登录");
-    }
-  } catch (error) {
-    console.error("静默登录失败:", error);
-  }
+  // #ifdef MP-TOUTIAO
+  initCloud();
+  // #endif
 });
 
 onShow(() => {

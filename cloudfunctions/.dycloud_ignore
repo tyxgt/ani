@@ -1,0 +1,5 @@
+# 忽略项目根目录的 TypeScript 配置和源码
+../tsconfig.json
+../src/
+../node_modules/
+../.git/

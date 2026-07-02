@@ -1,18 +1,29 @@
-import type { DouyinUserInfo, CloudFunctionResult, LoginData } from '../types'
-import { TOKEN_KEY, USER_INFO_KEY, LOGIN_CLOUD_FUNCTION, ERROR_CODE } from '../constants'
+import type { DouyinUserInfo, LoginData } from '../types'
+import { TOKEN_KEY, USER_INFO_KEY, EXPIRES_AT_KEY, LOGIN_CLOUD_FUNCTION } from '../constants'
 import { callFunction } from './cloud'
 
 class AuthManager {
   private _token: string = ''
   private _userInfo: DouyinUserInfo | null = null
+  private _expiresAt: number = 0
   private _loginPromise: Promise<DouyinUserInfo | null> | null = null
 
   constructor() {
     this._token = uni.getStorageSync(TOKEN_KEY) || ''
     this._userInfo = uni.getStorageSync(USER_INFO_KEY) || null
+    this._expiresAt = uni.getStorageSync(EXPIRES_AT_KEY) || 0
+    this._checkTokenExpired()
+  }
+
+  private _checkTokenExpired(): void {
+    if (this._token && this._expiresAt && Date.now() > this._expiresAt) {
+      console.log('[Auth] token 已过期，清除登录状态')
+      this.logout()
+    }
   }
 
   isLoggedIn(): boolean {
+    this._checkTokenExpired()
     return !!this._token
   }
 
@@ -50,28 +61,35 @@ class AuthManager {
   private async _executeLogin(force: boolean): Promise<DouyinUserInfo | null> {
     // #ifdef MP-TOUTIAO
     try {
-      const code = await this._ttLogin(force)
+      const code = await this._ttLogin(force);
+      console.log('获取登录code成功:', code)
+
       if (!code) {
         return null
       }
 
       const result = await callFunction(LOGIN_CLOUD_FUNCTION, {
-        action: 'loginByCode',
         code,
       })
 
-      if (result.errCode === ERROR_CODE.SUCCESS && result.data) {
+      if (result.errCode === 0 && result.data) {
         const loginData = result.data as LoginData
         this._token = loginData.token
-        this._userInfo = loginData.user
+        this._expiresAt = loginData.expiresAt
+        this._userInfo = {
+          openid: loginData.openid,
+          nickName: '探索者',
+          avatarUrl: '',
+        }
         this._saveToStorage()
+        console.log('登录成功:', this._token)
         return this._userInfo
       } else {
-        console.error('登录失败:', result.errMsg)
+        console.error('登录失败:', result.errMsg || '未知错误')
         return null
       }
     } catch (error) {
-      console.error('登录失败:', error)
+      console.error('登录失败:', (error as Error).message || error)
       return null
     }
     // #endif
@@ -102,62 +120,13 @@ class AuthManager {
   }
   // #endif
 
-  async updateProfile(encryptedData: string, iv: string): Promise<DouyinUserInfo | null> {
-    if (!this._token) {
-      throw new Error('请先登录')
-    }
-
-    const result = await callFunction(LOGIN_CLOUD_FUNCTION, {
-      action: 'updateProfile',
-      token: this._token,
-      encryptedData,
-      iv,
-    })
-
-    if (result.errCode === ERROR_CODE.UNAUTHORIZED) {
-      this.logout()
-      throw new Error('登录已过期，请重新登录')
-    }
-
-    if (result.errCode === ERROR_CODE.SUCCESS && result.data) {
-      this._userInfo = (result.data as any).user
-      this._saveToStorage()
-      return this._userInfo
-    }
-
-    throw new Error(result.errMsg || '更新用户信息失败')
-  }
-
-  async bindPhone(phoneCode: string): Promise<DouyinUserInfo | null> {
-    if (!this._token) {
-      throw new Error('请先登录')
-    }
-
-    const result = await callFunction(LOGIN_CLOUD_FUNCTION, {
-      action: 'bindPhone',
-      token: this._token,
-      phoneCode,
-    })
-
-    if (result.errCode === ERROR_CODE.UNAUTHORIZED) {
-      this.logout()
-      throw new Error('登录已过期，请重新登录')
-    }
-
-    if (result.errCode === ERROR_CODE.SUCCESS && result.data) {
-      this._userInfo = (result.data as any).user
-      this._saveToStorage()
-      return this._userInfo
-    }
-
-    throw new Error(result.errMsg || '绑定手机号失败')
-  }
-
   logout(): void {
     this._token = ''
     this._userInfo = null
+    this._expiresAt = 0
     uni.removeStorageSync(TOKEN_KEY)
     uni.removeStorageSync(USER_INFO_KEY)
+    uni.removeStorageSync(EXPIRES_AT_KEY)
   }
 
   private _saveToStorage(): void {
@@ -166,6 +135,9 @@ class AuthManager {
     }
     if (this._userInfo) {
       uni.setStorageSync(USER_INFO_KEY, this._userInfo)
+    }
+    if (this._expiresAt) {
+      uni.setStorageSync(EXPIRES_AT_KEY, this._expiresAt)
     }
   }
 }

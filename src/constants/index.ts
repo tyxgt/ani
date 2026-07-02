@@ -3,7 +3,11 @@ import type { UserInfo, MenuItem, KnowledgeCategory, KnowledgeAnimal } from '../
 // ─── 登录相关常量 ─────────────────────────────────────────────
 export const TOKEN_KEY = 'token'
 export const USER_INFO_KEY = 'userInfo'
+export const EXPIRES_AT_KEY = 'expiresAt'
 export const LOGIN_CLOUD_FUNCTION = 'login'
+export const CLOUD_ENV = 'env-a22YxZSttQ'
+export const CLOUD_SERVICE_ID = '1m5svld6xb0hr'
+export const CLOUD_FUNCTION_PATH = '/index'
 
 export const ERROR_CODE = {
   SUCCESS: 0,

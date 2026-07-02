@@ -11,6 +11,19 @@ function copyCloudfunctionsPlugin() {
     if (!fs.existsSync(cloudfunctionsSrc) || !outDir) return;
     const destDir = path.join(outDir, "cloudfunctions");
     copyDir(cloudfunctionsSrc, destDir);
+    updateProjectConfig();
+  }
+
+  function updateProjectConfig() {
+    const configPath = path.join(outDir, "project.config.json");
+    if (!fs.existsSync(configPath)) return;
+    try {
+      const config = JSON.parse(fs.readFileSync(configPath, "utf-8"));
+      config.cloudfunctionRoot = "cloudfunctions/";
+      fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
+    } catch (error) {
+      console.error("更新 project.config.json 失败:", error);
+    }
   }
 
   return {

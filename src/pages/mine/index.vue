@@ -23,26 +23,6 @@
             {{ isLoggedIn ? '设置昵称' : '点击登录' }}
           </text>
         </view>
-
-        <view v-if="isLoggedIn" :class="styles.authButtons">
-          <view
-            v-if="!hasProfile"
-            :class="styles.authBtn"
-            @click="handleGetUserProfile"
-          >
-            <text :class="styles.authBtnText">完善资料</text>
-          </view>
-          <!-- #ifdef MP-TOUTIAO -->
-          <button
-            v-if="!hasPhone"
-            :class="styles.authBtn"
-            open-type="getPhoneNumber"
-            @getphonenumber="handleGetPhoneNumber"
-          >
-            绑定手机号
-          </button>
-          <!-- #endif -->
-        </view>
       </view>
 
       <view :class="styles.menuCard">
@@ -76,7 +56,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, useCssModule } from "vue";
 import { onShow } from "@dcloudio/uni-app";
 import CustomTabBar from "../../components/CustomTabBar";
 import PinyinText from "../../components/PinyinText";
@@ -96,14 +76,6 @@ const displayAvatar = computed(() => {
     return douyinUserInfo.value.avatarUrl
   }
   return DEFAULT_USER_INFO.avatar
-})
-
-const hasProfile = computed(() => {
-  return !!(douyinUserInfo.value?.nickName && douyinUserInfo.value?.avatarUrl)
-})
-
-const hasPhone = computed(() => {
-  return !!douyinUserInfo.value?.phoneNumber
 })
 
 const displayMenuList = computed<MenuItem[]>(() => {
@@ -153,59 +125,6 @@ const handleLogin = async () => {
   } catch (error) {
     console.error('登录失败:', error)
     uni.showToast({ title: (error as Error).message || '登录失败', icon: 'none' })
-  } finally {
-    uni.hideLoading()
-  }
-}
-
-const handleGetUserProfile = async () => {
-  // #ifdef MP-TOUTIAO
-  try {
-    const res = await new Promise<any>((resolve, reject) => {
-      tt.getUserProfile({
-        desc: '用于完善用户资料',
-        success: resolve,
-        fail: reject,
-      })
-    })
-
-    const { encryptedData, iv } = res
-    uni.showLoading({ title: '更新中...' })
-    const userInfo = await authManager.updateProfile(encryptedData, iv)
-    if (userInfo) {
-      refreshLoginState()
-      uni.showToast({ title: '资料更新成功', icon: 'success' })
-    }
-  } catch (error) {
-    console.error('获取用户信息失败:', error)
-    uni.showToast({ title: (error as Error).message || '获取失败', icon: 'none' })
-  } finally {
-    uni.hideLoading()
-  }
-  // #endif
-
-  // #ifndef MP-TOUTIAO
-  uni.showToast({ title: '当前平台不支持', icon: 'none' })
-  // #endif
-}
-
-const handleGetPhoneNumber = async (e: any) => {
-  if (e.detail.errMsg !== 'getPhoneNumber:ok') {
-    uni.showToast({ title: '授权失败', icon: 'none' })
-    return
-  }
-
-  try {
-    uni.showLoading({ title: '绑定中...' })
-    const phoneCode = e.detail.code
-    const userInfo = await authManager.bindPhone(phoneCode)
-    if (userInfo) {
-      refreshLoginState()
-      uni.showToast({ title: '绑定成功', icon: 'success' })
-    }
-  } catch (error) {
-    console.error('手机号绑定失败:', error)
-    uni.showToast({ title: (error as Error).message || '绑定失败', icon: 'none' })
   } finally {
     uni.hideLoading()
   }

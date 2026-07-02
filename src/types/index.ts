@@ -44,7 +44,8 @@ export interface CloudFunctionResult<T = any> {
 
 export interface LoginData {
   token: string
-  user: DouyinUserInfo
+  openid: string
+  expiresAt: number
 }
 
 export interface MenuItem {
