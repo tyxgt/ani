@@ -1,14 +1,14 @@
 <template>
   <view :class="[styles.pinyinText, alignClass, { [styles.vertical]: displayMode === 'vertical' }]">
     <template v-if="displayMode === 'vertical'">
-      <view :class="styles.charGroup" v-for="(item, index) in pinyinData" :key="index">
+      <view :class="styles.charGroup" v-for="(item, index) in pinyinData" :key="index" :style="charGroupStyle">
         <text :class="[styles.pinyin, pinyinClass]" :style="pinyinStyle">{{ item.pinyin }}</text>
         <text :class="[styles.char, charClass]" :style="charStyle">{{ item.char }}</text>
       </view>
     </template>
     <template v-else>
       <view :class="styles.charRow">
-        <view :class="styles.charGroup" v-for="(item, index) in pinyinData" :key="index">
+        <view :class="styles.charGroup" v-for="(item, index) in pinyinData" :key="index" :style="charGroupStyle">
           <text :class="[styles.pinyin, pinyinClass]" :style="pinyinStyle">{{ item.pinyin || '\u00A0' }}</text>
           <text :class="[styles.char, charClass]" :style="charStyle">{{ item.char }}</text>
         </view>
@@ -31,13 +31,15 @@ const props = withDefaults(defineProps<{
   pinyinClass?: string
   charStyle?: Record<string, string>
   pinyinStyle?: Record<string, string>
+  charGroupWidth?: string
 }>(), {
   displayMode: 'horizontal',
   align: 'center',
   charClass: '',
   pinyinClass: '',
   charStyle: () => ({}),
-  pinyinStyle: () => ({})
+  pinyinStyle: () => ({}),
+  charGroupWidth: ''
 })
 
 const pinyinData = computed(() => getPinyinArray(props.text))
@@ -49,6 +51,11 @@ const alignClass = computed(() => {
     right: styles.alignRight,
   }
   return map[props.align] || ''
+})
+
+const charGroupStyle = computed(() => {
+  if (!props.charGroupWidth) return {}
+  return { minWidth: props.charGroupWidth }
 })
 </script>
 
