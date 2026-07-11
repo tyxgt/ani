@@ -9,6 +9,8 @@ export const CLOUD_ENV = 'env-a22YxZSttQ'
 export const CLOUD_SERVICE_ID = '1m5svld6xb0hr'
 export const CLOUD_FUNCTION_PATH = '/index'
 
+export const WX_CLOUD_ENV = 'cloud1-d0g4jnows8cd22b84'
+
 export const ERROR_CODE = {
   SUCCESS: 0,
   GENERAL_ERROR: -1,

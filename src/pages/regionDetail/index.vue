@@ -1,24 +1,23 @@
 <template>
-  <view :class="styles.regionDetailPage" v-if="regionDetail">
-    <scroll-view scroll-y :class="styles.scrollView">
-      <view :class="styles.header">
-        <view :class="styles.backBtn" @click="goBack">
-          <image :class="styles.backIcon" src="/static/icons/back.svg" mode="aspectFit" />
-        </view>
-        <view :class="styles.titleWrap">
-          <PinyinText
-            :text="regionDetail.name"
-            display-mode="horizontal"
-            :char-style="{ fontSize: '20px', fontWeight: 'bold' }"
-            :pinyin-style="{ fontSize: '18px' }"
-            :char-class="styles.titleChar"
-          />
-        </view>
-        <!-- <view :class="styles.locationBtn">
-          <text :class="styles.locationIcon">📍</text>
-        </view> -->
+  <view :class="styles.regionDetailPage">
+    <!-- Header 固定在顶部 -->
+    <view :class="styles.header">
+      <view :class="styles.backBtn" @click="goBack" @tap="goBack">
+        <image :class="styles.backIcon" src="/static/icons/back.svg" mode="aspectFit" />
       </view>
+      <view :class="styles.titleWrap">
+        <PinyinText
+          :text="regionDetail.name"
+          display-mode="horizontal"
+          :char-style="{ fontSize: '20px', fontWeight: 'bold' }"
+          :pinyin-style="{ fontSize: '18px' }"
+          :char-class="styles.titleChar"
+        />
+      </view>
+    </view>
 
+    <!-- 可滚动内容区域 -->
+    <scroll-view scroll-y :class="styles.scrollView">
       <view :class="styles.heroImageWrap">
         <image
           :class="styles.heroImage"
@@ -136,10 +135,15 @@ import { REGION_IMAGE_URLS } from '../../constants'
 import { REGION_DETAILS } from '../../data/regionDetail'
 import type { RegionDetail } from '../../types'
 
-const regionDetail = ref<RegionDetail | null>(null)
+const regionDetail = ref<RegionDetail>(REGION_DETAILS['西南地区'])
 
 const goBack = () => {
-  uni.navigateBack()
+  const pages = getCurrentPages()
+  if (pages.length > 1) {
+    uni.navigateBack()
+  } else {
+    uni.reLaunch({ url: '/pages/index/index' })
+  }
 }
 
 onMounted(() => {

@@ -1,7 +1,8 @@
 import type { CloudFunctionResult } from '../types'
-import { ERROR_CODE, CLOUD_ENV, CLOUD_SERVICE_ID, CLOUD_FUNCTION_PATH } from '../constants'
+import { ERROR_CODE, CLOUD_ENV, CLOUD_SERVICE_ID, CLOUD_FUNCTION_PATH, WX_CLOUD_ENV } from '../constants'
 
 let cloudInstance: any = null
+let wxCloudInitialized = false
 
 function normalizeCloudResponse(rawData: any, res: any): CloudFunctionResult {
   if (!rawData) {
@@ -47,6 +48,30 @@ function normalizeCloudResponse(rawData: any, res: any): CloudFunctionResult {
     }
   }
 
+  if (typeof rawData === 'object' && rawData.userInfo && rawData.userInfo.openId) {
+    return {
+      errCode: ERROR_CODE.SUCCESS,
+      errMsg: '登录成功',
+      data: {
+        openid: rawData.userInfo.openId,
+        appid: rawData.userInfo.appId,
+        unionid: rawData.userInfo.unionId || null,
+      },
+    }
+  }
+
+  if (typeof rawData === 'object' && (rawData.openId || rawData.openid)) {
+    return {
+      errCode: ERROR_CODE.SUCCESS,
+      errMsg: '登录成功',
+      data: {
+        openid: rawData.openId || rawData.openid,
+        appid: rawData.appId || rawData.appid || null,
+        unionid: rawData.unionId || rawData.unionid || null,
+      },
+    }
+  }
+
   if (res && res.statusCode === 200) {
     return {
       errCode: ERROR_CODE.SUCCESS,
@@ -73,6 +98,21 @@ export function initCloud(): void {
     console.log('[Cloud] 云服务初始化成功')
   } catch (error) {
     console.error('[Cloud] 云服务初始化失败:', error)
+  }
+  // #endif
+
+  // #ifdef MP-WEIXIN
+  if (wxCloudInitialized) return
+  try {
+    wx.cloud.init({
+      env: WX_CLOUD_ENV,
+      traceUser: true,
+    })
+    wxCloudInitialized = true
+    console.log('[Cloud] 微信云服务初始化成功')
+  } catch (error) {
+    console.error('[Cloud] 微信云服务初始化失败:', error)
+    console.warn('[Cloud] 请确保已在微信开发者工具中配置云环境，WX_CLOUD_ENV 不能为空')
   }
   // #endif
 }
@@ -163,12 +203,53 @@ export async function callFunction(
   }
   // #endif
 
+  // #ifdef MP-WEIXIN
+  try {
+    if (!wxCloudInitialized) {
+      initCloud()
+    }
+
+    console.log(`[Cloud] 调用微信云函数 [${name}]:`, data)
+
+    const res = await wx.cloud.callFunction({
+      name,
+      data,
+    })
+
+    console.log(`[Cloud] 微信云函数 [${name}] 响应:`, res)
+
+    let rawData = res.result || res
+    if (typeof rawData === 'string') {
+      try {
+        rawData = JSON.parse(rawData)
+      } catch (e) {
+        console.log(`[Cloud] 微信云函数 [${name}] res.result JSON解析失败，按纯文本处理`)
+      }
+    }
+
+    let result = normalizeCloudResponse(rawData, res)
+
+    console.log(`[Cloud] 微信云函数 [${name}] 标准化后响应:`, result)
+
+    return result as CloudFunctionResult
+  } catch (error) {
+    console.error(`云函数调用失败 [${name}]:`, error)
+    return {
+      errCode: ERROR_CODE.GENERAL_ERROR,
+      errMsg: (error as Error).message || '网络请求失败',
+      data: null,
+    }
+  }
+  // #endif
+
   // #ifndef MP-TOUTIAO
+  // #ifndef MP-WEIXIN
   return {
     errCode: ERROR_CODE.GENERAL_ERROR,
     errMsg: '当前平台不支持云函数',
     data: null,
   }
+  // #endif
   // #endif
 }
 

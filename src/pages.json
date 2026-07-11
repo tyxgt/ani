@@ -4,7 +4,7 @@
 			"path": "pages/index/index",
 			"style": {
 				"navigationStyle": "custom",
-				"navigationBarTitleText": "3D中国地理"
+				"navigationBarTitleText": "大熊猫博士"
 			}
 		},
 		{
@@ -46,8 +46,41 @@
 	],
 	"globalStyle": {
 		"navigationBarTextStyle": "black",
-		"navigationBarTitleText": "3D中国地理",
+		"navigationBarTitleText": "大熊猫博士",
 		"navigationBarBackgroundColor": "#FFFFFF",
 		"backgroundColor": "#87CEEB"
+	},
+	"tabBar": {
+		"custom": true,
+		"color": "#999999",
+		"selectedColor": "#5C6BC0",
+		"borderStyle": "black",
+		"backgroundColor": "#FFFFFF",
+		"list": [
+			{
+				"pagePath": "pages/index/index",
+				"text": "探索",
+				"iconPath": "static/icons/tab-home.png",
+				"selectedIconPath": "static/icons/tab-home-active.png"
+			},
+			{
+				"pagePath": "pages/ai/index",
+				"text": "AI",
+				"iconPath": "static/icons/tab-ai.png",
+				"selectedIconPath": "static/icons/tab-ai-active.png"
+			},
+			{
+				"pagePath": "pages/learn/index",
+				"text": "学习",
+				"iconPath": "static/icons/tab-book.png",
+				"selectedIconPath": "static/icons/tab-book-active.png"
+			},
+			{
+				"pagePath": "pages/mine/index",
+				"text": "我的",
+				"iconPath": "static/icons/tab-mine.png",
+				"selectedIconPath": "static/icons/tab-mine-active.png"
+			}
+		]
 	}
 }

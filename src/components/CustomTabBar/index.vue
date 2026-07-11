@@ -47,14 +47,13 @@ const tabList = [
 ];
 
 const navigateTo = (index: number) => {
-  // 检查当前页面路径是否与目标相同，不同页面即使 tab index 相同也应允许跳转
   const pages = getCurrentPages();
   if (pages.length > 0) {
     const currentPage = '/' + pages[pages.length - 1].route;
     if (currentPage === tabList[index].pagePath) return;
   }
   currentIndex.value = index;
-  uni.navigateTo({
+  uni.switchTab({
     url: tabList[index].pagePath,
   });
 };

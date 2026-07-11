@@ -45,9 +45,6 @@
     <view
       :class="styles.infoCard"
       v-if="selectedRegion"
-      @touchstart.stop
-      @touchmove.stop
-      @touchend.stop
     >
       <view :class="styles.infoLeft">
         <view :class="styles.regionImage">
@@ -69,7 +66,7 @@
             />
           </view>
           <view :class="styles.moreBtn" @click="learnMore">
-            <text :class="styles.moreBtnText">了解更多</text>
+            <text :class="styles.moreBtnText" @click="learnMore">了解更多</text>
           </view>
         </view>
         <text :class="styles.regionDesc">{{ selectedRegion.description }}</text>
@@ -123,6 +120,103 @@ let ctx: CanvasRenderingContext2D | null = null;
 // ─── Region background images ─────────────────────────────────
 const regionImages: Record<string, any> = {};
 
+// ─── Offscreen canvas cache ─────────────────────────────────
+let offscreenCanvas: any = null;
+let offscreenCtx: CanvasRenderingContext2D | null = null;
+let offscreenDirty = true;
+
+function ensureOffscreenCanvas(): boolean {
+  if (offscreenCanvas && offscreenCtx) {
+    // #ifdef H5
+    const expectedW = Math.max(1, Math.floor(canvasW * dpr));
+    const expectedH = Math.max(1, Math.floor(canvasH * dpr));
+    if (offscreenCanvas.width !== expectedW || offscreenCanvas.height !== expectedH) {
+      offscreenCanvas.width = expectedW;
+      offscreenCanvas.height = expectedH;
+      offscreenCtx = offscreenCanvas.getContext("2d");
+      if (offscreenCtx) (offscreenCtx as CanvasRenderingContext2D).scale(dpr, dpr);
+      offscreenDirty = true;
+    }
+    // #endif
+    return true;
+  }
+
+  // #ifdef H5
+  offscreenCanvas = document.createElement("canvas");
+  offscreenCanvas.width = Math.max(1, Math.floor(canvasW * dpr));
+  offscreenCanvas.height = Math.max(1, Math.floor(canvasH * dpr));
+  offscreenCtx = offscreenCanvas.getContext("2d");
+  if (offscreenCtx) (offscreenCtx as CanvasRenderingContext2D).scale(dpr, dpr);
+  return !!offscreenCtx;
+  // #endif
+
+  // #ifndef H5
+  try {
+    if (typeof uni !== "undefined" && (uni as any).createOffscreenCanvas) {
+      offscreenCanvas = (uni as any).createOffscreenCanvas({
+        type: "2d",
+        width: Math.max(1, Math.floor(canvasW * dpr)),
+        height: Math.max(1, Math.floor(canvasH * dpr)),
+      });
+      offscreenCtx = offscreenCanvas.getContext("2d");
+      if (offscreenCtx) (offscreenCtx as CanvasRenderingContext2D).scale(dpr, dpr);
+      return !!offscreenCtx;
+    }
+  } catch (e) {
+    console.warn("[Map] Offscreen canvas not available:", e);
+  }
+  return false;
+  // #endif
+}
+
+function renderToOffscreen() {
+  if (!ensureOffscreenCanvas() || !offscreenCtx || canvasW === 0 || canvasH === 0) {
+    offscreenDirty = true;
+    return;
+  }
+  offscreenDirty = false;
+
+  offscreenCtx.clearRect(0, 0, canvasW, canvasH);
+
+  projectedFeatures.forEach((pf) => {
+    const regionImage = regionImages[pf.name];
+    const imageConfig = REGION_IMAGE_CONFIG[pf.name];
+
+    if (!regionImage || !imageConfig) {
+      const fillColor = regionColors[pf.name] || "#ccc";
+      offscreenCtx!.beginPath();
+      pf.polygons.forEach((pg) => {
+        pg.forEach((ring) => {
+          if (ring.length < 3) return;
+          ring.forEach((pt, i) => {
+            i === 0 ? offscreenCtx!.moveTo(pt.x, pt.y) : offscreenCtx!.lineTo(pt.x, pt.y);
+          });
+          offscreenCtx!.closePath();
+        });
+      });
+      offscreenCtx!.fillStyle = fillColor;
+      offscreenCtx!.fill();
+      offscreenCtx!.strokeStyle = BORDER_COLOR;
+      offscreenCtx!.lineWidth = BORDER_WIDTH;
+      offscreenCtx!.stroke();
+    } else {
+      offscreenCtx!.beginPath();
+      pf.polygons.forEach((pg) => {
+        pg.forEach((ring) => {
+          if (ring.length < 3) return;
+          ring.forEach((pt, i) => {
+            i === 0 ? offscreenCtx!.moveTo(pt.x, pt.y) : offscreenCtx!.lineTo(pt.x, pt.y);
+          });
+          offscreenCtx!.closePath();
+        });
+      });
+      offscreenCtx!.strokeStyle = BORDER_COLOR;
+      offscreenCtx!.lineWidth = BORDER_WIDTH;
+      offscreenCtx!.stroke();
+    }
+  });
+}
+
 /** Canvas logical size (CSS pixels) */
 let canvasW = 0;
 let canvasH = 0;
@@ -131,6 +225,26 @@ let dpr = 1;
 
 /** Cached bounding rect for hit-testing */
 let canvasRect = { left: 0, top: 0 };
+
+// ─── Render scheduling ──────────────────────────────────────
+let needsRedraw = false;
+let rafId: number | null = null;
+
+function scheduleDraw() {
+  needsRedraw = true;
+  if (rafId) return;
+  const requestFn: (cb: FrameRequestCallback) => number =
+    typeof requestAnimationFrame !== "undefined"
+      ? requestAnimationFrame
+      : ((cb: FrameRequestCallback) => setTimeout(cb, 16)) as any;
+  rafId = requestFn(() => {
+    rafId = null;
+    if (needsRedraw) {
+      needsRedraw = false;
+      draw();
+    }
+  });
+}
 
 // ─── Map data internals ──────────────────────────────────────
 let projectedFeatures: ProjectedFeature[] = [];
@@ -273,6 +387,7 @@ function preprojectFeatures() {
         polygons,
         centroid: count > 0 ? { x: sx / count, y: sy / count } : { x: 0, y: 0 },
         angle: computeAngle(polygons),
+        bbox: getPolygonBBox(polygons),
       };
     });
 }
@@ -339,6 +454,16 @@ function getPolygonBBox(polygons: Polygon[]) {
   };
 }
 
+function isBBoxVisible(
+  bbox: { minX: number; minY: number; maxX: number; maxY: number },
+  viewLeft: number,
+  viewTop: number,
+  viewRight: number,
+  viewBottom: number
+): boolean {
+  return !(bbox.maxX < viewLeft || bbox.minX > viewRight || bbox.maxY < viewTop || bbox.minY > viewBottom);
+}
+
 // ─── Drawing ─────────────────────────────────────────────────
 
 function draw() {
@@ -359,7 +484,64 @@ function draw() {
     ctx.scale(scale, scale);
     ctx.translate(-canvasW / 2, -canvasH / 2);
 
+    // 计算当前变换下的可视矩形（用于视口裁剪）
+    const invScale = 1 / scale;
+    const viewLeft = (-panX - canvasW / 2) * invScale + canvasW / 2;
+    const viewTop = (-panY - canvasH / 2) * invScale + canvasH / 2;
+    const viewRight = (canvasW - panX - canvasW / 2) * invScale + canvasW / 2;
+    const viewBottom = (canvasH - panY - canvasH / 2) * invScale + canvasH / 2;
+
+    // 如果离屏缓存可用且需要更新，先渲染离屏缓存
+    if (offscreenDirty && offscreenCanvas) {
+      renderToOffscreen();
+    }
+
+    // 使用离屏缓存作为静态底图，若不可用则回退到直接绘制
+    if (offscreenCanvas) {
+      ctx.drawImage(offscreenCanvas, 0, 0, canvasW, canvasH);
+    } else {
+      projectedFeatures.forEach((pf) => {
+        if (!isBBoxVisible(pf.bbox, viewLeft, viewTop, viewRight, viewBottom)) return;
+        const regionImage = regionImages[pf.name];
+        const imageConfig = REGION_IMAGE_CONFIG[pf.name];
+        if (!regionImage || !imageConfig) {
+          const fillColor = regionColors[pf.name] || "#ccc";
+          ctx!.beginPath();
+          pf.polygons.forEach((pg) => {
+            pg.forEach((ring) => {
+              if (ring.length < 3) return;
+              ring.forEach((pt, i) => {
+                i === 0 ? ctx!.moveTo(pt.x, pt.y) : ctx!.lineTo(pt.x, pt.y);
+              });
+              ctx!.closePath();
+            });
+          });
+          ctx!.fillStyle = fillColor;
+          ctx!.fill();
+          ctx!.strokeStyle = BORDER_COLOR;
+          ctx!.lineWidth = BORDER_WIDTH;
+          ctx!.stroke();
+        } else {
+          ctx!.beginPath();
+          pf.polygons.forEach((pg) => {
+            pg.forEach((ring) => {
+              if (ring.length < 3) return;
+              ring.forEach((pt, i) => {
+                i === 0 ? ctx!.moveTo(pt.x, pt.y) : ctx!.lineTo(pt.x, pt.y);
+              });
+              ctx!.closePath();
+            });
+          });
+          ctx!.strokeStyle = BORDER_COLOR;
+          ctx!.lineWidth = BORDER_WIDTH;
+          ctx!.stroke();
+        }
+      });
+    }
+
+    // 绘制动态内容：背景图、选中边框、标签
     projectedFeatures.forEach((pf) => {
+      if (!isBBoxVisible(pf.bbox, viewLeft, viewTop, viewRight, viewBottom)) return;
       const isSelected = selectedRegion.value?.name === pf.name;
       const regionImage = regionImages[pf.name];
       const imageConfig = REGION_IMAGE_CONFIG[pf.name];
@@ -379,19 +561,19 @@ function draw() {
       };
 
       const strokePath = () => {
+        ctx!.beginPath();
         pf.polygons.forEach((pg) => {
           pg.forEach((ring) => {
             if (ring.length < 3) return;
-            ctx!.beginPath();
             ring.forEach((pt, i) => {
               i === 0 ? ctx!.moveTo(pt.x, pt.y) : ctx!.lineTo(pt.x, pt.y);
             });
             ctx!.closePath();
-            ctx!.strokeStyle = BORDER_COLOR;
-            ctx!.lineWidth = borderWidth;
-            ctx!.stroke();
           });
         });
+        ctx!.strokeStyle = BORDER_COLOR;
+        ctx!.lineWidth = borderWidth;
+        ctx!.stroke();
       };
 
       if (regionImage && imageConfig) {
@@ -432,24 +614,11 @@ function draw() {
         ctx!.drawImage(regionImage, drawX, drawY, targetW, targetH);
         ctx!.restore();
 
+        // 重绘边框以覆盖背景图
         strokePath();
-      } else {
-        const fillColor = regionColors[pf.name] || "#ccc";
-        pf.polygons.forEach((pg) => {
-          pg.forEach((ring) => {
-            if (ring.length < 3) return;
-            ctx!.beginPath();
-            ring.forEach((pt, i) => {
-              i === 0 ? ctx!.moveTo(pt.x, pt.y) : ctx!.lineTo(pt.x, pt.y);
-            });
-            ctx!.closePath();
-            ctx!.fillStyle = fillColor;
-            ctx!.fill();
-            ctx!.strokeStyle = BORDER_COLOR;
-            ctx!.lineWidth = borderWidth;
-            ctx!.stroke();
-          });
-        });
+      } else if (isSelected) {
+        // 无背景图区域选中时，重绘 2px 边框
+        strokePath();
       }
 
       drawLabel(ctx!, pf, isSelected);
@@ -541,9 +710,36 @@ function hitTest(cssX: number, cssY: number): ProjectedFeature | null {
 
 // ─── Canvas initialisation (platform-specific) ──────────────
 
+let initCanvasRetryCount = 0;
+
+function proceedCanvasInit(node: any) {
+  node.width = canvasW * dpr;
+  node.height = canvasH * dpr;
+  const c = node.getContext("2d");
+  if (!c) {
+    error.value = "Canvas 2D context not available";
+    return;
+  }
+  c.scale(dpr, dpr);
+  canvas = node;
+  ctx = c;
+
+  // Get bounding rect for hit-testing
+  uni
+    .createSelectorQuery()
+    .select("#mapChart")
+    .boundingClientRect((r: any) => {
+      if (r) canvasRect = { left: r.left, top: r.top };
+    })
+    .exec();
+
+  onCanvasReady();
+}
+
 function initCanvas() {
   const info = uni.getSystemInfoSync();
-  dpr = info.pixelRatio || 1;
+  const rawDpr = info.pixelRatio || 1;
+  dpr = Math.min(rawDpr, 2);
 
   uni
     .createSelectorQuery()
@@ -557,27 +753,35 @@ function initCanvas() {
       const node = res[0].node;
       canvasW = res[0].width;
       canvasH = res[0].height;
-      node.width = canvasW * dpr;
-      node.height = canvasH * dpr;
-      const c = node.getContext("2d");
-      if (!c) {
-        error.value = "Canvas 2D context not available";
+
+      // 尺寸为0时重试
+      if ((canvasW === 0 || canvasH === 0) && initCanvasRetryCount < 3) {
+        initCanvasRetryCount++;
+        console.warn(`[Map] Canvas size zero (${canvasW}x${canvasH}), retry ${initCanvasRetryCount}/3...`);
+        setTimeout(initCanvas, 200);
         return;
       }
-      c.scale(dpr, dpr);
-      canvas = node;
-      ctx = c;
 
-      // Get bounding rect for hit-testing
-      uni
-        .createSelectorQuery()
-        .select("#mapChart")
-        .boundingClientRect((r: any) => {
-          if (r) canvasRect = { left: r.left, top: r.top };
-        })
-        .exec();
+      // 最终备选：boundingClientRect
+      if (canvasW === 0 || canvasH === 0) {
+        uni.createSelectorQuery()
+          .select("#mapChart")
+          .boundingClientRect((r: any) => {
+            if (r && r.width > 0 && r.height > 0) {
+              canvasW = r.width;
+              canvasH = r.height;
+              initCanvasRetryCount = 0;
+              proceedCanvasInit(node);
+            } else {
+              error.value = "Canvas size unavailable";
+            }
+          })
+          .exec();
+        return;
+      }
 
-      onCanvasReady();
+      initCanvasRetryCount = 0;
+      proceedCanvasInit(node);
     });
 }
 
@@ -601,7 +805,8 @@ function onCanvasReady() {
   panY = 0;
   clampPan();
 
-  draw();
+  offscreenDirty = true;
+  scheduleDraw();
 
   // Load all region background images
   loadRegionImages();
@@ -611,7 +816,7 @@ function onCanvasReady() {
     const region = regions.find((r) => r.name === "华中地区");
     if (region) {
       selectedRegion.value = region;
-      draw();
+      scheduleDraw();
     }
   }, 300);
 }
@@ -622,7 +827,8 @@ function loadRegionImages() {
     const img = new Image();
     img.onload = () => {
       regionImages[name] = img;
-      draw();
+      offscreenDirty = true;
+      scheduleDraw();
     };
     img.onerror = () => {
       console.error(`Failed to load ${name} image`);
@@ -639,7 +845,8 @@ function loadRegionImages() {
         const img = canvas.createImage();
         img.onload = () => {
           regionImages[name] = img;
-          draw();
+          offscreenDirty = true;
+          scheduleDraw();
         };
         img.onerror = () => {
           console.error(`Failed to load ${name} image in canvas`);
@@ -658,7 +865,8 @@ function loadRegionImages() {
 
 function handleResize() {
   const info = uni.getSystemInfoSync();
-  dpr = info.pixelRatio || 1;
+  const rawDpr = info.pixelRatio || 1;
+  dpr = Math.min(rawDpr, 2);
 
   uni
     .createSelectorQuery()
@@ -686,7 +894,8 @@ function handleResize() {
           vis.visibleHeight
         );
         preprojectFeatures();
-        draw();
+        offscreenDirty = true;
+        scheduleDraw();
       }
       uni
         .createSelectorQuery()
@@ -768,7 +977,7 @@ function onCanvasTap(e: any) {
     const region = regions.find((r) => r.name === hit.name);
     if (region) {
       selectedRegion.value = region;
-      draw();
+      scheduleDraw();
     }
   }
 }
@@ -839,7 +1048,7 @@ function onTouchMove(e: any) {
       panY = (cy - canvasH / 2) * (1 - ratio) + ratio * panY;
       scale = newScale;
       clampPan();
-      draw();
+      scheduleDraw();
     }
 
     touchState.lastDist = dist;
@@ -861,7 +1070,7 @@ function onTouchMove(e: any) {
     clampPan();
     touchState.lastCX = coords.x;
     touchState.lastCY = coords.y;
-    draw();
+    scheduleDraw();
   }
 }
 
@@ -900,7 +1109,7 @@ function onTouchEnd(e: any) {
       const region = regions.find((r) => r.name === hit.name);
       if (region) {
         selectedRegion.value = region;
-        draw();
+        scheduleDraw();
       }
     }
   }
@@ -920,7 +1129,7 @@ onMounted(() => {
       // #ifndef H5
       uni.onWindowResize(handleResize);
       // #endif
-    }, 100);
+    }, 300);
   });
 });
 
@@ -931,6 +1140,11 @@ onUnmounted(() => {
   // #ifndef H5
   uni.offWindowResize(handleResize);
   // #endif
+  if (rafId) {
+    const cancelFn = typeof cancelAnimationFrame !== "undefined" ? cancelAnimationFrame : clearTimeout;
+    cancelFn(rafId);
+    rafId = null;
+  }
   ctx = null;
   canvas = null;
   projectedFeatures = [];
@@ -938,6 +1152,7 @@ onUnmounted(() => {
 
 // ─── Placeholder actions ─────────────────────────────────────
 const learnMore = () => {
+  console.log(selectedRegion.value)
   if (!selectedRegion.value) return;
   uni.navigateTo({
     url: `/pages/regionDetail/index?name=${encodeURIComponent(selectedRegion.value.name)}`,

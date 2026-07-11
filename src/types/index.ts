@@ -8,6 +8,13 @@ export type Ring = ProjectedPoint[]
 
 export type Polygon = Ring[]
 
+export interface BBox {
+  minX: number
+  minY: number
+  maxX: number
+  maxY: number
+}
+
 export interface ProjectedFeature {
   name: string
   pinyin: string
@@ -18,6 +25,8 @@ export interface ProjectedFeature {
   centroid: ProjectedPoint
   /** 主轴角度，用于文字旋转 */
   angle: number
+  /** Precomputed bounding box in drawing-space coordinates */
+  bbox: BBox
 }
 
 // ─── 用户相关类型 ───────────────────────────────────────────────
@@ -34,6 +43,19 @@ export interface DouyinUserInfo {
   avatarUrl: string
   phoneNumber?: string
   gender?: number
+}
+
+export interface WechatUserInfo {
+  openid: string
+  unionid?: string
+  nickName: string
+  avatarUrl: string
+  phoneNumber?: string
+  gender?: number
+  country?: string
+  province?: string
+  city?: string
+  language?: string
 }
 
 export interface CloudFunctionResult<T = any> {

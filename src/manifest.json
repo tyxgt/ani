@@ -50,11 +50,18 @@
     "quickapp" : {},
     /* 小程序特有相关 */
     "mp-weixin" : {
-        "appid" : "",
+        "appid" : "wxf43bc453f6eb26ac",
         "setting" : {
-            "urlCheck" : false
+            "urlCheck" : false,
+            "es6" : true,
+            "enhance" : true,
+            "postcss" : true,
+            "minified" : true
         },
-        "usingComponents" : true
+        "usingComponents" : true,
+        "permission" : {},
+        "requiredPrivateInfos" : [],
+        "lazyCodeLoading" : "requiredComponents"
     },
     "mp-alipay" : {
         "usingComponents" : true
@@ -70,7 +77,7 @@
     },
     /* H5特有相关 */
     "h5" : {
-        "title" : "3D中国地理",
+        "title" : "大熊猫博士",
         "router" : {
             "mode" : "hash"
         },

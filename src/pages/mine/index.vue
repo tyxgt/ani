@@ -51,7 +51,49 @@
         </view>
       </view>
     </view>
+
     <CustomTabBar :current="3" />
+
+    <!-- 登录弹窗 -->
+    <view v-if="showLoginModal" :class="styles.loginModal" @click="closeLoginModal">
+      <view :class="styles.loginModalContent" @click.stop>
+        <text :class="styles.loginModalTitle">完善个人信息</text>
+        <!-- #ifdef MP-WEIXIN -->
+        <button :class="styles.avatarBtn" open-type="chooseAvatar" @chooseavatar="onChooseAvatar">
+          <image :class="styles.avatarPreview" :src="tempAvatarUrl || DEFAULT_USER_INFO.avatar" mode="aspectFill" />
+          <text :class="styles.avatarTip">点击选择头像</text>
+        </button>
+        <view :class="styles.nicknameField">
+          <input
+            type="nickname"
+            :class="styles.nicknameInput"
+            placeholder="请输入昵称"
+            :value="tempNickName"
+            @blur="onNicknameInput"
+          />
+        </view>
+        <!-- #endif -->
+        <!-- #ifndef MP-WEIXIN -->
+        <view :class="styles.avatarBtn" @click="chooseAvatarFromAlbum">
+          <image :class="styles.avatarPreview" :src="tempAvatarUrl || DEFAULT_USER_INFO.avatar" mode="aspectFill" />
+          <text :class="styles.avatarTip">点击选择头像</text>
+        </view>
+        <view :class="styles.nicknameField">
+          <input
+            type="text"
+            :class="styles.nicknameInput"
+            placeholder="请输入昵称"
+            :value="tempNickName"
+            @input="onNicknameInputH5"
+          />
+        </view>
+        <!-- #endif -->
+        <view :class="styles.loginModalBtn" @click="confirmLogin">
+          <text :class="styles.loginModalBtnText">确认登录</text>
+        </view>
+        <text :class="styles.loginModalSkip" @click="skipLogin">跳过</text>
+      </view>
+    </view>
   </view>
 </template>
 
@@ -70,6 +112,11 @@ const iconStyleMap = ICON_STYLE_MAP
 
 const isLoggedIn = ref(false)
 const douyinUserInfo = ref<DouyinUserInfo | null>(null)
+
+// 登录弹窗状态
+const showLoginModal = ref(false)
+const tempAvatarUrl = ref('')
+const tempNickName = ref('')
 
 const displayAvatar = computed(() => {
   if (douyinUserInfo.value?.avatarUrl) {
@@ -92,16 +139,26 @@ const displayMenuList = computed<MenuItem[]>(() => {
 })
 
 const refreshLoginState = () => {
-  isLoggedIn.value = authManager.isLoggedIn()
-  douyinUserInfo.value = authManager.getUserInfo()
+  isLoggedIn.value = authManager.isLoggedIn(true)
+  douyinUserInfo.value = authManager.getUserInfo(true)
+}
+
+const refreshLoginStateAsync = async () => {
+  refreshLoginState()
+  try {
+    await authManager.silentLogin()
+    refreshLoginState()
+  } catch (error) {
+    console.error('静默登录失败:', error)
+  }
 }
 
 onMounted(() => {
-  refreshLoginState()
+  refreshLoginStateAsync()
 })
 
 onShow(() => {
-  refreshLoginState()
+  refreshLoginStateAsync()
 })
 
 const handleAvatarClick = () => {
@@ -112,12 +169,69 @@ const handleAvatarClick = () => {
   changeAvatar()
 }
 
-const handleLogin = async () => {
+const handleLogin = () => {
+  tempAvatarUrl.value = ''
+  tempNickName.value = ''
+  showLoginModal.value = true
+}
+
+const closeLoginModal = () => {
+  showLoginModal.value = false
+}
+
+const onChooseAvatar = (e: any) => {
+  tempAvatarUrl.value = e.detail.avatarUrl || ''
+}
+
+const chooseAvatarFromAlbum = () => {
+  uni.chooseImage({
+    count: 1,
+    sizeType: ['compressed'],
+    sourceType: ['album', 'camera'],
+    success: (res) => {
+      tempAvatarUrl.value = res.tempFilePaths[0]
+    },
+  })
+}
+
+const onNicknameInput = (e: any) => {
+  tempNickName.value = e.detail.value || ''
+}
+
+const onNicknameInputH5 = (e: any) => {
+  tempNickName.value = e.detail.value || ''
+}
+
+const confirmLogin = async () => {
+  try {
+    uni.showLoading({ title: '登录中...' })
+    const nickName = tempNickName.value || '探索者'
+    const avatarUrl = tempAvatarUrl.value || ''
+    const userInfo = await authManager.login({ nickName, avatarUrl })
+    if (userInfo) {
+      showLoginModal.value = false
+      isLoggedIn.value = true
+      douyinUserInfo.value = userInfo
+      uni.showToast({ title: '登录成功', icon: 'success' })
+    } else {
+      uni.showToast({ title: '登录失败', icon: 'none' })
+    }
+  } catch (error) {
+    console.error('登录失败:', error)
+    uni.showToast({ title: (error as Error).message || '登录失败', icon: 'none' })
+  } finally {
+    uni.hideLoading()
+  }
+}
+
+const skipLogin = async () => {
   try {
     uni.showLoading({ title: '登录中...' })
     const userInfo = await authManager.login()
     if (userInfo) {
-      refreshLoginState()
+      showLoginModal.value = false
+      isLoggedIn.value = true
+      douyinUserInfo.value = userInfo
       uni.showToast({ title: '登录成功', icon: 'success' })
     } else {
       uni.showToast({ title: '登录失败', icon: 'none' })
@@ -173,7 +287,7 @@ const handleMenuClick = (item: { action: string; name: string }) => {
     case "about":
       uni.showModal({
         title: "关于我们",
-        content: "名称：3D中国地理-儿童专属版\n版本：1.0.0",
+        content: "名称：大熊猫博士-儿童专属版\n版本：1.0.0",
         showCancel: false,
       });
       break;
@@ -202,7 +316,8 @@ const handleMenuClick = (item: { action: string; name: string }) => {
         success: (res) => {
           if (res.confirm) {
             authManager.logout()
-            refreshLoginState()
+            isLoggedIn.value = false
+            douyinUserInfo.value = null
             uni.showToast({ title: '已退出登录', icon: 'success' })
           }
         },
