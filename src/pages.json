@@ -45,9 +45,7 @@
 		}
 	],
 	"globalStyle": {
-		"navigationBarTextStyle": "black",
 		"navigationBarTitleText": "大熊猫博士",
-		"navigationBarBackgroundColor": "#FFFFFF",
 		"backgroundColor": "#87CEEB"
 	},
 	"tabBar": {

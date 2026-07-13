@@ -13,6 +13,12 @@ class AuthManager {
     this._userInfo = uni.getStorageSync(USER_INFO_KEY) || null
     this._expiresAt = uni.getStorageSync(EXPIRES_AT_KEY) || 0
     this._checkTokenExpired()
+    this._userInfo = this._parseUserInfo(this._userInfo)
+    console.log('[Auth] 构造函数:', {
+      hasToken: !!this._token,
+      userInfo: this._userInfo,
+      expiresAt: this._expiresAt,
+    })
   }
 
   private _checkTokenExpired(): void {
@@ -42,9 +48,19 @@ class AuthManager {
 
   getUserInfo(fresh = false): DouyinUserInfo | null {
     if (fresh || !this._userInfo) {
-      this._userInfo = uni.getStorageSync(USER_INFO_KEY) || null
+      const stored = uni.getStorageSync(USER_INFO_KEY)
+      this._userInfo = this._parseUserInfo(stored)
     }
     return this._userInfo
+  }
+
+  private _parseUserInfo(stored: any): DouyinUserInfo | null {
+    if (!stored) return null
+    if (typeof stored === 'object') return stored as DouyinUserInfo
+    if (typeof stored === 'string') {
+      try { return JSON.parse(stored) as DouyinUserInfo } catch {}
+    }
+    return null
   }
 
   async silentLogin(): Promise<DouyinUserInfo | null> {
@@ -110,12 +126,18 @@ class AuthManager {
 
       if (result.errCode === 0 && result.data) {
         const loginData = result.data as LoginData
-        this._token = loginData.token
-        this._expiresAt = loginData.expiresAt
+        this._token = loginData.token || ('local_' + Date.now().toString(36) + '_' + Math.random().toString(36).substring(2))
+        this._expiresAt = loginData.expiresAt || (Date.now() + 7 * 24 * 3600 * 1000)
+        let nickName = userProfile ? userProfile.nickName : ''
+        let avatarUrl = userProfile ? userProfile.avatarUrl : ''
+        if (!userProfile && this._userInfo) {
+          nickName = this._userInfo.nickName
+          avatarUrl = this._userInfo.avatarUrl
+        }
         this._userInfo = {
           openid: loginData.openid,
-          nickName: '探索者',
-          avatarUrl: '',
+          nickName,
+          avatarUrl,
         }
         this._saveToStorage()
         console.log('登录成功:', this._token)
@@ -144,16 +166,23 @@ class AuthManager {
       })
 
       if (result.errCode === 0 && result.data) {
+        console.log('[Auth] result.data 原始内容:', JSON.stringify(result.data))
         const loginData = result.data as LoginData;
-        console.log('微信登录成功-------:', loginData)
-        this._token = loginData.token
-        this._expiresAt = loginData.expiresAt
+        console.log('[Auth] loginData.token:', loginData?.token, 'loginData.openid:', loginData?.openid)
 
-        let nickName = '探索者'
+        // 兼容云函数不返回 token 的情况（仅返回 {openid, appid, unionid}）
+        this._token = loginData.token || ('local_' + Date.now().toString(36) + '_' + Math.random().toString(36).substring(2))
+        this._expiresAt = loginData.expiresAt || (Date.now() + 7 * 24 * 3600 * 1000)
+
+        let nickName = ''
         let avatarUrl = ''
         if (userProfile) {
           nickName = userProfile.nickName
           avatarUrl = userProfile.avatarUrl
+        } else if (this._userInfo) {
+          // silentLogin 时保留已有用户信息
+          nickName = this._userInfo.nickName
+          avatarUrl = this._userInfo.avatarUrl
         }
 
         this._userInfo = {
@@ -232,9 +261,14 @@ class AuthManager {
   }
 
   private _saveToStorage(): void {
-    uni.setStorageSync(TOKEN_KEY, this._token)
-    uni.setStorageSync(USER_INFO_KEY, this._userInfo || '')
-    uni.setStorageSync(EXPIRES_AT_KEY, this._expiresAt)
+    try {
+      uni.setStorageSync(TOKEN_KEY, this._token)
+      uni.setStorageSync(USER_INFO_KEY, JSON.stringify(this._userInfo || ''))
+      uni.setStorageSync(EXPIRES_AT_KEY, this._expiresAt)
+      console.log('[Auth] 存储成功:', { hasToken: !!this._token, userInfo: this._userInfo })
+    } catch (e) {
+      console.error('[Auth] 存储失败:', e)
+    }
   }
 }
 

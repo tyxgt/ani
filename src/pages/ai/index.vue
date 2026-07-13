@@ -38,13 +38,13 @@
       </view>
     </view>
 
-    <CustomTabBar :current="1" />
+    <!-- <CustomTabBar :current="1" /> -->
   </view>
 </template>
 
 <script setup lang="ts">
 import { ref, nextTick } from 'vue'
-import CustomTabBar from '../../components/CustomTabBar'
+// import CustomTabBar from '../../components/CustomTabBar'
 import PinyinText from '../../components/PinyinText'
 import MessageItem from '../../components/MessageItem'
 import { AI_BACKGROUND_URL, AI_INPUT_PANDA_URL } from '../../constants'

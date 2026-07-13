@@ -799,7 +799,6 @@ function onCanvasReady() {
   );
   preprojectFeatures();
 
-  // Reset view transform
   scale = 1.3;
   panX = 0;
   panY = 0;
@@ -808,10 +807,18 @@ function onCanvasReady() {
   offscreenDirty = true;
   scheduleDraw();
 
-  // Load all region background images
   loadRegionImages();
 
-  // Auto-select 华中地区 after a brief delay
+  setTimeout(() => {
+    uni
+      .createSelectorQuery()
+      .select("#mapChart")
+      .boundingClientRect((r: any) => {
+        if (r) canvasRect = { left: r.left, top: r.top };
+      })
+      .exec();
+  }, 100);
+
   setTimeout(() => {
     const region = regions.find((r) => r.name === "华中地区");
     if (region) {
@@ -926,19 +933,18 @@ function getCanvasCoords(e: any): { x: number; y: number } | null {
 
   // #ifdef H5
   if (e.touches && e.touches.length > 0) {
-    pageX = e.touches[0].clientX;
-    pageY = e.touches[0].clientY;
+    pageX = e.touches[0].pageX;
+    pageY = e.touches[0].pageY;
   } else if (e.changedTouches && e.changedTouches.length > 0) {
-    pageX = e.changedTouches[0].clientX;
-    pageY = e.changedTouches[0].clientY;
+    pageX = e.changedTouches[0].pageX;
+    pageY = e.changedTouches[0].pageY;
   } else {
-    pageX = e.clientX;
-    pageY = e.clientY;
+    pageX = e.pageX || e.clientX;
+    pageY = e.pageY || e.clientY;
   }
   // #endif
 
   // #ifndef H5
-  // 小程序中优先使用 pageX/pageY（CSS像素），不除以 dpr
   const touch = e.touches?.[0] || e.changedTouches?.[0];
   if (touch) {
     pageX = touch.pageX ?? touch.clientX ?? touch.x;
@@ -953,6 +959,16 @@ function getCanvasCoords(e: any): { x: number; y: number } | null {
 
   if (typeof pageX !== "number" || typeof pageY !== "number") return null;
   if (!isFinite(pageX) || !isFinite(pageY)) return null;
+
+  // #ifdef H5
+  if (canvas && canvas.getBoundingClientRect) {
+    const rect = canvas.getBoundingClientRect();
+    return {
+      x: pageX - rect.left - window.scrollX,
+      y: pageY - rect.top - window.scrollY,
+    };
+  }
+  // #endif
 
   return {
     x: pageX - canvasRect.left,

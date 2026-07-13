@@ -121,7 +121,7 @@ export const GEO_NORTH = 53.6
 
 // 布局偏移
 export const HEADER_BOTTOM = 140
-export const INFO_CARD_TOP_OFFSET = 250
+export const INFO_CARD_TOP_OFFSET = 280
 
 // 缩放比例限制
 export const MIN_SCALE = 0.5
@@ -152,8 +152,6 @@ export const AI_INPUT_PANDA_URL =
 
 // ─── 用户数据 ──────────────────────────────────────────────────
 export const DEFAULT_USER_INFO: UserInfo = {
-  avatar:
-    'https://neeko-copilot.bytedance.net/api/text_to_image?prompt=cute%20yellow%20duck%20wearing%20explorer%20hat%20cartoon%20style&image_size=square',
   nickname: '小黄鸭',
   description: '热爱探索的小探险家',
 }

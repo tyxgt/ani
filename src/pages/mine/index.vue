@@ -2,50 +2,33 @@
   <view :class="styles.minePage">
     <view :class="styles.content">
       <view :class="styles.userSection">
-        <view :class="styles.avatarWrapper" @click="handleAvatarClick">
-          <image
-            :class="styles.avatar"
-            :src="displayAvatar"
-            mode="aspectFill"
-          />
-          <view v-if="isLoggedIn" :class="styles.avatarEditIcon">
-            <text :class="styles.editIcon">+</text>
-          </view>
-        </view>
         <view :class="styles.userInfo">
-          <PinyinText
-            v-if="isLoggedIn && douyinUserInfo?.nickName"
-            :text="douyinUserInfo.nickName"
+          <PinyinText v-if="isLoggedIn && douyinUserInfo?.nickName" :text="douyinUserInfo.nickName"
             :charStyle="{ fontSize: '48rpx', fontWeight: 'bold', color: '#2C3E50' }"
-            :pinyinStyle="{ fontSize: '28rpx', color: '#5D6D7E' }"
-          />
+            :pinyinStyle="{ fontSize: '28rpx', color: '#5D6D7E' }" />
           <text v-else :class="styles.loginTip" @click="handleLogin">
-            {{ isLoggedIn ? '设置昵称' : '点击登录' }}
+            {{ !ready ? '加载中...' : (isLoggedIn ? '设置昵称' : '点击登录') }}
           </text>
         </view>
       </view>
 
       <view :class="styles.menuCard">
-        <view
-          :class="styles.menuItem"
-          v-for="item in displayMenuList"
-          :key="item.id"
-          @click="handleMenuClick(item)"
-        >
+        <view :class="styles.menuItem" v-for="item in displayMenuList" :key="item.id" @click="handleMenuClick(item)">
           <view :class="[styles.menuIcon, iconStyleMap[item.icon]]">
-            <image v-if="item.icon === 'settings'" src="/static/icons/settings.svg" mode="aspectFit" :class="styles.iconImage" />
-            <image v-else-if="item.icon === 'about'" src="/static/icons/about.svg" mode="aspectFit" :class="styles.iconImage" />
-            <image v-else-if="item.icon === 'feedback'" src="/static/icons/feedback.svg" mode="aspectFit" :class="styles.iconImage" />
-            <image v-else-if="item.icon === 'share'" src="/static/icons/share.svg" mode="aspectFit" :class="styles.iconImage" />
-            <image v-else-if="item.icon === 'logout'" src="/static/icons/settings.svg" mode="aspectFit" :class="styles.iconImage" />
+            <image v-if="item.icon === 'settings'" src="/static/icons/settings.svg" mode="aspectFit"
+              :class="styles.iconImage" />
+            <image v-else-if="item.icon === 'about'" src="/static/icons/about.svg" mode="aspectFit"
+              :class="styles.iconImage" />
+            <image v-else-if="item.icon === 'feedback'" src="/static/icons/feedback.svg" mode="aspectFit"
+              :class="styles.iconImage" />
+            <image v-else-if="item.icon === 'share'" src="/static/icons/share.svg" mode="aspectFit"
+              :class="styles.iconImage" />
+            <image v-else-if="item.icon === 'logout'" src="/static/icons/settings.svg" mode="aspectFit"
+              :class="styles.iconImage" />
           </view>
           <view :class="styles.menuText">
-            <PinyinText
-              :text="item.name"
-              align="left"
-              :charStyle="{ fontSize: '40rpx', color: item.action === 'logout' ? '#E74C3C' : '#666' }"
-              :pinyinStyle="{ fontSize: '34rpx', color: item.action === 'logout' ? '#E74C3C' : '#666' }"
-            />
+            <PinyinText :text="item.name" align="left" :charStyle="{ fontSize: '40rpx', color: '#666' }"
+              :pinyinStyle="{ fontSize: '34rpx', color: '#666' }" />
           </view>
           <text :class="styles.arrow">›</text>
         </view>
@@ -59,33 +42,15 @@
       <view :class="styles.loginModalContent" @click.stop>
         <text :class="styles.loginModalTitle">完善个人信息</text>
         <!-- #ifdef MP-WEIXIN -->
-        <button :class="styles.avatarBtn" open-type="chooseAvatar" @chooseavatar="onChooseAvatar">
-          <image :class="styles.avatarPreview" :src="tempAvatarUrl || DEFAULT_USER_INFO.avatar" mode="aspectFill" />
-          <text :class="styles.avatarTip">点击选择头像</text>
-        </button>
         <view :class="styles.nicknameField">
-          <input
-            type="nickname"
-            :class="styles.nicknameInput"
-            placeholder="请输入昵称"
-            :value="tempNickName"
-            @blur="onNicknameInput"
-          />
+          <input type="nickname" :class="styles.nicknameInput" placeholder="请输入昵称" :value="tempNickName"
+            @blur="onNicknameInput" />
         </view>
         <!-- #endif -->
         <!-- #ifndef MP-WEIXIN -->
-        <view :class="styles.avatarBtn" @click="chooseAvatarFromAlbum">
-          <image :class="styles.avatarPreview" :src="tempAvatarUrl || DEFAULT_USER_INFO.avatar" mode="aspectFill" />
-          <text :class="styles.avatarTip">点击选择头像</text>
-        </view>
         <view :class="styles.nicknameField">
-          <input
-            type="text"
-            :class="styles.nicknameInput"
-            placeholder="请输入昵称"
-            :value="tempNickName"
-            @input="onNicknameInputH5"
-          />
+          <input type="text" :class="styles.nicknameInput" placeholder="请输入昵称" :value="tempNickName"
+            @input="onNicknameInputH5" />
         </view>
         <!-- #endif -->
         <view :class="styles.loginModalBtn" @click="confirmLogin">
@@ -98,32 +63,29 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, useCssModule } from "vue";
+import { ref, computed, useCssModule } from "vue";
 import { onShow } from "@dcloudio/uni-app";
+import { storeToRefs } from "pinia";
 import CustomTabBar from "../../components/CustomTabBar";
 import PinyinText from "../../components/PinyinText";
-import { DEFAULT_USER_INFO, MENU_LIST, ICON_STYLE_MAP } from "../../constants";
-import { authManager } from "../../utils/auth";
-import type { DouyinUserInfo, MenuItem } from "../../types";
+import { MENU_LIST, ICON_STYLE_MAP } from "../../constants";
+import { useUserStore } from "../../stores/user";
+import type { MenuItem } from "../../types";
 
 const styles = useCssModule('styles') as Record<string, string>
 
 const iconStyleMap = ICON_STYLE_MAP
 
-const isLoggedIn = ref(false)
-const douyinUserInfo = ref<DouyinUserInfo | null>(null)
+// ─── 全局响应式状态 ─────────────────────────────────────────────
+const store = useUserStore()
+const { isLoggedIn, userInfo: douyinUserInfo } = storeToRefs(store)
+
+// 页面是否已就绪（silentLogin 完成后再展示登录按钮）
+const ready = ref(false)
 
 // 登录弹窗状态
 const showLoginModal = ref(false)
-const tempAvatarUrl = ref('')
 const tempNickName = ref('')
-
-const displayAvatar = computed(() => {
-  if (douyinUserInfo.value?.avatarUrl) {
-    return douyinUserInfo.value.avatarUrl
-  }
-  return DEFAULT_USER_INFO.avatar
-})
 
 const displayMenuList = computed<MenuItem[]>(() => {
   const baseList = [...MENU_LIST]
@@ -138,60 +100,18 @@ const displayMenuList = computed<MenuItem[]>(() => {
   return baseList
 })
 
-const refreshLoginState = () => {
-  isLoggedIn.value = authManager.isLoggedIn(true)
-  douyinUserInfo.value = authManager.getUserInfo(true)
-}
-
-const refreshLoginStateAsync = async () => {
-  refreshLoginState()
-  try {
-    await authManager.silentLogin()
-    refreshLoginState()
-  } catch (error) {
-    console.error('静默登录失败:', error)
-  }
-}
-
-onMounted(() => {
-  refreshLoginStateAsync()
+onShow(async () => {
+  await store.silentLogin()
+  ready.value = true
 })
-
-onShow(() => {
-  refreshLoginStateAsync()
-})
-
-const handleAvatarClick = () => {
-  if (!isLoggedIn.value) {
-    handleLogin()
-    return
-  }
-  changeAvatar()
-}
 
 const handleLogin = () => {
-  tempAvatarUrl.value = ''
   tempNickName.value = ''
   showLoginModal.value = true
 }
 
 const closeLoginModal = () => {
   showLoginModal.value = false
-}
-
-const onChooseAvatar = (e: any) => {
-  tempAvatarUrl.value = e.detail.avatarUrl || ''
-}
-
-const chooseAvatarFromAlbum = () => {
-  uni.chooseImage({
-    count: 1,
-    sizeType: ['compressed'],
-    sourceType: ['album', 'camera'],
-    success: (res) => {
-      tempAvatarUrl.value = res.tempFilePaths[0]
-    },
-  })
 }
 
 const onNicknameInput = (e: any) => {
@@ -205,13 +125,10 @@ const onNicknameInputH5 = (e: any) => {
 const confirmLogin = async () => {
   try {
     uni.showLoading({ title: '登录中...' })
-    const nickName = tempNickName.value || '探索者'
-    const avatarUrl = tempAvatarUrl.value || ''
-    const userInfo = await authManager.login({ nickName, avatarUrl })
+    const nickName = tempNickName.value || ''
+    const userInfo = await store.login(nickName)
     if (userInfo) {
       showLoginModal.value = false
-      isLoggedIn.value = true
-      douyinUserInfo.value = userInfo
       uni.showToast({ title: '登录成功', icon: 'success' })
     } else {
       uni.showToast({ title: '登录失败', icon: 'none' })
@@ -227,11 +144,9 @@ const confirmLogin = async () => {
 const skipLogin = async () => {
   try {
     uni.showLoading({ title: '登录中...' })
-    const userInfo = await authManager.login()
+    const userInfo = await store.login('')
     if (userInfo) {
       showLoginModal.value = false
-      isLoggedIn.value = true
-      douyinUserInfo.value = userInfo
       uni.showToast({ title: '登录成功', icon: 'success' })
     } else {
       uni.showToast({ title: '登录失败', icon: 'none' })
@@ -244,43 +159,12 @@ const skipLogin = async () => {
   }
 }
 
-const changeAvatar = () => {
-  uni.showActionSheet({
-    itemList: ["拍照", "从相册选择"],
-    success: (res) => {
-      if (res.tapIndex === 0) {
-        uni.chooseImage({
-          count: 1,
-          sizeType: ["compressed"],
-          sourceType: ["camera"],
-          success: (res) => {
-            if (douyinUserInfo.value) {
-              douyinUserInfo.value.avatarUrl = res.tempFilePaths[0]
-            }
-          },
-        });
-      } else {
-        uni.chooseImage({
-          count: 1,
-          sizeType: ["compressed"],
-          sourceType: ["album"],
-          success: (res) => {
-            if (douyinUserInfo.value) {
-              douyinUserInfo.value.avatarUrl = res.tempFilePaths[0]
-            }
-          },
-        });
-      }
-    },
-  });
-};
-
 const handleMenuClick = (item: { action: string; name: string }) => {
   switch (item.action) {
     case "settings":
       uni.showModal({
         title: "设置",
-        content: "修改头像、修改名字等设置功能",
+        content: "修改名字等设置功能",
         showCancel: false,
       });
       break;
@@ -315,9 +199,7 @@ const handleMenuClick = (item: { action: string; name: string }) => {
         content: "确定要退出登录吗？",
         success: (res) => {
           if (res.confirm) {
-            authManager.logout()
-            isLoggedIn.value = false
-            douyinUserInfo.value = null
+            store.logout()
             uni.showToast({ title: '已退出登录', icon: 'success' })
           }
         },

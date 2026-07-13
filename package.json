@@ -53,6 +53,7 @@
     "@dcloudio/uni-mp-weixin": "3.0.0-4080420251103001",
     "@dcloudio/uni-mp-xhs": "3.0.0-4080420251103001",
     "@dcloudio/uni-quickapp-webview": "3.0.0-4080420251103001",
+    "pinia": "^3.0.4",
     "pinyin-pro": "^3.28.1",
     "polygon-clipping": "^0.15.7",
     "vue": "^3.4.21",

@@ -31,7 +31,7 @@ export interface ProjectedFeature {
 
 // ─── 用户相关类型 ───────────────────────────────────────────────
 export interface UserInfo {
-  avatar: string
+  avatar?: string
   nickname: string
   description: string
 }

@@ -1,19 +1,18 @@
 <template>
   <view :class="styles.regionDetailPage">
-    <!-- Header 固定在顶部 -->
-    <view :class="styles.header">
-      <view :class="styles.backBtn" @click="goBack" @tap="goBack">
+    <!-- 自定义导航栏头部 -->
+    <view :class="styles.regionNavHeader">
+      <view :class="styles.backBtn" @click="goBack">
         <image :class="styles.backIcon" src="/static/icons/back.svg" mode="aspectFit" />
       </view>
-      <view :class="styles.titleWrap">
+      <view :class="styles.headerTitle">
         <PinyinText
-          :text="regionDetail.name"
-          display-mode="horizontal"
-          :char-style="{ fontSize: '20px', fontWeight: 'bold' }"
-          :pinyin-style="{ fontSize: '18px' }"
-          :char-class="styles.titleChar"
+          :text="pageTitle"
+          :char-style="{ fontSize: '16px', fontWeight: 'bold', color: '#333' }"
+          :pinyin-style="{ fontSize: '12px', color: '#666' }"
         />
       </view>
+      <view :class="styles.headerPlaceholder"></view>
     </view>
 
     <!-- 可滚动内容区域 -->
@@ -39,8 +38,9 @@
         <view :class="styles.introText">
           <PinyinText
             :text="regionDetail.description"
-            :char-style="{ fontSize: '18px', color: '#5D4037' }"
-            :pinyin-style="{ fontSize: '12px', color: '#A1887F' }"
+            align="left"
+            :char-style="{ fontSize: '18px', color: '#5D4037', lineHeight: '1.2' }"
+            :pinyin-style="{ fontSize: '12px', color: '#A1887F', lineHeight: '1.2' }"
           />
         </view>
       </view>
@@ -63,11 +63,11 @@
           :key="index"
           :style="{ background: feature.bgColor }"
         >
-          <text :class="styles.geoFeatureIcon">{{ feature.icon }}</text>
+          <!-- <text :class="styles.geoFeatureIcon">{{ feature.icon }}</text> -->
           <PinyinText
             :text="feature.name"
-            :char-style="{ fontSize: '14px', fontWeight: 'bold', color: '#2E7D32' }"
-            :pinyin-style="{ fontSize: '12px', color: '#81C784' }"
+            :char-style="{ fontSize: '16px', fontWeight: 'bold', color: '#2E7D32' }"
+            :pinyin-style="{ fontSize: '8px', color: '#81C784' }"
           />
         </view>
       </view>
@@ -108,7 +108,7 @@
                 :class="styles.animalLocation"
                 :style="{ background: animal.locationColor + '20', color: animal.locationColor }"
               >
-                <text :class="styles.locationDot">📍</text>
+                <!-- <text :class="styles.locationDot">📍</text> -->
                 <PinyinText
                   :text="animal.location"
                   :char-style="{ fontSize: '13px', fontWeight: 'bold', color: animal.locationColor }"
@@ -128,7 +128,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 // import CustomTabBar from '../../components/CustomTabBar'
 import PinyinText from '../../components/PinyinText'
 import { REGION_IMAGE_URLS } from '../../constants'
@@ -137,7 +137,9 @@ import type { RegionDetail } from '../../types'
 
 const regionDetail = ref<RegionDetail>(REGION_DETAILS['西南地区'])
 
-const goBack = () => {
+const pageTitle = computed(() => regionDetail.value.name || '地区详情')
+
+function goBack() {
   const pages = getCurrentPages()
   if (pages.length > 1) {
     uni.navigateBack()

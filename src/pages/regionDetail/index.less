@@ -15,70 +15,7 @@
   flex: 1;
   height: 0;
   box-sizing: border-box;
-  padding-top: 80px;
-}
-
-.header {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding-top: calc(env(safe-area-inset-top) + 8px);
-  padding-bottom: 8px;
-  padding-left: 20px;
-  padding-right: 20px;
-  z-index: 100;
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(10px);
-
-  .backBtn {
-    width: 44px;
-    height: 44px;
-    border-radius: 50%;
-    background: #fff;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    border: 3px solid #fff;
-  }
-
-  .backIcon {
-    width: 24px;
-    height: 24px;
-    color: #2E7D32;
-  }
-
-  .titleWrap {
-    display: flex;
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-left: -70px;
-
-    :global(.pinyinRow) {
-      justify-content: center;
-    }
-
-    :global(.pinyin) {
-      color: #2E7D32;
-      font-weight: bold;
-    }
-
-    :global(.char) {
-      color: #1B5E20;
-      text-shadow: 2px 2px 4px rgba(255, 255, 255, 0.8);
-      letter-spacing: 2px;
-    }
-  }
-
-  .titleChar {
-    text-align: center;
-  }
+  padding-top: 10px;
 }
 
 .heroImageWrap {
@@ -116,8 +53,13 @@
   }
 
   .introText {
-    text-align: center;
+    text-align: left;
     line-height: 2.0;
+
+    :global(.charGroup) {
+      margin: 0;
+      min-width: 1.2em;
+    }
   }
 }
 
@@ -142,14 +84,24 @@
   .dividerIcon {
     font-size: 28px;
   }
+
+  :global(.charGroup) {
+    margin: 0 -2px;
+    min-width: 1.0em;
+  }
+
+  :global(.charRow) {
+    justify-content: center;
+  }
 }
 
 .geoFeatures {
   display: flex;
-  gap: 12px;
-  padding: 16px 20px;
+  gap: 4px;
+  padding: 16px 10px;
 
   .geoFeatureCard {
+    width: auto;
     flex: 1;
     border-radius: 20px;
     padding: 10px 4px;
@@ -161,9 +113,9 @@
     border: 3px solid #fff;
   }
 
-  .geoFeatureIcon {
-    font-size: 40px;
-  }
+  // .geoFeatureIcon {
+  //   font-size: 40px;
+  // }
 }
 
 .animalsScroll {
@@ -178,7 +130,7 @@
 }
 
 .animalCard {
-  width: 160px;
+  width: 170px;
   flex-shrink: 0;
   background: #fff;
   border-radius: 20px;
@@ -220,7 +172,7 @@
 
   .animalLocation {
     margin-top: 8px;
-    padding: 4px 8px;
+    padding: 4px 6px;
     border-radius: 12px;
     display: flex;
     align-items: center;
@@ -236,4 +188,58 @@
 
 .bottomSpacer {
   height: 120px;
+}
+
+// ─── 自定义导航栏 ────────────────────────────────────────────────
+.regionNavHeader {
+  box-sizing: border-box;
+  width: 80%;
+  position: relative;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-evenly;
+  border-radius: 30px;
+  padding: 4px 10px;
+  margin-top: env(safe-area-inset-top);
+  margin-left: auto;
+  margin-right: auto;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(10px);
+}
+
+.backBtn {
+  width: 30px;
+  height: 30px;
+  margin-right: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 50%;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.backIcon {
+  width: 18px;
+  height: 18px;
+  color: #333;
+}
+
+.headerTitle {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  :deep(.charGroup) {
+    width: 10px;
+    flex-shrink: 0;
+  }
+}
+
+.headerPlaceholder {
+  width: 30px;
+  margin-left: 6px;
+  flex-shrink: 0;
 }
