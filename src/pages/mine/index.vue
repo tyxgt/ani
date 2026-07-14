@@ -7,7 +7,7 @@
             :charStyle="{ fontSize: '48rpx', fontWeight: 'bold', color: '#2C3E50' }"
             :pinyinStyle="{ fontSize: '28rpx', color: '#5D6D7E' }" />
           <text v-else :class="styles.loginTip" @click="handleLogin">
-            {{ !ready ? '加载中...' : (isLoggedIn ? '设置昵称' : '点击登录') }}
+            {{ !ready ? '加载中...' : '点击登录' }}
           </text>
         </view>
       </view>
