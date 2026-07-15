@@ -25,11 +25,12 @@
   align-items: center;
   justify-content: center;
   position: relative;
-  
+  transition: transform 0.25s ease;
+
   &.active {
-    .pinyinText .pinyin,
-    .pinyinText .char {
-      color: #fff;
+    .tabIcon {
+      // transform: scale(1.15) translateY(-4px);
+      filter: drop-shadow(0 4px 6px rgba(92, 107, 192, 0.4));
     }
   }
 }
@@ -38,6 +39,7 @@
   width: 60px;
   height: 60px;
   margin-bottom: 8px;
+  transition: transform 0.25s ease;
 }
 
 .iconHome {
@@ -73,19 +75,4 @@
   background-image: url("https://tt3ccf4a72a2ab53a201-env-a22yxzsttq.tos-cn-beijing.volces.com/panda.png");
   background-size: 100%;
   background-repeat: no-repeat;
-}
-
-.pinyinText {
-  .char {
-    font-size: 18px;
-    color: #fff;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
-  }
-  
-  .pinyin {
-    font-size: 12px;
-    color: #fff;
-    margin-top: 2px;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
-  }
 }

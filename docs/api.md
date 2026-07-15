@@ -262,13 +262,13 @@
 
 ---
 
-## 接口 8：AI 对话 ⬜ 待实现
+## 接口 8：AI 对话 ✅ 已实现
 
 | 项目 | 内容 |
 |------|------|
-| **云函数名称** | `aiChat` |
-| **当前状态** | ⬜ 待实现 |
-| **当前 Mock** | `src/pages/ai/index.vue` 中 5 条硬编码消息 |
+| **云函数名称** | `chat` |
+| **当前状态** | ✅ 已实现（对接 DeepSeek API） |
+| **实现文件** | `cloudfunctions/chat/index.js` + `src/pages/ai/index.vue` |
 
 ### 请求参数
 
@@ -288,7 +288,7 @@
 | `data.reply` | `string` | AI 回复内容 |
 | `data.sessionId` | `string` | 会话标识（用于续传） |
 
-> **建议**：对接大语言模型（豆包/通义千问/DeepSeek），配合儿童友好的 System Prompt 和安全过滤。
+> **部署依赖**：需在微信云开发控制台为 chat 云函数配置环境变量 `DEEPSEEK_API_KEY`（DeepSeek API 密钥），并在 `cloudfunctions/chat/` 目录下执行 `npm install` 安装依赖。
 
 ---
 
@@ -407,7 +407,7 @@ if (res.errCode === 0) {
 |------|------|------|
 | **Phase 0** | `login` | 已实现，可直接使用 |
 | **Phase 1** | `getRegions`, `getRegionDetail`, `getAnimalsByCategory` | 替代核心静态数据 |
-| **Phase 2** | `aiChat` | 对接 AI 模型，实现真实问答 |
+| **Phase 2** | `chat` | 对接 AI 模型，实现真实问答 |
 | **Phase 3** | `updateUserInfo`, `submitFeedback`, `userProgress` | 用户相关功能 |
 | **Phase 4** | `getConfig`, `getAnimalDetail` | 后台可配置能力 |
 

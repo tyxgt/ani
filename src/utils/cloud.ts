@@ -4,7 +4,7 @@ import { ERROR_CODE, CLOUD_ENV, CLOUD_SERVICE_ID, CLOUD_FUNCTION_PATH, WX_CLOUD_
 let cloudInstance: any = null
 let wxCloudInitialized = false
 
-function normalizeCloudResponse(rawData: any, res: any): CloudFunctionResult {
+function normalizeCloudResponse(rawData: any, res: any, functionName?: string): CloudFunctionResult {
   if (!rawData) {
     return {
       errCode: ERROR_CODE.GENERAL_ERROR,
@@ -13,6 +13,7 @@ function normalizeCloudResponse(rawData: any, res: any): CloudFunctionResult {
     }
   }
 
+  // ─── 标准 errCode/errMsg 格式 ──────────────────────────────────
   if (typeof rawData === 'object' && 'errCode' in rawData && 'errMsg' in rawData) {
     if (rawData.data !== undefined) {
       return rawData as CloudFunctionResult
@@ -24,6 +25,7 @@ function normalizeCloudResponse(rawData: any, res: any): CloudFunctionResult {
     }
   }
 
+  // ─── 标准 { code, msg } 格式 ────────────────────────────────────
   if (typeof rawData === 'object' && typeof rawData.code === 'number' && !('errCode' in rawData)) {
     return {
       errCode: rawData.code,
@@ -32,6 +34,7 @@ function normalizeCloudResponse(rawData: any, res: any): CloudFunctionResult {
     }
   }
 
+  // ─── 内层 result 携带标准格式 ──────────────────────────────────
   if (typeof rawData === 'object' && rawData.result && typeof rawData.result === 'object') {
     const inner = rawData.result
     if ('errCode' in inner) {
@@ -48,30 +51,34 @@ function normalizeCloudResponse(rawData: any, res: any): CloudFunctionResult {
     }
   }
 
-  if (typeof rawData === 'object' && rawData.userInfo && rawData.userInfo.openId) {
-    return {
-      errCode: ERROR_CODE.SUCCESS,
-      errMsg: '登录成功',
-      data: {
-        openid: rawData.userInfo.openId,
-        appid: rawData.userInfo.appId,
-        unionid: rawData.userInfo.unionId || null,
-      },
+  // ─── 登录函数专用检测（仅对 login 函数启用） ──────────────────
+  if (functionName === 'login') {
+    if (typeof rawData === 'object' && rawData.userInfo && rawData.userInfo.openId) {
+      return {
+        errCode: ERROR_CODE.SUCCESS,
+        errMsg: '登录成功',
+        data: {
+          openid: rawData.userInfo.openId,
+          appid: rawData.userInfo.appId,
+          unionid: rawData.userInfo.unionId || null,
+        },
+      }
+    }
+
+    if (typeof rawData === 'object' && (rawData.openId || rawData.openid)) {
+      return {
+        errCode: ERROR_CODE.SUCCESS,
+        errMsg: '登录成功',
+        data: {
+          openid: rawData.openId || rawData.openid,
+          appid: rawData.appId || rawData.appid || null,
+          unionid: rawData.unionId || rawData.unionid || null,
+        },
+      }
     }
   }
 
-  if (typeof rawData === 'object' && (rawData.openId || rawData.openid)) {
-    return {
-      errCode: ERROR_CODE.SUCCESS,
-      errMsg: '登录成功',
-      data: {
-        openid: rawData.openId || rawData.openid,
-        appid: rawData.appId || rawData.appid || null,
-        unionid: rawData.unionId || rawData.unionid || null,
-      },
-    }
-  }
-
+  // ─── 根据 HTTP 状态码兜底 ─────────────────────────────────────
   if (res && res.statusCode === 200) {
     return {
       errCode: ERROR_CODE.SUCCESS,
@@ -161,8 +168,9 @@ export async function callFunction(
             }
 
             console.log(`[Cloud] 云函数 [${name}] 解析后原始数据:`, rawData)
+            console.log(`[Cloud] 云函数 [${name}] 原始数据字段:`, typeof rawData === 'object' ? Object.keys(rawData) : typeof rawData)
 
-            let result = normalizeCloudResponse(rawData, res)
+            let result = normalizeCloudResponse(rawData, res, name)
 
             console.log(`[Cloud] 云函数 [${name}] 标准化后响应:`, result)
 
@@ -227,7 +235,13 @@ export async function callFunction(
       }
     }
 
-    let result = normalizeCloudResponse(rawData, res)
+    // 调试：打印原始数据字段名，便于定位响应格式问题
+    console.log(`[Cloud] 微信云函数 [${name}] 原始数据类型:`, typeof rawData)
+    if (typeof rawData === 'object') {
+      console.log(`[Cloud] 微信云函数 [${name}] 原始数据字段:`, Object.keys(rawData))
+    }
+
+    let result = normalizeCloudResponse(rawData, res, name)
 
     console.log(`[Cloud] 微信云函数 [${name}] 标准化后响应:`, result)
 

@@ -64,7 +64,6 @@
 
 <script setup lang="ts">
 import { ref, computed, useCssModule } from "vue";
-import { onShow } from "@dcloudio/uni-app";
 import { storeToRefs } from "pinia";
 import CustomTabBar from "../../components/CustomTabBar";
 import PinyinText from "../../components/PinyinText";
@@ -80,8 +79,8 @@ const iconStyleMap = ICON_STYLE_MAP
 const store = useUserStore()
 const { isLoggedIn, userInfo: douyinUserInfo } = storeToRefs(store)
 
-// 页面是否已就绪（silentLogin 完成后再展示登录按钮）
-const ready = ref(false)
+// 页面是否已就绪
+const ready = ref(true)
 
 // 登录弹窗状态
 const showLoginModal = ref(false)
@@ -98,11 +97,6 @@ const displayMenuList = computed<MenuItem[]>(() => {
     })
   }
   return baseList
-})
-
-onShow(async () => {
-  await store.silentLogin()
-  ready.value = true
 })
 
 const handleLogin = () => {

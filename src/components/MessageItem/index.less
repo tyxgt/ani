@@ -5,18 +5,18 @@
   align-items: flex-start;
 
   &.userMsg {
-    flex-direction: row;
-
-    .messageContent {
-      align-items: flex-start;
-    }
-  }
-
-  &.assistantMsg {
     flex-direction: row-reverse;
 
     .messageContent {
       align-items: flex-end;
+    }
+  }
+
+  &.assistantMsg {
+    flex-direction: row;
+
+    .messageContent {
+      align-items: flex-start;
     }
   }
 }
@@ -44,14 +44,35 @@
   word-break: break-all;
 }
 
+.bubbleContent {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.typingCursor {
+  display: inline-block;
+  width: 2px;
+  height: 18px;
+  background-color: #333;
+  margin-left: 2px;
+  flex-shrink: 0;
+  animation: blink 0.53s infinite;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
 .assistantBubble {
   background: #E8D5F7;
-  margin-right: 4px;
+  margin-left: 4px;
 }
 
 .userBubble {
   background: #FFF9C4;
-  margin-left: 4px;
+  margin-right: 4px;
 }
 
 .msgTime {

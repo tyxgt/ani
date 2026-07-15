@@ -12,20 +12,7 @@ function copyCloudfunctionsPlugin() {
 
     const destDir = path.join(outDir, "cloudfunctions");
 
-    if (process.env.UNI_PLATFORM === "mp-weixin") {
-      // 微信平台：只复制微信云函数目录
-      if (!fs.existsSync(destDir)) {
-        fs.mkdirSync(destDir, { recursive: true });
-      }
-      const wechatCloudfunction = path.join(cloudfunctionsSrc, "login");
-      const destWechatDir = path.join(destDir, "login");
-      if (fs.existsSync(wechatCloudfunction)) {
-        copyDir(wechatCloudfunction, destWechatDir);
-      }
-    } else {
-      // 其他平台：复制所有云函数
-      copyDir(cloudfunctionsSrc, destDir);
-    }
+    copyDir(cloudfunctionsSrc, destDir);
     updateProjectConfig();
   }
 

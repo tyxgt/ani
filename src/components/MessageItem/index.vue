@@ -1,5 +1,5 @@
 <template>
-  <view :class="[styles.messageItem, message.role === 'user' ? styles.userMsg : styles.assistantMsg]">
+  <view :id="`msg-${message.id}`" :class="[styles.messageItem, message.role === 'user' ? styles.userMsg : styles.assistantMsg]">
     <image
       v-if="message.role === 'user'"
       :class="styles.avatar"
@@ -15,12 +15,15 @@
 
     <view :class="styles.messageContent">
       <view :class="[styles.bubble, message.role === 'user' ? styles.userBubble : styles.assistantBubble]">
-        <PinyinText
-          :text="message.content"
-          align="left"
-          :charStyle="msgCharStyle"
-          :pinyinStyle="msgPinyinStyle"
-        />
+        <view :class="styles.bubbleContent">
+          <PinyinText
+            :text="message.content"
+            align="left"
+            :charStyle="msgCharStyle"
+            :pinyinStyle="msgPinyinStyle"
+          />
+          <view v-if="message.typing" :class="styles.typingCursor"></view>
+        </view>
       </view>
       <view :class="styles.msgTime">
         {{ message.time }}

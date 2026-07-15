@@ -106,6 +106,7 @@ export interface ChatMessage {
   role: 'user' | 'assistant'
   content: string
   time: string
+  typing?: boolean
 }
 
 // ─── 知识库相关类型 ───────────────────────────────────────────
