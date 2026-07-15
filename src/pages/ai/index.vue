@@ -51,7 +51,7 @@ function getWelcomeMessage(): ChatMessage {
   return {
     id: Date.now(),
     role: 'assistant',
-    content: '你好呀，小朋友！\u{1F436} 我是大熊猫博士，专门为你讲解中国地理和动物知识！你有什么想知道的，尽管问我吧！\u{1F33F}',
+    content: '你好呀，小朋友！我是大熊猫博士，专门为你讲解中国地理和动物知识！你有什么想知道的，尽管问我吧！',
     time: getTimeString(),
   }
 }
