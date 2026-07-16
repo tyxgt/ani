@@ -42,6 +42,41 @@
 				"navigationStyle": "custom",
 				"navigationBarTitleText": "地区详情"
 			}
+		},
+		{
+			"path": "pages/terrainList/index",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "地形百科"
+			}
+		},
+		{
+			"path": "pages/climateList/index",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "气候百科"
+			}
+		},
+		{
+			"path": "pages/terrainDetail/index",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "地形详情"
+			}
+		},
+		{
+			"path": "pages/climateDetail/index",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "气候详情"
+			}
+		},
+		{
+			"path": "pages/animalDetail/index",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "动物详情"
+			}
 		}
 	],
 	"globalStyle": {

@@ -127,3 +127,60 @@ export interface KnowledgeAnimal {
   protectionTextColor: string
   borderColor: string
 }
+
+// ─── 学习详情页类型（地形 / 气候 / 动物） ──────────────────────────
+export interface TerrainItem {
+  id: number
+  name: string
+  pinyin: string
+  image: string
+  features: string
+  climate: string
+  vegetation: string
+  region: string
+  summary: string
+  bannerIcon: string
+  pageBg: string
+}
+
+export interface ClimateItem {
+  id: number
+  name: string
+  pinyin: string
+  image: string
+  temperature: string
+  precipitation: string
+  characteristics: string
+  region: string
+  summary: string
+  bannerIcon: string
+  pageBg: string
+}
+
+export interface AnimalDetailItem {
+  id: number
+  name: string
+  pinyin: string
+  image: string
+  habitat: string
+  food: string
+  habits: string
+  secret: string
+  protectionLevel: string
+  protectionBgColor: string
+  protectionTextColor: string
+  borderColor: string
+  pageBg: string
+}
+
+// ─── 学习页卡片统一类型 ─────────────────────────────────────────
+export interface LearnCardItem {
+  id: number
+  name: string
+  image: string
+  tagText: string
+  tagBgColor: string
+  tagBorderColor: string
+  tagTextColor: string
+  borderColor: string
+}

@@ -39,10 +39,12 @@
 
 <script setup lang="ts">
 import { ref, nextTick, onUnmounted } from 'vue'
+import { storeToRefs } from 'pinia'
 import PinyinText from '../../components/PinyinText'
 import MessageItem from '../../components/MessageItem'
 import { AI_BACKGROUND_URL, AI_INPUT_PANDA_URL, AI_CHAT_CLOUD_FUNCTION, AI_CHAT_MAX_HISTORY_ROUNDS, AI_TYPEWRITER_SPEED } from '../../constants'
 import { callFunction } from '../../utils/cloud'
+import { useUserStore } from '../../stores/user'
 import type { ChatMessage } from '../../types'
 
 const STORAGE_KEY = 'chat_messages'
@@ -80,6 +82,10 @@ const scrollTop = ref(99999)
 const scrollToId = ref('')
 const loading = ref(false)
 const sessionId = ref<string>('')
+
+const userStore = useUserStore()
+const { isLoggedIn } = storeToRefs(userStore)
+
 let typingTimer: ReturnType<typeof setInterval> | null = null
 let currentTypingMsgIndex: number | null = null
 let fullReplyContent: string = ''
@@ -165,6 +171,20 @@ function saveMessages() {
 async function sendMessage() {
   const content = inputValue.value.trim()
   if (!content || loading.value) return
+
+  if (!isLoggedIn.value) {
+    uni.showModal({
+      title: '提示',
+      content: '登录后才能和大熊猫博士聊天哦~',
+      confirmText: '去登录',
+      success: (res) => {
+        if (res.confirm) {
+          uni.switchTab({ url: '/pages/mine/index' })
+        }
+      },
+    })
+    return
+  }
 
   stopTyping()
 
