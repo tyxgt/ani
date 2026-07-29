@@ -47,6 +47,7 @@
 import { ref, onMounted } from 'vue'
 import PinyinText from '../../components/PinyinText'
 import { CLIMATE_DETAILS } from '../../data/learnDetails'
+import { callFunction } from '../../utils/cloud'
 import type { ClimateItem } from '../../types'
 
 const climateList = ref<ClimateItem[]>([])
@@ -66,8 +67,20 @@ function onClimateClick(item: ClimateItem) {
   })
 }
 
+async function loadData() {
+  try {
+    const res = await callFunction('getClimateList')
+    if (res.errCode === 0 && res.data) {
+      climateList.value = res.data
+    }
+  } catch (error) {
+    console.error('加载气候数据失败:', error)
+    climateList.value = Object.values(CLIMATE_DETAILS)
+  }
+}
+
 onMounted(() => {
-  climateList.value = Object.values(CLIMATE_DETAILS)
+  loadData()
 })
 </script>
 

@@ -26,7 +26,7 @@
 ### 返回数据
 
 | 字段 | 类型 | 说明 |
-|------|------|------|
+|------|------|------|------|
 | `errCode` | `number` | 0=成功 -1=失败 401=未授权 |
 | `errMsg` | `string` | 提示信息 |
 | `data.token` | `string` | 登录令牌（32 字节 hex） |
@@ -61,7 +61,7 @@
 ### 返回数据
 
 | 字段 | 类型 | 说明 |
-|------|------|------|
+|------|------|------|------|
 | `errCode` | `number` | 0=成功 |
 | `errMsg` | `string` | 提示信息 |
 | `data` | `UserInfo` | 更新后的用户信息 |
@@ -85,7 +85,7 @@
 ### 返回数据
 
 | 字段 | 类型 | 说明 |
-|------|------|------|
+|------|------|------|------|
 | `errCode` | `number` | 0=成功 |
 | `errMsg` | `string` | 提示信息 |
 | `data` | `Region[]` | 区域列表 |
@@ -93,7 +93,7 @@
 **`Region` 结构**：
 
 | 字段 | 类型 | 说明 |
-|------|------|------|
+|------|------|------|------|
 | `id` | `string` | 区域标识（如 `dongbei`） |
 | `name` | `string` | 中文名称 |
 | `pinyin` | `string` | 拼音 |
@@ -121,7 +121,7 @@
 ### 返回数据
 
 | 字段 | 类型 | 说明 |
-|------|------|------|
+|------|------|------|------|
 | `errCode` | `number` | 0=成功 |
 | `errMsg` | `string` | 提示信息 |
 | `data.name` | `string` | 区域名称 |
@@ -133,7 +133,7 @@
 **`GeoFeature` 结构**：
 
 | 字段 | 类型 | 说明 |
-|------|------|------|
+|------|------|------|------|
 | `name` | `string` | 特征名称（如"林海雪原"） |
 | `pinyin` | `string` | 拼音 |
 | `icon` | `string` | 图标 URL |
@@ -142,7 +142,7 @@
 **`RegionAnimal` 结构**：
 
 | 字段 | 类型 | 说明 |
-|------|------|------|
+|------|------|------|------|
 | `name` | `string` | 动物名称 |
 | `pinyin` | `string` | 拼音 |
 | `image` | `string` | 图片 URL |
@@ -152,13 +152,13 @@
 
 ---
 
-## 接口 5：获取知识百科分类 ⬜ 待实现
+## 接口 5：获取知识百科分类 ✅ 已实现
 
 | 项目 | 内容 |
 |------|------|
 | **云函数名称** | `getKnowledgeCategories` |
-| **当前状态** | ⬜ 待实现 |
-| **当前 Mock** | `src/constants/index.ts` - `KNOWLEDGE_CATEGORIES` |
+| **当前状态** | ✅ 已实现 |
+| **实现文件** | `cloudfunctions/getKnowledgeCategories/index.js` |
 
 ### 请求参数
 
@@ -169,7 +169,7 @@
 ### 返回数据
 
 | 字段 | 类型 | 说明 |
-|------|------|------|
+|------|------|------|------|
 | `errCode` | `number` | 0=成功 |
 | `errMsg` | `string` | 提示信息 |
 | `data` | `Category[]` | 分类列表 |
@@ -177,92 +177,208 @@
 **`Category` 结构**：
 
 | 字段 | 类型 | 说明 |
-|------|------|------|
-| `id` | `string` | 分类 ID |
+|------|------|------|------|
+| `id` | `number` | 分类 ID（1=地形，2=气候，3=动物） |
 | `name` | `string` | 分类名称 |
-| `pinyin` | `string` | 拼音 |
-| `icon` | `string` | 图标 URL |
-| `color` | `string` | 文字颜色 |
-| `bgColor` | `string` | 背景颜色 |
+| `icon` | `string` | 图标（emoji） |
+| `color` | `string` | 文字颜色（hex） |
+| `bgColor` | `string` | 背景颜色（hex） |
 
 ---
 
-## 接口 6：获取动物百科列表 ⬜ 待实现
+## 接口 6：获取地形列表 ✅ 已实现
 
 | 项目 | 内容 |
 |------|------|
-| **云函数名称** | `getAnimalsByCategory` |
-| **当前状态** | ⬜ 待实现 |
-| **当前 Mock** | `src/constants/index.ts` - `KNOWLEDGE_ANIMALS`（5 条，无分类关联） |
+| **云函数名称** | `getTerrainList` |
+| **当前状态** | ✅ 已实现 |
+| **实现文件** | `cloudfunctions/getTerrainList/index.js` |
+| **数据库集合** | `terrain` |
 
 ### 请求参数
 
 | 字段 | 类型 | 必填 | 说明 |
 |------|------|------|------|
-| `categoryId` | `string` | 否 | 分类 ID（不传返回全部） |
-| `page` | `number` | 否 | 页码，默认 1 |
-| `pageSize` | `number` | 否 | 每页数量，默认 20 |
+| 无 | - | - | 公开数据 |
 
 ### 返回数据
 
 | 字段 | 类型 | 说明 |
-|------|------|------|
+|------|------|------|------|
 | `errCode` | `number` | 0=成功 |
 | `errMsg` | `string` | 提示信息 |
-| `data.list` | `KnowledgeAnimal[]` | 动物列表 |
-| `data.total` | `number` | 总数 |
+| `data` | `Terrain[]` | 地形列表（按 id 升序） |
 
-**`KnowledgeAnimal` 结构**：
+**`Terrain` 结构**：
 
-| 字段 | 类型 | 说明 |
-|------|------|------|
-| `id` | `string` | 动物 ID |
-| `name` | `string` | 动物名称 |
-| `pinyin` | `string` | 拼音 |
-| `image` | `string` | 图片 URL |
-| `categoryId` | `string` | 所属分类 ID |
-| `protectionLevel` | `string` | 保护级别 |
-| `protectionBgColor` | `string` | 标签背景色 |
-| `protectionTextColor` | `string` | 标签文字色 |
-| `borderColor` | `string` | 卡片边框色 |
+| 字段 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| `id` | `number` | 是 | 业务 ID |
+| `name` | `string` | 是 | 地形名称 |
+| `image` | `string` | 是 | 图片 URL |
+| `features` | `string` | 是 | 地形特征 |
+| `climate` | `string` | 是 | 气候特点 |
+| `vegetation` | `string` | 是 | 植被类型 |
+| `region` | `string` | 是 | 代表地区 |
+| `summary` | `string` | 是 | 总结描述 |
+
+> **说明**：数据库不存储前端展示字段（pinyin、bannerIcon、pageBg），由前端根据名称在 `constants/index.ts` 的 `TERRAIN_DISPLAY_CONFIG` 中匹配。
 
 ---
 
-## 接口 7：获取动物详情 ⬜ 待实现
+## 接口 7：获取地形详情 ✅ 已实现
+
+| 项目 | 内容 |
+|------|------|
+| **云函数名称** | `getTerrainDetail` |
+| **当前状态** | ✅ 已实现 |
+| **实现文件** | `cloudfunctions/getTerrainDetail/index.js` |
+
+### 请求参数
+
+| 字段 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| `name` | `string` | 是 | 地形名称 |
+
+### 返回数据
+
+| 字段 | 类型 | 说明 |
+|------|------|------|------|
+| `errCode` | `number` | 0=成功 |
+| `errMsg` | `string` | 提示信息 |
+| `data` | `Terrain` | 地形详情（结构同接口 6） |
+
+---
+
+## 接口 8：获取气候列表 ✅ 已实现
+
+| 项目 | 内容 |
+|------|------|
+| **云函数名称** | `getClimateList` |
+| **当前状态** | ✅ 已实现 |
+| **实现文件** | `cloudfunctions/getClimateList/index.js` |
+| **数据库集合** | `climate` |
+
+### 请求参数
+
+| 字段 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| 无 | - | - | 公开数据 |
+
+### 返回数据
+
+| 字段 | 类型 | 说明 |
+|------|------|------|------|
+| `errCode` | `number` | 0=成功 |
+| `errMsg` | `string` | 提示信息 |
+| `data` | `Climate[]` | 气候列表（按 id 升序） |
+
+**`Climate` 结构**：
+
+| 字段 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| `id` | `number` | 是 | 业务 ID |
+| `name` | `string` | 是 | 气候名称 |
+| `image` | `string` | 是 | 图片 URL |
+| `temperature` | `string` | 是 | 气温特点 |
+| `precipitation` | `string` | 是 | 降水特点 |
+| `characteristics` | `string` | 是 | 气候特点 |
+| `region` | `string` | 是 | 代表地区 |
+| `summary` | `string` | 是 | 总结描述 |
+
+> **说明**：数据库不存储前端展示字段（pinyin、bannerIcon、pageBg），由前端根据名称在 `constants/index.ts` 的 `CLIMATE_DISPLAY_CONFIG` 中匹配。
+
+---
+
+## 接口 9：获取气候详情 ✅ 已实现
+
+| 项目 | 内容 |
+|------|------|
+| **云函数名称** | `getClimateDetail` |
+| **当前状态** | ✅ 已实现 |
+| **实现文件** | `cloudfunctions/getClimateDetail/index.js` |
+
+### 请求参数
+
+| 字段 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| `name` | `string` | 是 | 气候名称 |
+
+### 返回数据
+
+| 字段 | 类型 | 说明 |
+|------|------|------|------|
+| `errCode` | `number` | 0=成功 |
+| `errMsg` | `string` | 提示信息 |
+| `data` | `Climate` | 气候详情（结构同接口 8） |
+
+---
+
+## 接口 10：获取动物列表 ✅ 已实现
+
+| 项目 | 内容 |
+|------|------|
+| **云函数名称** | `getAnimalList` |
+| **当前状态** | ✅ 已实现 |
+| **实现文件** | `cloudfunctions/getAnimalList/index.js` |
+| **数据库集合** | `animal` |
+
+### 请求参数
+
+| 字段 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| 无 | - | - | 公开数据 |
+
+### 返回数据
+
+| 字段 | 类型 | 说明 |
+|------|------|------|------|
+| `errCode` | `number` | 0=成功 |
+| `errMsg` | `string` | 提示信息 |
+| `data` | `Animal[]` | 动物列表（按 id 升序） |
+
+**`Animal` 结构**：
+
+| 字段 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| `id` | `number` | 是 | 业务 ID |
+| `name` | `string` | 是 | 动物名称 |
+| `image` | `string` | 是 | 图片 URL |
+| `habitat` | `string` | 是 | 栖息地 |
+| `food` | `string` | 是 | 食物喜好 |
+| `habits` | `string` | 是 | 生活习性 |
+| `secret` | `string` | 是 | 趣味小秘密 |
+| `protectionLevel` | `string` | 是 | 保护级别 |
+
+> **说明**：数据库不存储前端展示字段（pinyin、protectionBgColor、protectionTextColor、borderColor、pageBg），由前端根据名称在 `constants/index.ts` 的 `PROTECTION_COLOR_MAP` 和 `ANIMAL_DISPLAY_CONFIG` 中匹配。
+
+---
+
+## 接口 11：获取动物详情 ✅ 已实现
 
 | 项目 | 内容 |
 |------|------|
 | **云函数名称** | `getAnimalDetail` |
-| **当前状态** | ⬜ 待实现 |
-| **当前 Mock** | 无 |
+| **当前状态** | ✅ 已实现 |
+| **实现文件** | `cloudfunctions/getAnimalDetail/index.js` |
 
 ### 请求参数
 
 | 字段 | 类型 | 必填 | 说明 |
 |------|------|------|------|
-| `animalId` | `string` | 是 | 动物 ID |
+| `name` | `string` | 是 | 动物名称 |
 
 ### 返回数据
 
 | 字段 | 类型 | 说明 |
-|------|------|------|
+|------|------|------|------|
 | `errCode` | `number` | 0=成功 |
 | `errMsg` | `string` | 提示信息 |
-| `data.id` | `string` | 动物 ID |
-| `data.name` | `string` | 动物名称 |
-| `data.pinyin` | `string` | 拼音 |
-| `data.scientificName` | `string` | 学名 |
-| `data.description` | `string` | 详细介绍 |
-| `data.images` | `string[]` | 图片列表 |
-| `data.habitat` | `string` | 栖息地描述 |
-| `data.diet` | `string` | 食性 |
-| `data.protectionLevel` | `string` | 保护级别 |
-| `data.distribution` | `string[]` | 分布区域列表 |
-| `data.funFact` | `string` | 趣味小知识 |
+| `data` | `Animal` | 动物详情（结构同接口 10） |
 
 ---
 
-## 接口 8：AI 对话 ✅ 已实现
+## 接口 12：AI 对话 ✅ 已实现
 
 | 项目 | 内容 |
 |------|------|
@@ -282,7 +398,7 @@
 ### 返回数据
 
 | 字段 | 类型 | 说明 |
-|------|------|------|
+|------|------|------|------|
 | `errCode` | `number` | 0=成功 |
 | `errMsg` | `string` | 提示信息 |
 | `data.reply` | `string` | AI 回复内容 |
@@ -292,7 +408,7 @@
 
 ---
 
-## 接口 9：提交意见反馈 ⬜ 待实现
+## 接口 13：提交意见反馈 ⬜ 待实现
 
 | 项目 | 内容 |
 |------|------|
@@ -312,14 +428,14 @@
 ### 返回数据
 
 | 字段 | 类型 | 说明 |
-|------|------|------|
+|------|------|------|------|
 | `errCode` | `number` | 0=成功 |
 | `errMsg` | `string` | 提示信息 |
 | `data.id` | `string` | 反馈记录 ID |
 
 ---
 
-## 接口 10：用户学习进度 ⬜ 待实现
+## 接口 14：用户学习进度 ⬜ 待实现
 
 | 项目 | 内容 |
 |------|------|
@@ -347,14 +463,14 @@
 ### 返回数据
 
 | 字段 | 类型 | 说明 |
-|------|------|------|
+|------|------|------|------|
 | `errCode` | `number` | 0=成功 |
 | `errMsg` | `string` | 提示信息 |
 | `data.progress` | `object` | 学习进度对象 |
 
 ---
 
-## 接口 11：获取系统配置 ⬜ 待实现
+## 接口 15：获取系统配置 ⬜ 待实现
 
 | 项目 | 内容 |
 |------|------|
@@ -371,7 +487,7 @@
 ### 返回数据
 
 | 字段 | 类型 | 说明 |
-|------|------|------|
+|------|------|------|------|
 | `errCode` | `number` | 0=成功 |
 | `errMsg` | `string` | 提示信息 |
 | `data` | `object` | 配置键值对 |
@@ -392,10 +508,16 @@
 ```typescript
 import { callFunction } from '@/utils/cloud'
 
-// 调用区域列表接口
-const res = await callFunction('getRegions', {})
+// 调用地形列表接口
+const res = await callFunction('getTerrainList', {})
 if (res.errCode === 0) {
-  const regions = res.data
+  const terrains = res.data
+}
+
+// 调用地形详情接口
+const detailRes = await callFunction('getTerrainDetail', { name: '高山地形' })
+if (detailRes.errCode === 0) {
+  const terrain = detailRes.data
 }
 ```
 
@@ -406,10 +528,62 @@ if (res.errCode === 0) {
 | 阶段 | 接口 | 说明 |
 |------|------|------|
 | **Phase 0** | `login` | 已实现，可直接使用 |
-| **Phase 1** | `getRegions`, `getRegionDetail`, `getAnimalsByCategory` | 替代核心静态数据 |
-| **Phase 2** | `chat` | 对接 AI 模型，实现真实问答 |
-| **Phase 3** | `updateUserInfo`, `submitFeedback`, `userProgress` | 用户相关功能 |
-| **Phase 4** | `getConfig`, `getAnimalDetail` | 后台可配置能力 |
+| **Phase 1** | `getKnowledgeCategories`, `getTerrainList`, `getTerrainDetail`, `getClimateList`, `getClimateDetail`, `getAnimalList`, `getAnimalDetail` | ✅ 已实现，知识库三表完整接口 |
+| **Phase 2** | `chat` | 已实现，对接 AI 模型 |
+| **Phase 3** | `updateUserInfo`, `submitFeedback`, `userProgress` | 待实现，用户相关功能 |
+| **Phase 4** | `getConfig`, `getRegions`, `getRegionDetail` | 待实现，后台可配置能力 |
+
+---
+
+## 附录：数据库表设计
+
+### 地形表 (`terrain`)
+
+| 字段名 | 类型 | 必填 | 说明 |
+|--------|------|------|------|
+| `_id` | String | 是 | 文档ID（自动生成） |
+| `id` | Number | 是 | 业务ID |
+| `name` | String | 是 | 地形名称 |
+| `image` | String | 是 | 图片URL |
+| `features` | String | 是 | 地形特征 |
+| `climate` | String | 是 | 气候特点 |
+| `vegetation` | String | 是 | 植被类型 |
+| `region` | String | 是 | 代表地区 |
+| `summary` | String | 是 | 总结描述 |
+| `createdAt` | Date | 是 | 创建时间（自动） |
+| `updatedAt` | Date | 是 | 更新时间（自动） |
+
+### 气候表 (`climate`)
+
+| 字段名 | 类型 | 必填 | 说明 |
+|--------|------|------|------|
+| `_id` | String | 是 | 文档ID（自动生成） |
+| `id` | Number | 是 | 业务ID |
+| `name` | String | 是 | 气候名称 |
+| `image` | String | 是 | 图片URL |
+| `temperature` | String | 是 | 气温特点 |
+| `precipitation` | String | 是 | 降水特点 |
+| `characteristics` | String | 是 | 气候特点 |
+| `region` | String | 是 | 代表地区 |
+| `summary` | String | 是 | 总结描述 |
+| `createdAt` | Date | 是 | 创建时间（自动） |
+| `updatedAt` | Date | 是 | 更新时间（自动） |
+
+### 动物表 (`animal`)
+
+| 字段名 | 类型 | 必填 | 说明 |
+|--------|------|------|------|
+| `_id` | String | 是 | 文档ID（自动生成） |
+| `id` | Number | 是 | 业务ID |
+| `name` | String | 是 | 动物名称 |
+| `image` | String | 是 | 图片URL |
+| `habitat` | String | 是 | 栖息地 |
+| `food` | String | 是 | 食物喜好 |
+| `habits` | String | 是 | 生活习性 |
+| `secret` | String | 是 | 趣味小秘密 |
+| `protectionLevel` | String | 是 | 保护级别 |
+| `createdAt` | Date | 是 | 创建时间（自动） |
+| `updatedAt` | Date | 是 | 更新时间（自动） |
 
 ---
 
@@ -425,5 +599,6 @@ if (res.errCode === 0) {
 | `MenuItem` | 菜单项 |
 | `RegionDetail` / `RegionAnimal` / `RegionGeoFeature` | 区域详情相关 |
 | `KnowledgeCategory` / `KnowledgeAnimal` | 知识百科相关 |
+| `TerrainItem` / `ClimateItem` / `AnimalDetailItem` | 学习详情页类型 |
 | `ChatMessage` | AI 对话消息 |
 | `ProjectedPoint` / `Polygon` / `Ring` / `BBox` / `ProjectedFeature` | 地图几何数据 |

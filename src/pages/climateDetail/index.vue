@@ -111,6 +111,8 @@
 import { ref, computed, onMounted } from 'vue'
 import PinyinText from '../../components/PinyinText'
 import { CLIMATE_DETAILS } from '../../data/learnDetails'
+import { callFunction } from '../../utils/cloud'
+import { CLIMATE_DISPLAY_CONFIG } from '../../constants'
 import type { ClimateItem } from '../../types'
 
 const detail = ref<ClimateItem>(CLIMATE_DETAILS['温带气候'])
@@ -121,6 +123,13 @@ const cardBg = computed(() => [
   '#E3F2FD', // 特點 - 蓝
   '#FCE4EC', // 代表地區 - 粉
 ])
+
+const displayConfig = computed(() => {
+  return CLIMATE_DISPLAY_CONFIG[detail.value.name] || {
+    bannerIcon: '🌤️',
+    pageBg: '#FFF3E0',
+  }
+})
 
 function goBack() {
   const pages = getCurrentPages()
@@ -139,12 +148,37 @@ function onAsk() {
   uni.switchTab({ url: '/pages/ai/index' })
 }
 
+async function loadDetail(name: string) {
+  try {
+    const res = await callFunction('getClimateDetail', { name })
+    if (res.errCode === 0 && res.data) {
+      const config = CLIMATE_DISPLAY_CONFIG[name] || {
+        bannerIcon: '🌤️',
+        pageBg: '#FFF3E0',
+      }
+      detail.value = {
+        ...res.data,
+        pinyin: '',
+        bannerIcon: config.bannerIcon,
+        pageBg: config.pageBg,
+      }
+    }
+  } catch (error) {
+    console.error('加载气候详情失败:', error)
+  }
+}
+
 onMounted(() => {
   const pages = getCurrentPages()
   const currentPage = pages[pages.length - 1]
   const options = (currentPage as any)?.options || {}
   const name = options.name || '温带气候'
-  detail.value = CLIMATE_DETAILS[name] || CLIMATE_DETAILS['温带气候']
+
+  loadDetail(name)
+
+  if (!detail.value || !detail.value.id) {
+    detail.value = CLIMATE_DETAILS[name] || CLIMATE_DETAILS['温带气候']
+  }
 })
 </script>
 

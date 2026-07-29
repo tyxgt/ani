@@ -1,0 +1,102 @@
+[
+  {
+    "id": 1,
+    "name": "溫帶季風氣候",
+    "image": "https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=cute+temperate+monsoon+landscape+watercolor+cartoon+style+four+seasons+trees+spring+blossom+summer+green+autumn+yellow+winter+snow&image_size=square_hd",
+    "temperature": "四季分明，春暖夏熱，秋涼冬冷",
+    "precipitation": "夏季多雨，冬季乾燥，雨熱同期",
+    "characteristics": "季風顯著，春天花開，夏天炎熱多雨，秋天涼爽，冬天寒冷",
+    "region": "中國東北、華北、朝鮮半島、日本北部",
+    "summary": "春夏秋冬輪番上陣，是大自然最美麗的四季舞台"
+  },
+  {
+    "id": 2,
+    "name": "亞熱帶季風氣候",
+    "image": "https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=cute+subtropical+monsoon+landscape+watercolor+cartoon+style+lush+green+bamboo+rain+paddy+fields+lotus+pond&image_size=square_hd",
+    "temperature": "夏季高溫，冬季溫和，四季常青",
+    "precipitation": "雨水豐沛，夏季梅雨綿綿，颱風帶來暴雨",
+    "characteristics": "溫暖濕潤，植被常綠，梅雨和颱風是特色",
+    "region": "中國華東、華南、長江中下游、台灣",
+    "summary": "綠意盎然的魚米之鄉，雨水滋潤萬物生長"
+  },
+  {
+    "id": 3,
+    "name": "熱帶季風氣候",
+    "image": "https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=cute+tropical+monsoon+landscape+watercolor+cartoon+style+coconut+palm+beach+monkey+colorful+birds+bright+sun&image_size=square_hd",
+    "temperature": "全年高溫，長夏無冬，陽光充足",
+    "precipitation": "分旱雨兩季，雨季暴雨傾盆，旱季陽光燦爛",
+    "characteristics": "陽光充足，植物常綠，水果豐富，海風習習",
+    "region": "中國海南、雲南南部、印度、泰國、越南",
+    "summary": "陽光與雨林的家園，一年四季都是夏天"
+  },
+  {
+    "id": 4,
+    "name": "溫帶大陸性氣候",
+    "image": "https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=cute+temperate+continental+landscape+watercolor+cartoon+style+vast+grassland+sheep+yurt+blue+sky+white+clouds&image_size=square_hd",
+    "temperature": "冬冷夏熱，晝夜溫差大，四季分明",
+    "precipitation": "降水稀少，集中在夏季，氣候乾燥",
+    "characteristics": "大陸性強，草原遼闊，風沙大，天空特別藍",
+    "region": "中國西北、蒙古、中亞、西伯利亞南部",
+    "summary": "遼闊的草原與沙漠，藍天白雲下的壯美天地"
+  },
+  {
+    "id": 5,
+    "name": "高原山地氣候",
+    "image": "https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=cute+high+mountain+plateau+climate+landscape+watercolor+cartoon+style+bright+sun+thin+air+yaks+tents+snow+peaks&image_size=square_hd",
+    "temperature": "氣溫低，日夜溫差大，太陽輻射強",
+    "precipitation": "降水少，空氣稀薄乾燥，多降雪",
+    "characteristics": "陽光強烈，紫外線強，氧氣稀薄，風大寒冷",
+    "region": "青藏高原、帕米爾高原、安第斯山脈",
+    "summary": "離太陽最近的天空，雪山與草原的聖潔世界"
+  },
+  {
+    "id": 6,
+    "name": "寒溫帶氣候",
+    "image": "https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=cute+cold+temperate+landscape+watercolor+cartoon+style+snow+forest+pine+trees+reindeer+aurora+borealis+blue+tone&image_size=square_hd",
+    "temperature": "冬季漫長嚴寒，夏季短暫涼爽",
+    "precipitation": "降水不多，以雪為主，積雪深厚",
+    "characteristics": "冰雪覆蓋，針葉林茂密，動物多有厚皮毛",
+    "region": "中國大興安嶺北段、西伯利亞、北歐北部",
+    "summary": "冰雪精靈的故鄉，銀裝素裹的童話世界"
+  },
+  {
+    "id": 7,
+    "name": "熱帶雨林氣候",
+    "image": "https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=cute+tropical+rainforest+landscape+watercolor+cartoon+style+dense+jungle+parrot+toucan+waterfall+lianas+bright+green&image_size=square_hd",
+    "temperature": "全年高溫多雨，溫差極小",
+    "precipitation": "雨水極多，幾乎每天都會下一場雨",
+    "characteristics": "植物層層疊疊，動物種類繁多，空氣濕潤",
+    "region": "亞馬遜平原、剛果盆地、東南亞群島",
+    "summary": "地球之肺，生物種類最豐富的綠色寶庫"
+  },
+  {
+    "id": 8,
+    "name": "地中海氣候",
+    "image": "https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=cute+mediterranean+climate+landscape+watercolor+cartoon+style+olive+trees+vineyard+blue+sea+white+houses+lavender&image_size=square_hd",
+    "temperature": "夏季炎熱乾燥，冬季溫和多雨",
+    "precipitation": "冬雨夏乾，降水集中在冬季",
+    "characteristics": "陽光充足，橄欖和葡萄長得好，海風宜人",
+    "region": "地中海沿岸、加州、智利中部、南非開普敦",
+    "summary": "陽光、大海與薰衣草，度假勝地的完美氣候"
+  },
+  {
+    "id": 9,
+    "name": "溫帶海洋性氣候",
+    "image": "https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=cute+temperate+oceanic+climate+landscape+watercolor+cartoon+style+green+meadows+sheep+castle+mist+rainbow+gentle+hills&image_size=square_hd",
+    "temperature": "冬暖夏涼，全年溫和，溫差很小",
+    "precipitation": "全年濕潤，細雨綿綿，雲霧多",
+    "characteristics": "溫和濕潤，牧草豐美，適合畜牧業",
+    "region": "西歐、英國、愛爾蘭、新西蘭",
+    "summary": "溫柔如詩的氣候，綠色草原與古堡的童話世界"
+  },
+  {
+    "id": 10,
+    "name": "極地氣候",
+    "image": "https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=cute+polar+climate+landscape+watercolor+cartoon+style+ice+snow+polar+bear+penguin+igloo+aurora+blue+white&image_size=square_hd",
+    "temperature": "全年酷寒，冰雪覆蓋，寒風刺骨",
+    "precipitation": "降水極少，乾燥寒冷，多暴風雪",
+    "characteristics": "極晝極夜，冰川廣佈，動物耐寒能力極強",
+    "region": "南極洲、北極圈內、格陵蘭島",
+    "summary": "冰雪世界的盡頭，勇敢生命的極限挑戰"
+  }
+]

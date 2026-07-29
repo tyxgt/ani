@@ -47,6 +47,7 @@
 import { ref, onMounted } from 'vue'
 import PinyinText from '../../components/PinyinText'
 import { TERRAIN_DETAILS } from '../../data/learnDetails'
+import { callFunction } from '../../utils/cloud'
 import type { TerrainItem } from '../../types'
 
 const terrainList = ref<TerrainItem[]>([])
@@ -66,8 +67,20 @@ function onTerrainClick(item: TerrainItem) {
   })
 }
 
+async function loadData() {
+  try {
+    const res = await callFunction('getTerrainList')
+    if (res.errCode === 0 && res.data) {
+      terrainList.value = res.data
+    }
+  } catch (error) {
+    console.error('加载地形数据失败:', error)
+    terrainList.value = Object.values(TERRAIN_DETAILS)
+  }
+}
+
 onMounted(() => {
-  terrainList.value = Object.values(TERRAIN_DETAILS)
+  loadData()
 })
 </script>
 

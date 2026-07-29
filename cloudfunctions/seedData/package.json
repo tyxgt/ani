@@ -1,0 +1,9 @@
+{
+  "name": "seedData",
+  "version": "1.0.0",
+  "description": "批量导入地形、气候、动物数据到云数据库",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "latest"
+  }
+}

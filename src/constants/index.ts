@@ -310,3 +310,75 @@ export const KNOWLEDGE_ANIMALS: KnowledgeAnimal[] = [
     borderColor: '#F48FB1',
   },
 ]
+
+// ─── 展示字段映射配置（数据库不存储，前端生成）───────────────────────
+
+export interface ProtectionColorConfig {
+  bgColor: string
+  textColor: string
+  borderColor: string
+}
+
+export const PROTECTION_COLOR_MAP: Record<string, ProtectionColorConfig> = {
+  '国家一级保护动物': {
+    bgColor: '#E8F5E9',
+    textColor: '#2E7D32',
+    borderColor: '#66BB6A',
+  },
+  '国家二级保护动物': {
+    bgColor: '#FFF3E0',
+    textColor: '#E65100',
+    borderColor: '#FFA726',
+  },
+  '国家三级保护动物': {
+    bgColor: '#E3F2FD',
+    textColor: '#1565C0',
+    borderColor: '#42A5F5',
+  },
+  '无保护级别': {
+    bgColor: '#F5F5F5',
+    textColor: '#757575',
+    borderColor: '#E0E0E0',
+  },
+}
+
+export interface DisplayConfig {
+  bannerIcon: string
+  pageBg: string
+}
+
+export const TERRAIN_DISPLAY_CONFIG: Record<string, DisplayConfig> = {
+  山地: { bannerIcon: '🏔️', pageBg: '#FFF8E1' },
+  平原: { bannerIcon: '🌾', pageBg: '#E8F5E9' },
+  盆地: { bannerIcon: '⛰️', pageBg: '#E3F2FD' },
+  高原: { bannerIcon: '🌄', pageBg: '#F3E5F5' },
+  丘陵: { bannerIcon: '🏡', pageBg: '#F1F8E9' },
+  沙漠: { bannerIcon: '🏜️', pageBg: '#FFF3E0' },
+  喀斯特地貌: { bannerIcon: '🗿', pageBg: '#E0F2F1' },
+  丹霞地貌: { bannerIcon: '🌈', pageBg: '#FCE4EC' },
+  雅丹地貌: { bannerIcon: '🏰', pageBg: '#EFEBE9' },
+  黄土地貌: { bannerIcon: '🌍', pageBg: '#FFFDE7' },
+  峡谷: { bannerIcon: '🏞️', pageBg: '#E8EAF6' },
+  海岸地貌: { bannerIcon: '🌊', pageBg: '#E1F5FE' },
+  沼泽湿地: { bannerIcon: '🦆', pageBg: '#E0F7FA' },
+  冰川地貌: { bannerIcon: '❄️', pageBg: '#E3F2FD' },
+  冻土地貌: { bannerIcon: '🧊', pageBg: '#ECEFF1' },
+  岛屿: { bannerIcon: '🏝️', pageBg: '#E0F7FA' },
+  草原: { bannerIcon: '🐎', pageBg: '#F1F8E9' },
+  森林: { bannerIcon: '🌲', pageBg: '#E8F5E9' },
+}
+
+export const CLIMATE_DISPLAY_CONFIG: Record<string, DisplayConfig> = {
+  温带气候: { bannerIcon: '🌱', pageBg: '#FFF3E0' },
+  热带气候: { bannerIcon: '🌴', pageBg: '#E8F5E9' },
+  寒带气候: { bannerIcon: '❄️', pageBg: '#E3F2FD' },
+  高原气候: { bannerIcon: '☀️', pageBg: '#FFF8E1' },
+}
+
+export const ANIMAL_DISPLAY_CONFIG: Record<string, DisplayConfig> = {
+  大熊猫: { bannerIcon: '🐼', pageBg: '#F1F8E9' },
+  东北虎: { bannerIcon: '🐯', pageBg: '#FFF3E0' },
+  金丝猴: { bannerIcon: '🐵', pageBg: '#E3F2FD' },
+  亚洲象: { bannerIcon: '🐘', pageBg: '#EDE7F6' },
+  丹顶鹤: { bannerIcon: '🦢', pageBg: '#FCE4EC' },
+}

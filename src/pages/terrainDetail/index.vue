@@ -42,7 +42,7 @@
         >
           <view :class="styles.cardIcon">🏔️</view>
           <PinyinText
-            :text="'地形特徵'"
+            :text="'地形特征'"
             :char-style="{ fontSize: '18px', fontWeight: 'bold', color: '#2E7D32' }"
             :pinyin-style="{ fontSize: '10px', color: '#66BB6A' }"
           />
@@ -54,7 +54,7 @@
         >
           <view :class="styles.cardIcon">❄️</view>
           <PinyinText
-            :text="'氣候'"
+            :text="'气候'"
             :char-style="{ fontSize: '18px', fontWeight: 'bold', color: '#E65100' }"
             :pinyin-style="{ fontSize: '10px', color: '#FFB74D' }"
           />
@@ -96,11 +96,11 @@
       <view :class="styles.actionBar">
         <view :class="[styles.actionBtn, styles.listenBtn]" @click="onListen" @tap="onListen">
           <text :class="styles.actionIcon">🔊</text>
-          <text>聽介紹</text>
+          <text>听介绍</text>
         </view>
         <view :class="[styles.actionBtn, styles.askBtn]" @click="onAsk" @tap="onAsk">
           <text :class="styles.actionIcon">🤖</text>
-          <text>問博士</text>
+          <text>问博士</text>
         </view>
       </view>
     </scroll-view>
@@ -111,16 +111,25 @@
 import { ref, computed, onMounted } from 'vue'
 import PinyinText from '../../components/PinyinText'
 import { TERRAIN_DETAILS } from '../../data/learnDetails'
+import { callFunction } from '../../utils/cloud'
+import { TERRAIN_DISPLAY_CONFIG } from '../../constants'
 import type { TerrainItem } from '../../types'
 
-const detail = ref<TerrainItem>(TERRAIN_DETAILS['高山地形'])
+const detail = ref<TerrainItem>(TERRAIN_DETAILS['山地'])
 
 const cardBg = computed(() => [
-  '#E8F5E9', // 地形特徵 - 绿
-  '#FFF8E1', // 氣候 - 黄
+  '#E8F5E9', // 地形特征 - 绿
+  '#FFF8E1', // 气候 - 黄
   '#E3F2FD', // 植被 - 蓝
-  '#FCE4EC', // 代表地區 - 粉
+  '#FCE4EC', // 代表地区 - 粉
 ])
+
+const displayConfig = computed(() => {
+  return TERRAIN_DISPLAY_CONFIG[detail.value.name] || {
+    bannerIcon: '🏔️',
+    pageBg: '#FFF8E1',
+  }
+})
 
 function goBack() {
   const pages = getCurrentPages()
@@ -132,19 +141,44 @@ function goBack() {
 }
 
 function onListen() {
-  uni.showToast({ title: '語音介紹開發中', icon: 'none' })
+  uni.showToast({ title: '语音介绍开发中', icon: 'none' })
 }
 
 function onAsk() {
   uni.switchTab({ url: '/pages/ai/index' })
 }
 
+async function loadDetail(name: string) {
+  try {
+    const res = await callFunction('getTerrainDetail', { name })
+    if (res.errCode === 0 && res.data) {
+      const config = TERRAIN_DISPLAY_CONFIG[name] || {
+        bannerIcon: '🏔️',
+        pageBg: '#FFF8E1',
+      }
+      detail.value = {
+        ...res.data,
+        pinyin: '',
+        bannerIcon: config.bannerIcon,
+        pageBg: config.pageBg,
+      }
+    }
+  } catch (error) {
+    console.error('加载地形详情失败:', error)
+  }
+}
+
 onMounted(() => {
   const pages = getCurrentPages()
   const currentPage = pages[pages.length - 1]
   const options = (currentPage as any)?.options || {}
-  const name = options.name || '高山地形'
-  detail.value = TERRAIN_DETAILS[name] || TERRAIN_DETAILS['高山地形']
+  const name = options.name || '山地'
+
+  loadDetail(name)
+
+  if (!detail.value || !detail.value.id) {
+    detail.value = TERRAIN_DETAILS[name] || TERRAIN_DETAILS['山地']
+  }
 })
 </script>
 

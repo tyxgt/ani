@@ -111,6 +111,8 @@
 import { ref, computed, onMounted } from 'vue'
 import PinyinText from '../../components/PinyinText'
 import { ANIMAL_DETAILS } from '../../data/learnDetails'
+import { callFunction } from '../../utils/cloud'
+import { PROTECTION_COLOR_MAP, ANIMAL_DISPLAY_CONFIG } from '../../constants'
 import type { AnimalDetailItem } from '../../types'
 
 const detail = ref<AnimalDetailItem>(ANIMAL_DETAILS['大熊貓'])
@@ -139,12 +141,44 @@ function onAsk() {
   uni.switchTab({ url: '/pages/ai/index' })
 }
 
+async function loadDetail(name: string) {
+  try {
+    const res = await callFunction('getAnimalDetail', { name })
+    if (res.errCode === 0 && res.data) {
+      const colorConfig = PROTECTION_COLOR_MAP[res.data.protectionLevel] || {
+        bgColor: '#F5F5F5',
+        textColor: '#757575',
+        borderColor: '#E0E0E0',
+      }
+      const displayConfig = ANIMAL_DISPLAY_CONFIG[name] || {
+        bannerIcon: '🐼',
+        pageBg: '#F1F8E9',
+      }
+      detail.value = {
+        ...res.data,
+        pinyin: '',
+        protectionBgColor: colorConfig.bgColor,
+        protectionTextColor: colorConfig.textColor,
+        borderColor: colorConfig.borderColor,
+        pageBg: displayConfig.pageBg,
+      }
+    }
+  } catch (error) {
+    console.error('加载动物详情失败:', error)
+  }
+}
+
 onMounted(() => {
   const pages = getCurrentPages()
   const currentPage = pages[pages.length - 1]
   const options = (currentPage as any)?.options || {}
   const name = options.name || '大熊貓'
-  detail.value = ANIMAL_DETAILS[name] || ANIMAL_DETAILS['大熊貓']
+
+  loadDetail(name)
+
+  if (!detail.value || !detail.value.id) {
+    detail.value = ANIMAL_DETAILS[name] || ANIMAL_DETAILS['大熊貓']
+  }
 })
 </script>
 

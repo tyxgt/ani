@@ -35,15 +35,20 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import CustomTabBar from '../../components/CustomTabBar'
 import PinyinText from '../../components/PinyinText'
 import LearnCard from '../../components/LearnCard'
-import { KNOWLEDGE_CATEGORIES, KNOWLEDGE_ANIMALS } from '../../constants'
+import {
+  KNOWLEDGE_CATEGORIES,
+  KNOWLEDGE_ANIMALS,
+  PROTECTION_COLOR_MAP,
+} from '../../constants'
 import { TERRAIN_DETAILS, CLIMATE_DETAILS } from '../../data/learnDetails'
-import type { LearnCardItem } from '../../types'
+import { callFunction } from '../../utils/cloud'
+import type { LearnCardItem, KnowledgeCategory } from '../../types'
 
-const categories = ref(KNOWLEDGE_CATEGORIES)
+const categories = ref<KnowledgeCategory[]>(KNOWLEDGE_CATEGORIES)
 const animals = ref(KNOWLEDGE_ANIMALS)
 const terrains = ref(Object.values(TERRAIN_DETAILS))
 const climates = ref(Object.values(CLIMATE_DETAILS))
@@ -59,7 +64,6 @@ const cardList = computed<LearnCardItem[]>(() => {
       tagBgColor: '#E8F5E9',
       tagBorderColor: '#66BB6A',
       tagTextColor: '#2E7D32',
-      // borderColor: '#66BB6A',
     }))
   }
   if (activeCategory.value === 2) {
@@ -71,19 +75,24 @@ const cardList = computed<LearnCardItem[]>(() => {
       tagBgColor: '#E3F2FD',
       tagBorderColor: '#42A5F5',
       tagTextColor: '#1565C0',
-      // borderColor: '#42A5F5',
     }))
   }
-  return animals.value.map(item => ({
-    id: item.id,
-    name: item.name,
-    image: item.image,
-    tagText: item.protectionLevel,
-    tagBgColor: item.protectionBgColor,
-    tagBorderColor: item.borderColor,
-    tagTextColor: item.protectionTextColor,
-    // borderColor: item.borderColor,
-  }))
+  return animals.value.map(item => {
+    const colorConfig = PROTECTION_COLOR_MAP[item.protectionLevel] || {
+      bgColor: '#F5F5F5',
+      textColor: '#757575',
+      borderColor: '#E0E0E0',
+    }
+    return {
+      id: item.id,
+      name: item.name,
+      image: item.image,
+      tagText: item.protectionLevel,
+      tagBgColor: colorConfig.bgColor,
+      tagBorderColor: colorConfig.borderColor,
+      tagTextColor: colorConfig.textColor,
+    }
+  })
 })
 
 function onCategoryClick(cat: { id: number; name: string }) {
@@ -100,6 +109,47 @@ function onCardClick(card: LearnCardItem) {
     uni.navigateTo({ url: '/pages/animalDetail/index?name=' + name })
   }
 }
+
+async function loadData() {
+  try {
+    const [catRes, terrainRes, climateRes, animalRes] = await Promise.all([
+      callFunction('getKnowledgeCategories'),
+      callFunction('getTerrainList'),
+      callFunction('getClimateList'),
+      callFunction('getAnimalList'),
+    ])
+
+    if (catRes.errCode === 0 && catRes.data) {
+      categories.value = catRes.data
+    }
+
+    if (terrainRes.errCode === 0 && terrainRes.data) {
+      terrains.value = terrainRes.data
+    }
+
+    if (climateRes.errCode === 0 && climateRes.data) {
+      climates.value = climateRes.data
+    }
+
+    if (animalRes.errCode === 0 && animalRes.data) {
+      animals.value = animalRes.data.map((item: any) => ({
+        ...item,
+        protectionBgColor:
+          PROTECTION_COLOR_MAP[item.protectionLevel]?.bgColor || '#F5F5F5',
+        protectionTextColor:
+          PROTECTION_COLOR_MAP[item.protectionLevel]?.textColor || '#757575',
+        borderColor:
+          PROTECTION_COLOR_MAP[item.protectionLevel]?.borderColor || '#E0E0E0',
+      }))
+    }
+  } catch (error) {
+    console.error('加载知识库数据失败:', error)
+  }
+}
+
+onMounted(() => {
+  loadData()
+})
 </script>
 
 <style lang="less" src="./index.less" module="styles"></style>
