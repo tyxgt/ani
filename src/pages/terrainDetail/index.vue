@@ -151,7 +151,7 @@ function onAsk() {
 async function loadDetail(name: string) {
   try {
     const res = await callFunction('getTerrainDetail', { name })
-    if (res.errCode === 0 && res.data) {
+    if (res.code === 0 && res.data) {
       const config = TERRAIN_DISPLAY_CONFIG[name] || {
         bannerIcon: '🏔️',
         pageBg: '#FFF8E1',

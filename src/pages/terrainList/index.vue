@@ -30,8 +30,8 @@
               :text="item.name"
               displayMode="horizontal"
               align="left"
-              :char-style="{ fontSize: '18px', fontWeight: 'bold', color: '#333' }"
-              :pinyin-style="{ fontSize: '13px', color: '#666' }"
+              :char-style="{ fontSize: '18px', fontWeight: 'bold' }"
+              :pinyin-style="{ fontSize: '13px' }"
             />
             <text :class="styles.terrainDesc">{{ item.features }}</text>
           </view>
@@ -70,7 +70,7 @@ function onTerrainClick(item: TerrainItem) {
 async function loadData() {
   try {
     const res = await callFunction('getTerrainList')
-    if (res.errCode === 0 && res.data) {
+    if (res.code === 0 && res.data) {
       terrainList.value = res.data
     }
   } catch (error) {

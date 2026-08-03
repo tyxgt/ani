@@ -35,7 +35,7 @@
       </view>
     </view>
 
-    <CustomTabBar :current="3" />
+    <CustomTabBar :current="2" />
 
     <!-- 登录弹窗 -->
     <view v-if="showLoginModal" :class="styles.loginModal" @click="closeLoginModal">

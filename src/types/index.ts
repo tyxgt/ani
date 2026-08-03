@@ -59,8 +59,8 @@ export interface WechatUserInfo {
 }
 
 export interface CloudFunctionResult<T = any> {
-  errCode: number
-  errMsg: string
+  code: number
+  msg: string
   data: T
 }
 

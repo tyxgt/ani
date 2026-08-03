@@ -144,7 +144,7 @@ function onAsk() {
 async function loadDetail(name: string) {
   try {
     const res = await callFunction('getAnimalDetail', { name })
-    if (res.errCode === 0 && res.data) {
+    if (res.code === 0 && res.data) {
       const colorConfig = PROTECTION_COLOR_MAP[res.data.protectionLevel] || {
         bgColor: '#F5F5F5',
         textColor: '#757575',

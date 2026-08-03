@@ -13,14 +13,14 @@ exports.main = async (event, context) => {
       .get()
 
     return {
-      errCode: 0,
-      errMsg: 'success',
+      code: 0,
+      msg: '',
       data: result.data,
     }
   } catch (err) {
     return {
-      errCode: -1,
-      errMsg: err.message,
+      code: -1,
+      msg: err.message,
       data: null,
     }
   }

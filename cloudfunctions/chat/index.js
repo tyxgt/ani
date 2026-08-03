@@ -156,16 +156,16 @@ exports.main = async (event, context) => {
 
   if (!OPENID) {
     return {
-      errCode: -1,
-      errMsg: '无法获取用户身份',
+      code: -1,
+      msg: '无法获取用户身份',
       data: null,
     }
   }
 
   if (!message || !message.trim()) {
     return {
-      errCode: -1,
-      errMsg: '消息内容不能为空',
+      code: -1,
+      msg: '消息内容不能为空',
       data: null,
     }
   }
@@ -184,8 +184,8 @@ exports.main = async (event, context) => {
     const newSessionId = sessionId || generateSessionId()
     
     return {
-      errCode: 0,
-      errMsg: 'success',
+      code: 0,
+      msg: '',
       data: {
         reply: reply,
         sessionId: newSessionId,
@@ -195,8 +195,8 @@ exports.main = async (event, context) => {
     console.error('[chat] 调用失败:', error)
     
     return {
-      errCode: -1,
-      errMsg: error.message || 'AI对话服务暂时不可用',
+      code: -1,
+      msg: error.message || 'AI对话服务暂时不可用',
       data: null,
     }
   }

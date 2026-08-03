@@ -588,14 +588,14 @@ exports.main = async (event, context) => {
     }
 
     return {
-      errCode: 0,
-      errMsg: 'success',
+      code: 0,
+      msg: '',
       data: results,
     }
   } catch (err) {
     return {
-      errCode: -1,
-      errMsg: err.message,
+      code: -1,
+      msg: err.message,
       data: null,
     }
   }

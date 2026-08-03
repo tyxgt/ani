@@ -12,16 +12,17 @@
             v-if="index === 0"
             :class="[styles.iconHome, { [styles.active]: currentIndex === index }]"
           ></view>
-          <view
+          <!-- 对话 tab 暂时关闭,后续再开放 -->
+          <!-- <view
             v-else-if="index === 1"
             :class="[styles.iconAi, { [styles.active]: currentIndex === index }]"
-          ></view>
+          ></view> -->
           <view
-            v-else-if="index === 2"
+            v-else-if="index === 1"
             :class="[styles.iconBook, { [styles.active]: currentIndex === index }]"
           ></view>
           <view
-            v-else-if="index === 3"
+            v-else-if="index === 2"
             :class="[styles.iconPanda, { [styles.active]: currentIndex === index }]"
           ></view>
         </view>
@@ -41,7 +42,7 @@ const currentIndex = ref(props.current);
 
 const tabList = [
   { pagePath: "/pages/index/index", text: "探索" },
-  { pagePath: "/pages/ai/index", text: "AI" },
+  // { pagePath: "/pages/ai/index", text: "AI" }, // 对话 tab 暂时关闭,后续再开放
   { pagePath: "/pages/learn/index", text: "学习" },
   { pagePath: "/pages/mine/index", text: "我的" },
 ];

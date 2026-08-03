@@ -55,17 +55,29 @@
   .tag {
     display: inline-flex;
     align-items: center;
-    padding: 8px 14px;
+    padding: 6px 12px;
     border-radius: 24px;
     align-self: flex-start;
     border: 2px solid;
     gap: 6px;
     background: rgba(255, 255, 255, 0.8);
 
-    .tagText {
-      font-size: 12px;
-      font-weight: 600;
-      white-space: nowrap;
+    :deep(.pinyinText) {
+      align-items: flex-start;
+
+      .charRow {
+        justify-content: flex-start;
+        flex-wrap: nowrap;
+      }
+
+      .charGroup {
+        align-items: flex-start;
+        min-width: 1em;
+      }
+
+      .pinyin {
+        white-space: nowrap;
+      }
     }
   }
 }

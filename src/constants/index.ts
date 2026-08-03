@@ -382,3 +382,7 @@ export const ANIMAL_DISPLAY_CONFIG: Record<string, DisplayConfig> = {
   亚洲象: { bannerIcon: '🐘', pageBg: '#EDE7F6' },
   丹顶鹤: { bannerIcon: '🦢', pageBg: '#FCE4EC' },
 }
+
+// ─── TTS 朗读相关常量 ─────────────────────────────────────────────
+export const TTS_MAX_LENGTH = 500 // 单次朗读最大字符数(微信限制)
+export const TTS_DEFAULT_SPEED = 1.0 // 默认语速

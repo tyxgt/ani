@@ -70,7 +70,7 @@ function onClimateClick(item: ClimateItem) {
 async function loadData() {
   try {
     const res = await callFunction('getClimateList')
-    if (res.errCode === 0 && res.data) {
+    if (res.code === 0 && res.data) {
       climateList.value = res.data
     }
   } catch (error) {

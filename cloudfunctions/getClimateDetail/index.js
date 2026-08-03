@@ -12,8 +12,8 @@ exports.main = async (event, context) => {
 
     if (!name) {
       return {
-        errCode: -1,
-        errMsg: '参数错误：缺少 name',
+        code: -1,
+        msg: '参数错误：缺少 name',
         data: null,
       }
     }
@@ -24,21 +24,21 @@ exports.main = async (event, context) => {
 
     if (result.data.length === 0) {
       return {
-        errCode: -1,
-        errMsg: '未找到该气候',
+        code: -1,
+        msg: '未找到该气候',
         data: null,
       }
     }
 
     return {
-      errCode: 0,
-      errMsg: 'success',
+      code: 0,
+      msg: '',
       data: result.data[0],
     }
   } catch (err) {
     return {
-      errCode: -1,
-      errMsg: err.message,
+      code: -1,
+      msg: err.message,
       data: null,
     }
   }

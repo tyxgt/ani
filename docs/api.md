@@ -4,7 +4,7 @@
 >
 > 云平台：抖音云（`env-a22YxZSttQ`）+ 微信云开发（`cloud1-d0g4jnows8cd22b84`）
 >
-> 统一返回格式：`CloudFunctionResult<T>` = `{ errCode: number, errMsg: string, data: T | null }`
+> 统一返回格式：`CloudFunctionResult<T>` = `{ code: number, msg: string, data: T | null }`
 
 ---
 
@@ -27,8 +27,8 @@
 
 | 字段 | 类型 | 说明 |
 |------|------|------|------|
-| `errCode` | `number` | 0=成功 -1=失败 401=未授权 |
-| `errMsg` | `string` | 提示信息 |
+| `code` | `number` | 0=成功 -1=失败 401=未授权 |
+| `msg` | `string` | 提示信息(成功时为空) |
 | `data.token` | `string` | 登录令牌（32 字节 hex） |
 | `data.openid` | `string` | 用户平台标识 |
 | `data.unionid` | `string` | 平台统一标识（微信专属） |
@@ -62,8 +62,8 @@
 
 | 字段 | 类型 | 说明 |
 |------|------|------|------|
-| `errCode` | `number` | 0=成功 |
-| `errMsg` | `string` | 提示信息 |
+| `code` | `number` | 0=成功 |
+| `msg` | `string` | 提示信息(成功时为空) |
 | `data` | `UserInfo` | 更新后的用户信息 |
 
 ---
@@ -86,8 +86,8 @@
 
 | 字段 | 类型 | 说明 |
 |------|------|------|------|
-| `errCode` | `number` | 0=成功 |
-| `errMsg` | `string` | 提示信息 |
+| `code` | `number` | 0=成功 |
+| `msg` | `string` | 提示信息(成功时为空) |
 | `data` | `Region[]` | 区域列表 |
 
 **`Region` 结构**：
@@ -122,8 +122,8 @@
 
 | 字段 | 类型 | 说明 |
 |------|------|------|------|
-| `errCode` | `number` | 0=成功 |
-| `errMsg` | `string` | 提示信息 |
+| `code` | `number` | 0=成功 |
+| `msg` | `string` | 提示信息(成功时为空) |
 | `data.name` | `string` | 区域名称 |
 | `data.pinyin` | `string` | 拼音 |
 | `data.description` | `string` | 详细描述 |
@@ -170,8 +170,8 @@
 
 | 字段 | 类型 | 说明 |
 |------|------|------|------|
-| `errCode` | `number` | 0=成功 |
-| `errMsg` | `string` | 提示信息 |
+| `code` | `number` | 0=成功 |
+| `msg` | `string` | 提示信息(成功时为空) |
 | `data` | `Category[]` | 分类列表 |
 
 **`Category` 结构**：
@@ -205,8 +205,8 @@
 
 | 字段 | 类型 | 说明 |
 |------|------|------|------|
-| `errCode` | `number` | 0=成功 |
-| `errMsg` | `string` | 提示信息 |
+| `code` | `number` | 0=成功 |
+| `msg` | `string` | 提示信息(成功时为空) |
 | `data` | `Terrain[]` | 地形列表（按 id 升序） |
 
 **`Terrain` 结构**：
@@ -244,8 +244,8 @@
 
 | 字段 | 类型 | 说明 |
 |------|------|------|------|
-| `errCode` | `number` | 0=成功 |
-| `errMsg` | `string` | 提示信息 |
+| `code` | `number` | 0=成功 |
+| `msg` | `string` | 提示信息(成功时为空) |
 | `data` | `Terrain` | 地形详情（结构同接口 6） |
 
 ---
@@ -269,8 +269,8 @@
 
 | 字段 | 类型 | 说明 |
 |------|------|------|------|
-| `errCode` | `number` | 0=成功 |
-| `errMsg` | `string` | 提示信息 |
+| `code` | `number` | 0=成功 |
+| `msg` | `string` | 提示信息(成功时为空) |
 | `data` | `Climate[]` | 气候列表（按 id 升序） |
 
 **`Climate` 结构**：
@@ -308,8 +308,8 @@
 
 | 字段 | 类型 | 说明 |
 |------|------|------|------|
-| `errCode` | `number` | 0=成功 |
-| `errMsg` | `string` | 提示信息 |
+| `code` | `number` | 0=成功 |
+| `msg` | `string` | 提示信息(成功时为空) |
 | `data` | `Climate` | 气候详情（结构同接口 8） |
 
 ---
@@ -333,8 +333,8 @@
 
 | 字段 | 类型 | 说明 |
 |------|------|------|------|
-| `errCode` | `number` | 0=成功 |
-| `errMsg` | `string` | 提示信息 |
+| `code` | `number` | 0=成功 |
+| `msg` | `string` | 提示信息(成功时为空) |
 | `data` | `Animal[]` | 动物列表（按 id 升序） |
 
 **`Animal` 结构**：
@@ -372,8 +372,8 @@
 
 | 字段 | 类型 | 说明 |
 |------|------|------|------|
-| `errCode` | `number` | 0=成功 |
-| `errMsg` | `string` | 提示信息 |
+| `code` | `number` | 0=成功 |
+| `msg` | `string` | 提示信息(成功时为空) |
 | `data` | `Animal` | 动物详情（结构同接口 10） |
 
 ---
@@ -399,8 +399,8 @@
 
 | 字段 | 类型 | 说明 |
 |------|------|------|------|
-| `errCode` | `number` | 0=成功 |
-| `errMsg` | `string` | 提示信息 |
+| `code` | `number` | 0=成功 |
+| `msg` | `string` | 提示信息(成功时为空) |
 | `data.reply` | `string` | AI 回复内容 |
 | `data.sessionId` | `string` | 会话标识（用于续传） |
 
@@ -429,8 +429,8 @@
 
 | 字段 | 类型 | 说明 |
 |------|------|------|------|
-| `errCode` | `number` | 0=成功 |
-| `errMsg` | `string` | 提示信息 |
+| `code` | `number` | 0=成功 |
+| `msg` | `string` | 提示信息(成功时为空) |
 | `data.id` | `string` | 反馈记录 ID |
 
 ---
@@ -464,8 +464,8 @@
 
 | 字段 | 类型 | 说明 |
 |------|------|------|------|
-| `errCode` | `number` | 0=成功 |
-| `errMsg` | `string` | 提示信息 |
+| `code` | `number` | 0=成功 |
+| `msg` | `string` | 提示信息(成功时为空) |
 | `data.progress` | `object` | 学习进度对象 |
 
 ---
@@ -488,8 +488,8 @@
 
 | 字段 | 类型 | 说明 |
 |------|------|------|------|
-| `errCode` | `number` | 0=成功 |
-| `errMsg` | `string` | 提示信息 |
+| `code` | `number` | 0=成功 |
+| `msg` | `string` | 提示信息(成功时为空) |
 | `data` | `object` | 配置键值对 |
 
 **可配置项**：
@@ -510,13 +510,13 @@ import { callFunction } from '@/utils/cloud'
 
 // 调用地形列表接口
 const res = await callFunction('getTerrainList', {})
-if (res.errCode === 0) {
+if (res.code === 0) {
   const terrains = res.data
 }
 
 // 调用地形详情接口
 const detailRes = await callFunction('getTerrainDetail', { name: '高山地形' })
-if (detailRes.errCode === 0) {
+if (detailRes.code === 0) {
   const terrain = detailRes.data
 }
 ```

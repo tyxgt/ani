@@ -22,8 +22,8 @@ exports.main = async (event, context) => {
 
   if (!OPENID) {
     return {
-      errCode: -1,
-      errMsg: '登录失败: 获取 openid 失败',
+      code: -1,
+      msg: '登录失败: 获取 openid 失败',
       data: null,
     }
   }
@@ -34,8 +34,8 @@ exports.main = async (event, context) => {
   console.log('[login] 登录成功, openid:', OPENID)
 
   const response = {
-    errCode: 0,
-    errMsg: '登录成功',
+    code: 0,
+    msg: '',
     data: {
       token,
       openid: OPENID,

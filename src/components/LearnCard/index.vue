@@ -22,9 +22,20 @@
           borderColor: item.tagBorderColor,
         }"
       >
-        <text :class="styles.tagText" :style="{ color: item.tagTextColor }">
-          {{ item.tagText }}
-        </text>
+        <PinyinText
+          :text="item.tagText"
+          displayMode="horizontal"
+          align="left"
+          :char-style="{
+            fontSize: '12px',
+            fontWeight: '600',
+            color: item.tagTextColor,
+          }"
+          :pinyin-style="{
+            fontSize: '10px',
+            color: '#888',
+          }"
+        />
       </view>
     </view>
   </view>

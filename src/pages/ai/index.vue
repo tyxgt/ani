@@ -224,7 +224,7 @@ async function sendMessage() {
       sessionId: sessionId.value,
     })
 
-    if (res.errCode === 0 && res.data && res.data.reply) {
+    if (res.code === 0 && res.data && res.data.reply) {
       sessionId.value = res.data.sessionId || sessionId.value
 
       const reply = res.data.reply
@@ -236,7 +236,7 @@ async function sendMessage() {
       }
 
       // 检测默认模板响应（未部署自定义云函数代码）
-      if (res.errCode === -1 && (res.errMsg === '未知响应格式' || res.errMsg === '响应数据为空')) {
+      if (res.code === -1 && (res.msg === '未知响应格式' || res.msg === '响应数据为空')) {
         uni.showToast({
           title: 'chat 云函数未部署，请上传部署后再试',
           icon: 'none',
@@ -244,7 +244,7 @@ async function sendMessage() {
         })
       } else {
         uni.showToast({
-          title: res.errMsg || '大熊猫博士正在思考，请再试一次',
+          title: res.msg || '大熊猫博士正在思考，请再试一次',
           icon: 'none',
           duration: 2000,
         })

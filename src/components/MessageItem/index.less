@@ -79,3 +79,45 @@
   font-size: 12px;
   color: rgb(111, 111, 111);
 }
+
+// 消息底部区域：时间戳 + 朗读按钮
+.messageFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0 4px;
+}
+
+// 朗读按钮样式
+.speakBtn {
+  width: 32px;
+  height: 32px;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  flex-shrink: 0;
+
+  &:active {
+    transform: scale(0.95);
+    background: rgba(255, 255, 255, 1);
+  }
+
+  &.playing {
+    background: #FF9800;
+
+    .speakIcon {
+      color: #fff;
+    }
+  }
+}
+
+.speakIcon {
+  font-size: 16px;
+  color: #666;
+}

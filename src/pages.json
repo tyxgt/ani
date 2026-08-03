@@ -97,12 +97,6 @@
 				"selectedIconPath": "static/icons/tab-home-active.png"
 			},
 			{
-				"pagePath": "pages/ai/index",
-				"text": "AI",
-				"iconPath": "static/icons/tab-ai.png",
-				"selectedIconPath": "static/icons/tab-ai-active.png"
-			},
-			{
 				"pagePath": "pages/learn/index",
 				"text": "学习",
 				"iconPath": "static/icons/tab-book.png",

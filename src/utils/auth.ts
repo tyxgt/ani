@@ -124,7 +124,7 @@ class AuthManager {
         code,
       })
 
-      if (result.errCode === 0 && result.data) {
+      if (result.code === 0 && result.data) {
         const loginData = result.data as LoginData
         this._token = loginData.token || ('local_' + Date.now().toString(36) + '_' + Math.random().toString(36).substring(2))
         this._expiresAt = loginData.expiresAt || (Date.now() + 7 * 24 * 3600 * 1000)
@@ -143,7 +143,7 @@ class AuthManager {
         console.log('登录成功:', this._token)
         return this._userInfo
       } else {
-        console.error('登录失败:', result.errMsg || '未知错误')
+        console.error('登录失败:', result.msg || '未知错误')
         return null
       }
     } catch (error) {
@@ -165,7 +165,7 @@ class AuthManager {
         code,
       })
 
-      if (result.errCode === 0 && result.data) {
+      if (result.code === 0 && result.data) {
         console.log('[Auth] result.data 原始内容:', JSON.stringify(result.data))
         const loginData = result.data as LoginData;
         console.log('[Auth] loginData.token:', loginData?.token, 'loginData.openid:', loginData?.openid)
@@ -194,7 +194,7 @@ class AuthManager {
         console.log('微信登录成功:', this._token)
         return this._userInfo
       } else {
-        console.error('微信登录失败:', result.errMsg || '未知错误')
+        console.error('微信登录失败:', result.msg || '未知错误')
         return null
       }
     } catch (error) {

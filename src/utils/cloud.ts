@@ -7,46 +7,53 @@ let wxCloudInitialized = false
 function normalizeCloudResponse(rawData: any, res: any, functionName?: string): CloudFunctionResult {
   if (!rawData) {
     return {
-      errCode: ERROR_CODE.GENERAL_ERROR,
-      errMsg: '响应数据为空',
+      code: ERROR_CODE.GENERAL_ERROR,
+      msg: '响应数据为空',
       data: null,
     }
   }
 
-  // ─── 标准 errCode/errMsg 格式 ──────────────────────────────────
-  if (typeof rawData === 'object' && 'errCode' in rawData && 'errMsg' in rawData) {
+  // ─── 标准 code/msg 格式（改造后云函数返回） ───────────────────
+  if (typeof rawData === 'object' && 'code' in rawData && 'msg' in rawData) {
     if (rawData.data !== undefined) {
       return rawData as CloudFunctionResult
     }
     return {
-      errCode: rawData.errCode,
-      errMsg: rawData.errMsg,
+      code: rawData.code,
+      msg: rawData.msg,
       data: rawData.result || rawData.data || null,
     }
   }
 
-  // ─── 标准 { code, msg } 格式 ────────────────────────────────────
-  if (typeof rawData === 'object' && typeof rawData.code === 'number' && !('errCode' in rawData)) {
+  // ─── 兼容旧 errCode/errMsg 格式（未部署的旧版云函数） ──────────
+  if (typeof rawData === 'object' && 'errCode' in rawData && 'errMsg' in rawData) {
     return {
-      errCode: rawData.code,
-      errMsg: rawData.msg || '',
-      data: rawData.data || null,
+      code: rawData.errCode,
+      msg: rawData.errMsg,
+      data: rawData.data || rawData.result || null,
     }
   }
 
   // ─── 内层 result 携带标准格式 ──────────────────────────────────
   if (typeof rawData === 'object' && rawData.result && typeof rawData.result === 'object') {
     const inner = rawData.result
+    if ('code' in inner) {
+      return {
+        code: inner.code,
+        msg: inner.msg || '',
+        data: inner.data || null,
+      }
+    }
     if ('errCode' in inner) {
       return {
-        errCode: inner.errCode,
-        errMsg: inner.errMsg || '',
+        code: inner.errCode,
+        msg: inner.errMsg || '',
         data: inner.data || null,
       }
     }
     return {
-      errCode: ERROR_CODE.SUCCESS,
-      errMsg: 'success',
+      code: ERROR_CODE.SUCCESS,
+      msg: '',
       data: inner,
     }
   }
@@ -55,8 +62,8 @@ function normalizeCloudResponse(rawData: any, res: any, functionName?: string): 
   if (functionName === 'login') {
     if (typeof rawData === 'object' && rawData.userInfo && rawData.userInfo.openId) {
       return {
-        errCode: ERROR_CODE.SUCCESS,
-        errMsg: '登录成功',
+        code: ERROR_CODE.SUCCESS,
+        msg: '',
         data: {
           openid: rawData.userInfo.openId,
           appid: rawData.userInfo.appId,
@@ -67,8 +74,8 @@ function normalizeCloudResponse(rawData: any, res: any, functionName?: string): 
 
     if (typeof rawData === 'object' && (rawData.openId || rawData.openid)) {
       return {
-        errCode: ERROR_CODE.SUCCESS,
-        errMsg: '登录成功',
+        code: ERROR_CODE.SUCCESS,
+        msg: '',
         data: {
           openid: rawData.openId || rawData.openid,
           appid: rawData.appId || rawData.appid || null,
@@ -81,15 +88,15 @@ function normalizeCloudResponse(rawData: any, res: any, functionName?: string): 
   // ─── 根据 HTTP 状态码兜底 ─────────────────────────────────────
   if (res && res.statusCode === 200) {
     return {
-      errCode: ERROR_CODE.SUCCESS,
-      errMsg: 'success',
+      code: ERROR_CODE.SUCCESS,
+      msg: '',
       data: rawData,
     }
   }
 
   return {
-    errCode: ERROR_CODE.GENERAL_ERROR,
-    errMsg: '未知响应格式',
+    code: ERROR_CODE.GENERAL_ERROR,
+    msg: '未知响应格式',
     data: rawData,
   }
 }
@@ -174,15 +181,15 @@ export async function callFunction(
 
             console.log(`[Cloud] 云函数 [${name}] 标准化后响应:`, result)
 
-            if (result.errCode === -1 && !result.data && result.errMsg === 'success') {
+            if (result.code === -1 && !result.data && result.msg === 'success') {
               console.warn(
-                `[Cloud] ⚠️  检测到异常响应：errCode=-1 但 errMsg=success。` +
+                `[Cloud] ⚠️  检测到异常响应：code=-1 但 msg=success。` +
                 `这通常意味着请求没有到达预期的服务端处理逻辑。` +
                 `请检查云托管服务是否已正确部署，以及部署的代码版本是否正确。`
               )
             }
 
-            if (result.errCode === -2) {
+            if (result.code === -2) {
               console.warn(
                 `[Cloud] ⚠️  服务端返回 404 路由未匹配。` +
                 `请检查请求路径配置 (CLOUD_FUNCTION_PATH) 是否正确。`
@@ -204,8 +211,8 @@ export async function callFunction(
   } catch (error) {
     console.error(`云函数调用失败 [${name}]:`, error)
     return {
-      errCode: ERROR_CODE.GENERAL_ERROR,
-      errMsg: (error as Error).message || '网络请求失败',
+      code: ERROR_CODE.GENERAL_ERROR,
+      msg: (error as Error).message || '网络请求失败',
       data: null,
     }
   }
@@ -249,8 +256,8 @@ export async function callFunction(
   } catch (error) {
     console.error(`云函数调用失败 [${name}]:`, error)
     return {
-      errCode: ERROR_CODE.GENERAL_ERROR,
-      errMsg: (error as Error).message || '网络请求失败',
+      code: ERROR_CODE.GENERAL_ERROR,
+      msg: (error as Error).message || '网络请求失败',
       data: null,
     }
   }
@@ -259,8 +266,8 @@ export async function callFunction(
   // #ifndef MP-TOUTIAO
   // #ifndef MP-WEIXIN
   return {
-    errCode: ERROR_CODE.GENERAL_ERROR,
-    errMsg: '当前平台不支持云函数',
+    code: ERROR_CODE.GENERAL_ERROR,
+    msg: '当前平台不支持云函数',
     data: null,
   }
   // #endif
@@ -268,7 +275,7 @@ export async function callFunction(
 }
 
 export function handleCloudError(result: CloudFunctionResult): boolean {
-  if (result.errCode === ERROR_CODE.UNAUTHORIZED) {
+  if (result.code === ERROR_CODE.UNAUTHORIZED) {
     uni.removeStorageSync('token')
     uni.removeStorageSync('userInfo')
     uni.showToast({

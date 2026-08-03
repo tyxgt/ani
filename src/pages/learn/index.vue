@@ -2,7 +2,7 @@
   <view :class="styles.learnPage">
     <view :class="styles.header">
       <view :class="styles.titleRow">
-        <text :class="styles.pageTitle">动物知识库</text>
+        <text :class="styles.pageTitle">百科小乐园</text>
       </view>
     </view>
 
@@ -30,7 +30,7 @@
       </scroll-view>
     </view>
 
-    <CustomTabBar :current="2" />
+    <CustomTabBar :current="1" />
   </view>
 </template>
 
@@ -119,19 +119,19 @@ async function loadData() {
       callFunction('getAnimalList'),
     ])
 
-    if (catRes.errCode === 0 && catRes.data) {
+    if (catRes.code === 0 && catRes.data) {
       categories.value = catRes.data
     }
 
-    if (terrainRes.errCode === 0 && terrainRes.data) {
+    if (terrainRes.code === 0 && terrainRes.data) {
       terrains.value = terrainRes.data
     }
 
-    if (climateRes.errCode === 0 && climateRes.data) {
+    if (climateRes.code === 0 && climateRes.data) {
       climates.value = climateRes.data
     }
 
-    if (animalRes.errCode === 0 && animalRes.data) {
+    if (animalRes.code === 0 && animalRes.data) {
       animals.value = animalRes.data.map((item: any) => ({
         ...item,
         protectionBgColor:
