@@ -1,0 +1,32 @@
+{
+  "data": [
+    {
+      "id": "page-terrain",
+      "title": "地形",
+      "type": "page",
+      "version": 1,
+      "createdAt": 1754241600000,
+      "canvasData": {
+        "x": 0,
+        "y": 0,
+        "group": 0,
+        "layoutSnapshot": {
+          "version": 1,
+          "contentHeight": 1041,
+          "viewportWidth": 375,
+          "sourceHash": "fnv1a-a9eee62e",
+          "measuredAt": 1785814350124
+        }
+      },
+      "devMetadata": {
+        "htmlSrc": "pages/index.html",
+        "interactions": []
+      }
+    }
+  ],
+  "config": {
+    "autoLayout": true,
+    "deviceType": "mobile",
+    "projectName": "百科小乐园 - 地形"
+  }
+}

@@ -1,0 +1,13 @@
+{"id":1,"name":"东北地区","image":"https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=cute+northeast+china+landscape+watercolor+cartoon+style+snowy+forests+mountains+tiger+deer+pine+trees&image_size=square_hd","features":"山高谷深，森林茂密，林海雪原壮丽辽阔","climate":"冬季严寒漫长，夏季温凉短促，积雪期长","vegetation":"针叶林、针阔混交林广布，白桦、红松、落叶松茂密","region":"黑龙江、吉林、辽宁及内蒙古东部","summary":"林海雪原的壮美大地，是东北虎和梅花鹿的家园"}
+
+{"id":2,"name":"华北地区","image":"https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=cute+north+china+plain+landscape+watercolor+cartoon+style+great+wall+rolling+hills+ancient+temple+cherry+blossoms&image_size=square_hd","features":"平原广阔，历史悠久，文化灿烂，人杰地灵","climate":"四季分明，冬季寒冷干燥，夏季炎热多雨","vegetation":"落叶阔叶林为主，槐树、杨树、柳树常见","region":"北京、天津、河北、山西、内蒙古中部","summary":"中华文明的重要发祥地，承载着千年的历史与传奇"}
+
+{"id":3,"name":"西北地区","image":"https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=cute+northwest+china+landscape+watercolor+cartoon+style+sand+dunes+camel+oasis+desert+sunset+red+cliffs&image_size=square_hd","features":"大漠孤烟，长河落日，风光壮美，戈壁辽阔","climate":"干旱少雨，昼夜温差极大，日照充足","vegetation":"耐旱植物为主，胡杨、骆驼刺、仙人掌、红柳","region":"陕西、甘肃、青海、宁夏、新疆","summary":"神秘壮阔的丝绸之路，沙漠中的绿洲藏着生命的奇迹"}
+
+{"id":4,"name":"西南地区","image":"https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=cute+southwest+china+landscape+watercolor+cartoon+style+high+mountains+cloud+forest+panda+bamboo+monkey&image_size=square_hd","features":"高山连绵，雨林茂密，动物众多，风景如画","climate":"气候垂直差异显著，湿润多雨，云雾缭绕","vegetation":"热带雨林、亚热带常绿阔叶林、高山草甸","region":"四川、云南、贵州、西藏、重庆","summary":"大自然的珍稀宝库，是大熊猫和金丝猴的美丽故乡"}
+
+{"id":5,"name":"华南地区","image":"https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=cute+south+china+landscape+watercolor+cartoon+style+tropical+rainforest+elephant+peacock+blue+sea+palm+trees&image_size=square_hd","features":"热带雨林，四季如春，物种丰富，风光旖旎","climate":"温暖湿润，夏长冬短，雨量充沛","vegetation":"热带季雨林、常绿阔叶林，榕树、木棉、椰树繁茂","region":"广东、广西、海南、香港、澳门","summary":"四季花开的热带天堂，充满生机与活力的绿色世界"}
+
+{"id":6,"name":"华中地区","image":"https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=cute+central+china+landscape+watercolor+cartoon+style+lakes+rivers+farmland+fisht+rice+paddies+lotus&image_size=square_hd","features":"湖泊众多，大河纵横，鱼米之乡，物产丰富","climate":"温暖湿润，四季分明，雨水充沛","vegetation":"水稻田、莲塘密布，杨树、柳树、樟树常见","region":"河南、湖北、湖南","summary":"千湖之省的鱼米之乡，是江豚和白鳍豚的珍贵家园"}
+
+{"id":7,"name":"华东地区","image":"https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=cute+east+china+landscape+watercolor+cartoon+style+water+towns+green+hills+tea+plantations+crane+bamboo&image_size=square_hd","features":"水乡泽国，物产丰富，经济发达，文化繁荣","climate":"温暖湿润，四季分明，梅雨季节明显","vegetation":"亚热带常绿阔叶林，茶园、竹林、水杉遍布","region":"上海、江苏、浙江、安徽、福建、江西、山东、台湾","summary":"烟雨江南的诗意水乡，丹顶鹤翩翩起舞的美丽家园"}

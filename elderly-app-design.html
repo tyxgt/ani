@@ -1,0 +1,915 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>暖伴 — 老年人适老工具小程序 设计稿</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --warm-bg: #FFF8F0;
+    --warm-card: #FFFFFF;
+    --warm-primary: #FF7643;
+    --warm-primary-light: #FFE8DC;
+    --warm-primary-dark: #E55A2B;
+    --warm-text: #2D2419;
+    --warm-text-secondary: #8A7A6A;
+    --warm-text-light: #B8A99A;
+    --warm-border: #F0E6DA;
+    --warm-success: #4CAF7D;
+    --warm-success-light: #E3F5EC;
+    --warm-warning: #F5A623;
+    --warm-warning-light: #FFF3E0;
+    --warm-danger: #E5524A;
+    --warm-danger-light: #FFEBE9;
+    --warm-blue: #4A90D9;
+    --warm-blue-light: #E8F2FC;
+    --shadow-soft: 0 4px 20px rgba(45, 36, 25, 0.06);
+    --shadow-card: 0 2px 12px rgba(45, 36, 25, 0.05);
+    --shadow-button: 0 4px 12px rgba(255, 118, 67, 0.25);
+  }
+
+  body {
+    font-family: 'Noto Sans SC', -apple-system, sans-serif;
+    background: var(--warm-bg);
+    color: var(--warm-text);
+    min-height: 100vh;
+    padding: 40px 20px;
+  }
+
+  /* ===== Page Header ===== */
+  .design-header {
+    max-width: 1100px;
+    margin: 0 auto 48px;
+    text-align: center;
+  }
+  .design-header h1 {
+    font-size: 36px;
+    font-weight: 900;
+    color: var(--warm-text);
+    letter-spacing: -0.5px;
+  }
+  .design-header h1 span { color: var(--warm-primary); }
+  .design-header p {
+    font-size: 16px;
+    color: var(--warm-text-secondary);
+    margin-top: 8px;
+  }
+  .design-tags {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 16px;
+    flex-wrap: wrap;
+  }
+  .design-tag {
+    padding: 6px 16px;
+    border-radius: 100px;
+    font-size: 13px;
+    font-weight: 500;
+    background: var(--warm-primary-light);
+    color: var(--warm-primary-dark);
+  }
+  .design-tag.blue { background: var(--warm-blue-light); color: var(--warm-blue); }
+  .design-tag.green { background: var(--warm-success-light); color: var(--warm-success); }
+
+  /* ===== Screens Container ===== */
+  .screens {
+    display: flex;
+    justify-content: center;
+    gap: 48px;
+    flex-wrap: wrap;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  /* ===== Phone Frame ===== */
+  .phone-frame {
+    width: 390px;
+    height: 780px;
+    background: var(--warm-card);
+    border-radius: 40px;
+    box-shadow: 0 20px 60px rgba(45, 36, 25, 0.12), 0 0 0 8px #E8DED0, 0 0 0 9px #D4C9B8;
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Status Bar */
+  .status-bar {
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 28px;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--warm-text);
+    flex-shrink: 0;
+  }
+  .status-bar .icons { display: flex; align-items: center; gap: 5px; }
+  .status-bar .signal-bars { display: flex; align-items: flex-end; gap: 2px; }
+  .status-bar .signal-bars span { width: 3px; background: var(--warm-text); border-radius: 1px; }
+  .status-bar .signal-bars span:nth-child(1) { height: 4px; }
+  .status-bar .signal-bars span:nth-child(2) { height: 6px; }
+  .status-bar .signal-bars span:nth-child(3) { height: 8px; }
+  .status-bar .signal-bars span:nth-child(4) { height: 10px; }
+  .battery {
+    width: 22px; height: 11px;
+    border: 1.5px solid var(--warm-text);
+    border-radius: 3px;
+    position: relative;
+    padding: 1px;
+  }
+  .battery::after {
+    content: '';
+    position: absolute;
+    right: -3px; top: 3px;
+    width: 2px; height: 5px;
+    background: var(--warm-text);
+    border-radius: 0 1px 1px 0;
+  }
+  .battery .level { height: 100%; width: 80%; background: var(--warm-success); border-radius: 1px; }
+
+  /* ===== Screen Label ===== */
+  .screen-label {
+    text-align: center;
+    margin-top: 20px;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--warm-text-secondary);
+  }
+
+  /* ===== Weather Page ===== */
+  .weather-page {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .weather-hero {
+    background: linear-gradient(160deg, #FFB088 0%, #FF7643 50%, #E55A2B 100%);
+    padding: 12px 28px 32px;
+    color: white;
+    position: relative;
+    overflow: hidden;
+  }
+  .weather-hero::before {
+    content: '';
+    position: absolute;
+    top: -40px; right: -30px;
+    width: 160px; height: 160px;
+    background: rgba(255, 255, 255, 0.12);
+    border-radius: 50%;
+  }
+  .weather-hero::after {
+    content: '';
+    position: absolute;
+    bottom: -30px; left: -20px;
+    width: 100px; height: 100px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 50%;
+  }
+  .weather-location {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 18px;
+    font-weight: 500;
+    margin-bottom: 8px;
+    position: relative;
+    z-index: 1;
+  }
+  .weather-location svg { flex-shrink: 0; }
+  .weather-temp {
+    font-size: 80px;
+    font-weight: 900;
+    line-height: 1;
+    letter-spacing: -3px;
+    position: relative;
+    z-index: 1;
+  }
+  .weather-temp .degree {
+    font-size: 48px;
+    vertical-align: top;
+    font-weight: 700;
+  }
+  .weather-condition {
+    font-size: 24px;
+    font-weight: 500;
+    margin-top: 4px;
+    position: relative;
+    z-index: 1;
+  }
+  .weather-range {
+    font-size: 17px;
+    opacity: 0.9;
+    margin-top: 4px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .weather-body {
+    flex: 1;
+    padding: 24px 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    overflow-y: auto;
+  }
+
+  .advice-card {
+    background: var(--warm-primary-light);
+    border-radius: 20px;
+    padding: 20px 24px;
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+  }
+  .advice-icon {
+    width: 52px; height: 52px;
+    background: var(--warm-primary);
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 26px;
+  }
+  .advice-content h3 {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--warm-text);
+    margin-bottom: 4px;
+  }
+  .advice-content p {
+    font-size: 16px;
+    color: var(--warm-text-secondary);
+    line-height: 1.5;
+  }
+
+  .voice-btn {
+    background: var(--warm-primary);
+    color: white;
+    border: none;
+    border-radius: 20px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    font-size: 22px;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+    box-shadow: var(--shadow-button);
+    transition: transform 0.15s;
+  }
+  .voice-btn:active { transform: scale(0.97); }
+  .voice-btn svg { flex-shrink: 0; }
+
+  .weather-details {
+    display: flex;
+    gap: 12px;
+  }
+  .detail-item {
+    flex: 1;
+    background: var(--warm-card);
+    border: 1px solid var(--warm-border);
+    border-radius: 16px;
+    padding: 16px 12px;
+    text-align: center;
+  }
+  .detail-item .icon { font-size: 22px; margin-bottom: 6px; }
+  .detail-item .label { font-size: 13px; color: var(--warm-text-light); margin-bottom: 2px; }
+  .detail-item .value { font-size: 18px; font-weight: 700; color: var(--warm-text); }
+
+  .forecast-section h4 {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--warm-text);
+    margin-bottom: 12px;
+    padding-left: 4px;
+  }
+  .forecast-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .forecast-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    background: var(--warm-card);
+    border: 1px solid var(--warm-border);
+    border-radius: 14px;
+  }
+  .forecast-item .day { font-size: 16px; font-weight: 500; color: var(--warm-text); width: 60px; }
+  .forecast-item .icon { font-size: 22px; }
+  .forecast-item .temps { font-size: 16px; font-weight: 500; color: var(--warm-text-secondary); }
+
+  /* ===== Medication Page ===== */
+  .medication-page {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background: var(--warm-bg);
+  }
+
+  .med-header {
+    padding: 12px 28px 20px;
+    background: var(--warm-card);
+    border-bottom: 1px solid var(--warm-border);
+  }
+  .med-header h2 {
+    font-size: 28px;
+    font-weight: 900;
+    color: var(--warm-text);
+  }
+  .med-header .date {
+    font-size: 16px;
+    color: var(--warm-text-secondary);
+    margin-top: 4px;
+  }
+
+  .med-stats {
+    display: flex;
+    gap: 12px;
+    padding: 20px 28px;
+  }
+  .stat-card {
+    flex: 1;
+    border-radius: 18px;
+    padding: 18px 16px;
+    text-align: center;
+  }
+  .stat-card.taken { background: var(--warm-success-light); }
+  .stat-card.pending { background: var(--warm-warning-light); }
+  .stat-card .num { font-size: 36px; font-weight: 900; line-height: 1; }
+  .stat-card.taken .num { color: var(--warm-success); }
+  .stat-card.pending .num { color: var(--warm-warning); }
+  .stat-card .label { font-size: 14px; color: var(--warm-text-secondary); margin-top: 4px; }
+
+  .med-list {
+    flex: 1;
+    padding: 0 28px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .med-section-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--warm-text-secondary);
+    padding: 8px 4px 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .med-section-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--warm-border);
+  }
+
+  .med-item {
+    background: var(--warm-card);
+    border-radius: 18px;
+    padding: 18px 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    border: 2px solid transparent;
+    box-shadow: var(--shadow-card);
+    transition: border-color 0.2s;
+  }
+  .med-item.active {
+    border-color: var(--warm-primary);
+    background: var(--warm-primary-light);
+  }
+  .med-item.done { opacity: 0.6; }
+
+  .med-time {
+    text-align: center;
+    flex-shrink: 0;
+    width: 64px;
+  }
+  .med-time .clock {
+    font-size: 20px;
+    font-weight: 900;
+    color: var(--warm-text);
+  }
+  .med-time .period {
+    font-size: 12px;
+    color: var(--warm-text-light);
+    margin-top: 2px;
+  }
+
+  .med-divider {
+    width: 1px;
+    height: 40px;
+    background: var(--warm-border);
+    flex-shrink: 0;
+  }
+
+  .med-info {
+    flex: 1;
+  }
+  .med-info .name {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--warm-text);
+    margin-bottom: 2px;
+  }
+  .med-info .dose {
+    font-size: 15px;
+    color: var(--warm-text-secondary);
+  }
+
+  .med-status {
+    flex-shrink: 0;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+  }
+  .med-status.done {
+    background: var(--warm-success);
+    color: white;
+  }
+  .med-status.pending {
+    background: var(--warm-warning-light);
+    border: 2px dashed var(--warm-warning);
+  }
+  .med-status.alert {
+    background: var(--warm-danger);
+    color: white;
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(229, 82, 74, 0.4); }
+    50% { box-shadow: 0 0 0 8px rgba(229, 82, 74, 0); }
+  }
+
+  .add-med-btn {
+    margin: 16px 28px 20px;
+    background: var(--warm-primary-light);
+    border: 2px dashed var(--warm-primary);
+    border-radius: 18px;
+    padding: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--warm-primary);
+    cursor: pointer;
+    transition: background 0.15s;
+    font-family: inherit;
+  }
+  .add-med-btn:hover { background: var(--warm-primary-light); opacity: 0.85; }
+
+  .med-alert-banner {
+    margin: 0 28px 16px;
+    background: var(--warm-danger-light);
+    border-radius: 16px;
+    padding: 14px 18px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 15px;
+    color: var(--warm-danger);
+    font-weight: 500;
+  }
+  .med-alert-banner .bell {
+    animation: ring 0.8s ease-in-out infinite;
+    display: inline-block;
+  }
+  @keyframes ring {
+    0%, 100% { transform: rotate(0deg); }
+    25% { transform: rotate(-12deg); }
+    75% { transform: rotate(12deg); }
+  }
+
+  /* ===== Tab Bar ===== */
+  .tab-bar {
+    height: 76px;
+    background: var(--warm-card);
+    border-top: 1px solid var(--warm-border);
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    padding-bottom: 8px;
+    flex-shrink: 0;
+  }
+  .tab-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+    transition: opacity 0.15s;
+    position: relative;
+  }
+  .tab-item .tab-icon {
+    width: 32px; height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--warm-text-light);
+  }
+  .tab-item .tab-label {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--warm-text-light);
+  }
+  .tab-item.active .tab-icon { color: var(--warm-primary); }
+  .tab-item.active .tab-label { color: var(--warm-primary); font-weight: 700; }
+  .tab-item.active::before {
+    content: '';
+    position: absolute;
+    top: -1px;
+    width: 24px;
+    height: 3px;
+    background: var(--warm-primary);
+    border-radius: 0 0 3px 3px;
+  }
+
+  /* ===== Design Notes ===== */
+  .design-notes {
+    max-width: 1100px;
+    margin: 60px auto 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+  }
+  .note-card {
+    background: var(--warm-card);
+    border-radius: 20px;
+    padding: 24px;
+    box-shadow: var(--shadow-card);
+  }
+  .note-card h4 {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--warm-text);
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .note-card h4 .emoji { font-size: 20px; }
+  .note-card ul {
+    list-style: none;
+    padding: 0;
+  }
+  .note-card li {
+    font-size: 14px;
+    color: var(--warm-text-secondary);
+    line-height: 1.8;
+    padding-left: 16px;
+    position: relative;
+  }
+  .note-card li::before {
+    content: '·';
+    position: absolute;
+    left: 0;
+    color: var(--warm-primary);
+    font-weight: 900;
+    font-size: 18px;
+  }
+
+  /* ===== Animations ===== */
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .phone-frame { animation: fadeInUp 0.6s ease-out backwards; }
+  .phone-frame:nth-child(2) { animation-delay: 0.15s; }
+</style>
+</head>
+<body>
+
+<!-- ===== Header ===== -->
+<div class="design-header">
+  <h1>暖伴 <span>·</span> 适老工具小程序</h1>
+  <p>面向 60+ 老年人的极简生活工具 — 大字 · 语音 · 三步操作</p>
+  <div class="design-tags">
+    <span class="design-tag">适老化设计</span>
+    <span class="design-tag blue">语音播报</span>
+    <span class="design-tag green">微信小程序</span>
+    <span class="design-tag">个人主体可上线</span>
+  </div>
+</div>
+
+<!-- ===== Screens ===== -->
+<div class="screens">
+
+  <!-- ========== Screen 1: Weather ========== -->
+  <div>
+    <div class="phone-frame">
+      <div class="status-bar">
+        <span>9:41</span>
+        <div class="icons">
+          <div class="signal-bars"><span></span><span></span><span></span><span></span></div>
+          <span style="font-size:13px;margin-left:4px;">5G</span>
+          <div class="battery" style="margin-left:6px;"><div class="level"></div></div>
+        </div>
+      </div>
+
+      <div class="weather-page">
+        <!-- Hero -->
+        <div class="weather-hero">
+          <div class="weather-location">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+              <circle cx="12" cy="10" r="3"/>
+            </svg>
+            北京 海淀区
+          </div>
+          <div class="weather-temp">28<span class="degree">°</span></div>
+          <div class="weather-condition">☀️ 晴</div>
+          <div class="weather-range">最高 31° · 最低 22° · 体感 30°</div>
+        </div>
+
+        <!-- Body -->
+        <div class="weather-body">
+          <!-- Advice -->
+          <div class="advice-card">
+            <div class="advice-icon">👕</div>
+            <div class="advice-content">
+              <h3>穿短袖,带防晒帽</h3>
+              <p>今天天气热,紫外线强,出门记得涂防晒、戴帽子</p>
+            </div>
+          </div>
+
+          <!-- Details -->
+          <div class="weather-details">
+            <div class="detail-item">
+              <div class="icon">💧</div>
+              <div class="label">湿度</div>
+              <div class="value">45%</div>
+            </div>
+            <div class="detail-item">
+              <div class="icon">🌬️</div>
+              <div class="label">风力</div>
+              <div class="value">3级</div>
+            </div>
+            <div class="detail-item">
+              <div class="icon">☀️</div>
+              <div class="label">紫外线</div>
+              <div class="value">强</div>
+            </div>
+          </div>
+
+          <!-- Forecast -->
+          <div class="forecast-section">
+            <h4>未来几天</h4>
+            <div class="forecast-list">
+              <div class="forecast-item">
+                <span class="day">明天</span>
+                <span class="icon">⛅</span>
+                <span class="temps">31° / 23°</span>
+              </div>
+              <div class="forecast-item">
+                <span class="day">周三</span>
+                <span class="icon">🌧️</span>
+                <span class="temps">27° / 21°</span>
+              </div>
+              <div class="forecast-item">
+                <span class="day">周四</span>
+                <span class="icon">⛅</span>
+                <span class="temps">29° / 22°</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab Bar -->
+      <div class="tab-bar">
+        <div class="tab-item active">
+          <div class="tab-icon">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="5"/>
+              <line x1="12" y1="1" x2="12" y2="3"/>
+              <line x1="12" y1="21" x2="12" y2="23"/>
+              <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+              <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+              <line x1="1" y1="12" x2="3" y2="12"/>
+              <line x1="21" y1="12" x2="23" y2="12"/>
+              <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+              <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+            </svg>
+          </div>
+          <span class="tab-label">天气</span>
+        </div>
+        <div class="tab-item">
+          <div class="tab-icon">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M10.5 20.5L4 21l.5-6.5L17 2 22 7 10.5 20.5z"/>
+              <path d="M9 11l4 4"/>
+            </svg>
+          </div>
+          <span class="tab-label">吃药提醒</span>
+        </div>
+      </div>
+    </div>
+    <div class="screen-label">天气页 — 首页</div>
+  </div>
+
+  <!-- ========== Screen 2: Medication ========== -->
+  <div>
+    <div class="phone-frame">
+      <div class="status-bar">
+        <span>9:41</span>
+        <div class="icons">
+          <div class="signal-bars"><span></span><span></span><span></span><span></span></div>
+          <span style="font-size:13px;margin-left:4px;">5G</span>
+          <div class="battery" style="margin-left:6px;"><div class="level"></div></div>
+        </div>
+      </div>
+
+      <div class="medication-page">
+        <!-- Header -->
+        <div class="med-header">
+          <h2>用药提醒</h2>
+          <div class="date">8月4日 星期一</div>
+        </div>
+
+        <!-- Stats -->
+        <div class="med-stats">
+          <div class="stat-card taken">
+            <div class="num">1</div>
+            <div class="label">已服用</div>
+          </div>
+          <div class="stat-card pending">
+            <div class="num">2</div>
+            <div class="label">待服用</div>
+          </div>
+        </div>
+
+        <!-- Med List -->
+        <div class="med-list">
+          <div class="med-section-title">上午</div>
+
+          <div class="med-item done">
+            <div class="med-time">
+              <div class="clock">08:00</div>
+              <div class="period">早饭前</div>
+            </div>
+            <div class="med-divider"></div>
+            <div class="med-info">
+              <div class="name">降压药</div>
+              <div class="dose">1片 · 苯磺酸氨氯地平</div>
+            </div>
+            <div class="med-status done">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+            </div>
+          </div>
+
+          <div class="med-section-title">下午</div>
+
+          <div class="med-item active">
+            <div class="med-time">
+              <div class="clock">12:00</div>
+              <div class="period">午饭后</div>
+            </div>
+            <div class="med-divider"></div>
+            <div class="med-info">
+              <div class="name">降糖药</div>
+              <div class="dose">1片 · 二甲双胍</div>
+            </div>
+            <div class="med-status alert">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="white">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+              </svg>
+            </div>
+          </div>
+
+          <div class="med-section-title">晚上</div>
+
+          <div class="med-item">
+            <div class="med-time">
+              <div class="clock">20:00</div>
+              <div class="period">晚饭后</div>
+            </div>
+            <div class="med-divider"></div>
+            <div class="med-info">
+              <div class="name">降压药</div>
+              <div class="dose">1片 · 苯磺酸氨氯地平</div>
+            </div>
+            <div class="med-status pending">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#F5A623" stroke-width="2.5" stroke-linecap="round">
+                <circle cx="12" cy="12" r="9"/>
+                <polyline points="12 7 12 12 15 14"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <!-- Add Button -->
+        <button class="add-med-btn">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+            <line x1="12" y1="5" x2="12" y2="19"/>
+            <line x1="5" y1="12" x2="19" y2="12"/>
+          </svg>
+          添加药物
+        </button>
+      </div>
+
+      <!-- Tab Bar -->
+      <div class="tab-bar">
+        <div class="tab-item">
+          <div class="tab-icon">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="5"/>
+              <line x1="12" y1="1" x2="12" y2="3"/>
+              <line x1="12" y1="21" x2="12" y2="23"/>
+              <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+              <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+              <line x1="1" y1="12" x2="3" y2="12"/>
+              <line x1="21" y1="12" x2="23" y2="12"/>
+              <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+              <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+            </svg>
+          </div>
+          <span class="tab-label">天气</span>
+        </div>
+        <div class="tab-item active">
+          <div class="tab-icon">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M10.5 20.5L4 21l.5-6.5L17 2 22 7 10.5 20.5z"/>
+              <path d="M9 11l4 4"/>
+            </svg>
+          </div>
+          <span class="tab-label">吃药提醒</span>
+        </div>
+      </div>
+    </div>
+    <div class="screen-label">用药提醒页</div>
+  </div>
+
+</div>
+
+<!-- ===== Design Notes ===== -->
+<div class="design-notes">
+  <div class="note-card">
+    <h4><span class="emoji">🔍</span> 适老化设计原则</h4>
+    <ul>
+      <li>正文字号 16px+,标题 24px+,温度数字 80px</li>
+      <li>按钮高度 48px+,点击热区 1.5 倍</li>
+      <li>核心功能 3 步内可达,无多级菜单</li>
+      <li>高对比配色,文字对比度 > 4.5:1</li>
+      <li>去除所有弹窗、广告、复杂动画</li>
+    </ul>
+  </div>
+  <div class="note-card">
+    <h4><span class="emoji">🔊</span> 语音交互设计</h4>
+    <ul>
+      <li>用药提醒到时间自动语音播报警告</li>
+      <li>WechatSI 插件实现,零成本零服务器</li>
+      <li>长文本按 200 字分段连续播放</li>
+      <li>语音优先,文字辅助,降低阅读门槛</li>
+    </ul>
+  </div>
+  <div class="note-card">
+    <h4><span class="emoji">💊</span> 用药提醒机制</h4>
+    <ul>
+      <li>到时间红色脉冲动画 + 语音播报</li>
+      <li>已服用/待服用/超时三种状态</li>
+      <li>点击"已服用"确认,超 30 分钟提醒子女</li>
+      <li>订阅消息推送,不用打开小程序也能提醒</li>
+      <li>药品支持拼音标注,方便老人认药名</li>
+    </ul>
+  </div>
+  <div class="note-card">
+    <h4><span class="emoji">🎨</span> 色彩与视觉</h4>
+    <ul>
+      <li>暖橙主色 #FF7643,温暖友好不冰冷</li>
+      <li>米白背景 #FFF8F0,降低屏幕刺激</li>
+      <li>绿色=已完成,橙色=待办,红色=紧急</li>
+      <li>圆角 18-20px,避免锐利边角</li>
+      <li>卡片阴影柔和,层次清晰不杂乱</li>
+    </ul>
+  </div>
+</div>
+
+</body>
+</html>

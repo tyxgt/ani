@@ -148,7 +148,7 @@ export interface ClimateItem {
   name: string
   pinyin: string
   image: string
-  temperature: string
+  climate: string
   precipitation: string
   characteristics: string
   region: string

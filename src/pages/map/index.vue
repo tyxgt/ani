@@ -5,7 +5,10 @@
     @touchmove="onTouchMove"
     @touchend="onTouchEnd"
   >
-    <image :class="styles.background" :src="backgroundUrl" mode="aspectFill" />
+    <view :class="styles.bgWrap">
+      <view v-if="!bgLoaded" :class="styles.bgSkeleton" />
+      <image :class="styles.background" :src="backgroundUrl" mode="aspectFill" @load="bgLoaded = true" />
+    </view>
 
     <view :class="styles.header" @touchstart.stop @touchmove.stop @touchend.stop>
       <PinyinText
@@ -48,10 +51,12 @@
     >
       <view :class="styles.infoLeft">
         <view :class="styles.regionImage">
+          <view v-if="!regionImgLoaded" :class="styles.regionImgSkeleton" />
           <image
             :src="REGION_IMAGE_URLS[selectedRegion.name]"
             mode="aspectFill"
             :class="styles.regionImg"
+            @load="regionImgLoaded = true"
           />
         </view>
       </view>
@@ -78,7 +83,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, nextTick } from "vue";
+import { ref, onMounted, onUnmounted, nextTick, watch } from "vue";
 import regionData from "../../data/regions.json";
 import CustomTabBar from "../../components/CustomTabBar";
 import PinyinText from "../../components/PinyinText";
@@ -112,6 +117,12 @@ const regions = REGIONS;
 // ─── State ────────────────────────────────────────────────────
 const selectedRegion = ref<any>(null);
 const error = ref<string | null>(null);
+const bgLoaded = ref(false);
+const regionImgLoaded = ref(false);
+
+watch(selectedRegion, () => {
+  regionImgLoaded.value = false;
+});
 
 // ─── Canvas internals ─────────────────────────────────────────
 let canvas: any = null;
