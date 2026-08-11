@@ -25,13 +25,16 @@
       </view>
 
       <scroll-view scroll-y :class="styles.animalList" :scroll-top="0">
-        <LearnCard
-          v-for="card in cardList"
-          :key="activeCategory + '-' + card.id"
-          :item="card"
-          @click="onCardClick(card)"
-        />
-        <view :class="styles.listBottom"></view>
+        <CardSkeleton v-if="loading" />
+        <template v-else>
+          <LearnCard
+            v-for="card in cardList"
+            :key="activeCategory + '-' + card.id"
+            :item="card"
+            @click="onCardClick(card)"
+          />
+          <view :class="styles.listBottom"></view>
+        </template>
       </scroll-view>
     </view>
 
@@ -44,13 +47,14 @@ import { ref, computed, onMounted } from 'vue'
 import CustomTabBar from '../../components/CustomTabBar'
 import PinyinText from '../../components/PinyinText'
 import LearnCard from '../../components/LearnCard'
+import CardSkeleton from '../../components/CardSkeleton'
 import {
   KNOWLEDGE_CATEGORIES,
   KNOWLEDGE_ANIMALS,
   PROTECTION_COLOR_MAP,
 } from '../../constants'
 import { TERRAIN_DETAILS, CLIMATE_DETAILS } from '../../data/learnDetails'
-import { callFunction } from '../../utils/cloud'
+import { preloadLearnData } from '../../utils/preload'
 import type { LearnCardItem, KnowledgeCategory } from '../../types'
 
 const categories = ref<KnowledgeCategory[]>(KNOWLEDGE_CATEGORIES)
@@ -58,6 +62,7 @@ const animals = ref(KNOWLEDGE_ANIMALS)
 const terrains = ref(Object.values(TERRAIN_DETAILS))
 const climates = ref(Object.values(CLIMATE_DETAILS))
 const activeCategory = ref(3)
+const loading = ref(true)
 
 const cardList = computed<LearnCardItem[]>(() => {
   if (activeCategory.value === 1) {
@@ -89,10 +94,10 @@ const cardList = computed<LearnCardItem[]>(() => {
     name: item.name,
     image: item.image,
     tagText: item.protectionLevel,
-    tagBgColor: '#FFF3E0',
-    tagBorderColor: '#FF9800',
-    tagTextColor: '#E65100',
-    borderColor: '#FF9800',
+    tagBgColor: item.protectionBgColor || '#F5F5F5',
+    tagBorderColor: item.borderColor || '#E0E0E0',
+    tagTextColor: item.protectionTextColor || '#757575',
+    borderColor: item.borderColor || '#E0E0E0',
   }))
 })
 
@@ -112,13 +117,9 @@ function onCardClick(card: LearnCardItem) {
 }
 
 async function loadData() {
+  loading.value = true
   try {
-    const [catRes, terrainRes, climateRes, animalRes] = await Promise.all([
-      callFunction('getKnowledgeCategories'),
-      callFunction('getTerrainList'),
-      callFunction('getClimateList'),
-      callFunction('getAnimalList'),
-    ])
+    const [catRes, terrainRes, climateRes, animalRes] = await preloadLearnData()
 
     if (catRes.code === 0 && catRes.data) {
       categories.value = catRes.data
@@ -145,6 +146,9 @@ async function loadData() {
     }
   } catch (error) {
     console.error('加载知识库数据失败:', error)
+    uni.showToast({ title: '加载失败，请检查网络', icon: 'none' })
+  } finally {
+    loading.value = false
   }
 }
 

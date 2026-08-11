@@ -17,7 +17,8 @@
 
     <!-- 滚动内容区域 -->
     <scroll-view scroll-y :class="styles.scrollView">
-      <view :class="styles.terrainList">
+      <CardSkeleton v-if="loading" />
+      <view v-else :class="styles.terrainList">
         <view
           v-for="item in terrainList"
           :key="item.id"
@@ -46,11 +47,13 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import PinyinText from '../../components/PinyinText'
+import CardSkeleton from '../../components/CardSkeleton'
 import { TERRAIN_DETAILS } from '../../data/learnDetails'
 import { callFunction } from '../../utils/cloud'
 import type { TerrainItem } from '../../types'
 
 const terrainList = ref<TerrainItem[]>([])
+const loading = ref(true)
 
 function goBack() {
   const pages = getCurrentPages()
@@ -68,14 +71,21 @@ function onTerrainClick(item: TerrainItem) {
 }
 
 async function loadData() {
+  loading.value = true
   try {
     const res = await callFunction('getTerrainList')
     if (res.code === 0 && res.data) {
       terrainList.value = res.data
+    } else {
+      uni.showToast({ title: '加载失败，请检查网络', icon: 'none' })
+      terrainList.value = Object.values(TERRAIN_DETAILS)
     }
   } catch (error) {
     console.error('加载地形数据失败:', error)
+    uni.showToast({ title: '加载失败，请检查网络', icon: 'none' })
     terrainList.value = Object.values(TERRAIN_DETAILS)
+  } finally {
+    loading.value = false
   }
 }
 

@@ -1,102 +1,102 @@
 [
   {
     "id": 1,
-    "name": "溫帶季風氣候",
+    "name": "温带季风气候",
     "image": "https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=cute+temperate+monsoon+landscape+watercolor+cartoon+style+four+seasons+trees+spring+blossom+summer+green+autumn+yellow+winter+snow&image_size=square_hd",
-    "temperature": "四季分明，春暖夏熱，秋涼冬冷",
-    "precipitation": "夏季多雨，冬季乾燥，雨熱同期",
-    "characteristics": "季風顯著，春天花開，夏天炎熱多雨，秋天涼爽，冬天寒冷",
-    "region": "中國東北、華北、朝鮮半島、日本北部",
-    "summary": "春夏秋冬輪番上陣，是大自然最美麗的四季舞台"
+    "temperature": "四季分明，春暖夏热，秋凉冬冷",
+    "precipitation": "夏季多雨，冬季干燥，雨热同期",
+    "characteristics": "季风显著，春天花开，夏天炎热多雨，秋天凉爽，冬天寒冷",
+    "region": "中国东北、华北、朝鲜半岛、日本北部",
+    "summary": "春夏秋冬轮番上阵，是大自然最美丽的四季舞台"
   },
   {
     "id": 2,
-    "name": "亞熱帶季風氣候",
+    "name": "亚热带季风气候",
     "image": "https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=cute+subtropical+monsoon+landscape+watercolor+cartoon+style+lush+green+bamboo+rain+paddy+fields+lotus+pond&image_size=square_hd",
-    "temperature": "夏季高溫，冬季溫和，四季常青",
-    "precipitation": "雨水豐沛，夏季梅雨綿綿，颱風帶來暴雨",
-    "characteristics": "溫暖濕潤，植被常綠，梅雨和颱風是特色",
-    "region": "中國華東、華南、長江中下游、台灣",
-    "summary": "綠意盎然的魚米之鄉，雨水滋潤萬物生長"
+    "temperature": "夏季高温，冬季温和，四季常青",
+    "precipitation": "雨水丰沛，夏季梅雨绵绵，台风带来暴雨",
+    "characteristics": "温暖湿润，植被常绿，梅雨和台风是特色",
+    "region": "中国华东、华南、长江中下游、台湾",
+    "summary": "绿意盎然的鱼米之乡，雨水滋润万物生长"
   },
   {
     "id": 3,
-    "name": "熱帶季風氣候",
+    "name": "热带季风气候",
     "image": "https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=cute+tropical+monsoon+landscape+watercolor+cartoon+style+coconut+palm+beach+monkey+colorful+birds+bright+sun&image_size=square_hd",
-    "temperature": "全年高溫，長夏無冬，陽光充足",
-    "precipitation": "分旱雨兩季，雨季暴雨傾盆，旱季陽光燦爛",
-    "characteristics": "陽光充足，植物常綠，水果豐富，海風習習",
-    "region": "中國海南、雲南南部、印度、泰國、越南",
-    "summary": "陽光與雨林的家園，一年四季都是夏天"
+    "temperature": "全年高温，长夏无冬，阳光充足",
+    "precipitation": "分旱雨两季，雨季暴雨倾盆，旱季阳光灿烂",
+    "characteristics": "阳光充足，植物常绿，水果丰富，海风习习",
+    "region": "中国海南、云南南部、印度、泰国、越南",
+    "summary": "阳光与雨林的家园，一年四季都是夏天"
   },
   {
     "id": 4,
-    "name": "溫帶大陸性氣候",
+    "name": "温带大陆性气候",
     "image": "https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=cute+temperate+continental+landscape+watercolor+cartoon+style+vast+grassland+sheep+yurt+blue+sky+white+clouds&image_size=square_hd",
-    "temperature": "冬冷夏熱，晝夜溫差大，四季分明",
-    "precipitation": "降水稀少，集中在夏季，氣候乾燥",
-    "characteristics": "大陸性強，草原遼闊，風沙大，天空特別藍",
-    "region": "中國西北、蒙古、中亞、西伯利亞南部",
-    "summary": "遼闊的草原與沙漠，藍天白雲下的壯美天地"
+    "temperature": "冬冷夏热，昼夜温差大，四季分明",
+    "precipitation": "降水稀少，集中在夏季，气候干燥",
+    "characteristics": "大陆性强，草原辽阔，风沙大，天空特别蓝",
+    "region": "中国西北、蒙古、中亚、西伯利亚南部",
+    "summary": "辽阔的草原与沙漠，蓝天白云下的壮美天地"
   },
   {
     "id": 5,
-    "name": "高原山地氣候",
+    "name": "高原山地气候",
     "image": "https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=cute+high+mountain+plateau+climate+landscape+watercolor+cartoon+style+bright+sun+thin+air+yaks+tents+snow+peaks&image_size=square_hd",
-    "temperature": "氣溫低，日夜溫差大，太陽輻射強",
-    "precipitation": "降水少，空氣稀薄乾燥，多降雪",
-    "characteristics": "陽光強烈，紫外線強，氧氣稀薄，風大寒冷",
-    "region": "青藏高原、帕米爾高原、安第斯山脈",
-    "summary": "離太陽最近的天空，雪山與草原的聖潔世界"
+    "temperature": "气温低，日夜温差大，太阳辐射强",
+    "precipitation": "降水少，空气稀薄干燥，多降雪",
+    "characteristics": "阳光强烈，紫外线强，氧气稀薄，风大寒冷",
+    "region": "青藏高原、帕米尔高原、安第斯山脉",
+    "summary": "离太阳最近的天空，雪山与草原的圣洁世界"
   },
   {
     "id": 6,
-    "name": "寒溫帶氣候",
+    "name": "寒温带气候",
     "image": "https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=cute+cold+temperate+landscape+watercolor+cartoon+style+snow+forest+pine+trees+reindeer+aurora+borealis+blue+tone&image_size=square_hd",
-    "temperature": "冬季漫長嚴寒，夏季短暫涼爽",
-    "precipitation": "降水不多，以雪為主，積雪深厚",
-    "characteristics": "冰雪覆蓋，針葉林茂密，動物多有厚皮毛",
-    "region": "中國大興安嶺北段、西伯利亞、北歐北部",
-    "summary": "冰雪精靈的故鄉，銀裝素裹的童話世界"
+    "temperature": "冬季漫长严寒，夏季短暂凉爽",
+    "precipitation": "降水不多，以雪为主，积雪深厚",
+    "characteristics": "冰雪覆盖，针叶林茂密，动物多有厚皮毛",
+    "region": "中国大兴安岭北段、西伯利亚、北欧北部",
+    "summary": "冰雪精灵的故乡，银装素裹的童话世界"
   },
   {
     "id": 7,
-    "name": "熱帶雨林氣候",
+    "name": "热带雨林气候",
     "image": "https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=cute+tropical+rainforest+landscape+watercolor+cartoon+style+dense+jungle+parrot+toucan+waterfall+lianas+bright+green&image_size=square_hd",
-    "temperature": "全年高溫多雨，溫差極小",
-    "precipitation": "雨水極多，幾乎每天都會下一場雨",
-    "characteristics": "植物層層疊疊，動物種類繁多，空氣濕潤",
-    "region": "亞馬遜平原、剛果盆地、東南亞群島",
-    "summary": "地球之肺，生物種類最豐富的綠色寶庫"
+    "temperature": "全年高温多雨，温差极小",
+    "precipitation": "雨水极多，几乎每天都会下一场雨",
+    "characteristics": "植物层层叠叠，动物种类繁多，空气湿润",
+    "region": "亚马逊平原、刚果盆地、东南亚群岛",
+    "summary": "地球之肺，生物种类最丰富的绿色宝库"
   },
   {
     "id": 8,
-    "name": "地中海氣候",
+    "name": "地中海气候",
     "image": "https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=cute+mediterranean+climate+landscape+watercolor+cartoon+style+olive+trees+vineyard+blue+sea+white+houses+lavender&image_size=square_hd",
-    "temperature": "夏季炎熱乾燥，冬季溫和多雨",
-    "precipitation": "冬雨夏乾，降水集中在冬季",
-    "characteristics": "陽光充足，橄欖和葡萄長得好，海風宜人",
-    "region": "地中海沿岸、加州、智利中部、南非開普敦",
-    "summary": "陽光、大海與薰衣草，度假勝地的完美氣候"
+    "temperature": "夏季炎热干燥，冬季温和多雨",
+    "precipitation": "冬雨夏干，降水集中在冬季",
+    "characteristics": "阳光充足，橄榄和葡萄长得好，海风宜人",
+    "region": "地中海沿岸、加州、智利中部、南非开普敦",
+    "summary": "阳光、大海与薰衣草，度假胜地的完美气候"
   },
   {
     "id": 9,
-    "name": "溫帶海洋性氣候",
+    "name": "温带海洋性气候",
     "image": "https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=cute+temperate+oceanic+climate+landscape+watercolor+cartoon+style+green+meadows+sheep+castle+mist+rainbow+gentle+hills&image_size=square_hd",
-    "temperature": "冬暖夏涼，全年溫和，溫差很小",
-    "precipitation": "全年濕潤，細雨綿綿，雲霧多",
-    "characteristics": "溫和濕潤，牧草豐美，適合畜牧業",
-    "region": "西歐、英國、愛爾蘭、新西蘭",
-    "summary": "溫柔如詩的氣候，綠色草原與古堡的童話世界"
+    "temperature": "冬暖夏凉，全年温和，温差很小",
+    "precipitation": "全年湿润，细雨绵绵，云雾多",
+    "characteristics": "温和湿润，牧草丰美，适合畜牧业",
+    "region": "西欧、英国、爱尔兰、新西兰",
+    "summary": "温柔如诗的气候，绿色草原与古堡的童话世界"
   },
   {
     "id": 10,
-    "name": "極地氣候",
+    "name": "极地气候",
     "image": "https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=cute+polar+climate+landscape+watercolor+cartoon+style+ice+snow+polar+bear+penguin+igloo+aurora+blue+white&image_size=square_hd",
-    "temperature": "全年酷寒，冰雪覆蓋，寒風刺骨",
-    "precipitation": "降水極少，乾燥寒冷，多暴風雪",
-    "characteristics": "極晝極夜，冰川廣佈，動物耐寒能力極強",
-    "region": "南極洲、北極圈內、格陵蘭島",
-    "summary": "冰雪世界的盡頭，勇敢生命的極限挑戰"
+    "temperature": "全年酷寒，冰雪覆盖，寒风刺骨",
+    "precipitation": "降水极少，干燥寒冷，多暴风雪",
+    "characteristics": "极昼极夜，冰川广布，动物耐寒能力极强",
+    "region": "南极洲、北极圈内、格陵兰岛",
+    "summary": "冰雪世界的尽头，勇敢生命的极限挑战"
   }
 ]

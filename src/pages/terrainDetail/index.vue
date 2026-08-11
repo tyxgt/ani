@@ -16,6 +16,8 @@
     </view>
 
     <scroll-view scroll-y :class="styles.scrollView">
+      <LoadingSpinner v-if="loading && !detail.id" />
+      <template v-else>
       <!-- 顶部大图 -->
       <view :class="styles.heroImageWrap">
         <image :class="styles.heroImage" :src="detail.image" mode="aspectFill" />
@@ -78,7 +80,7 @@
         >
           <view :class="styles.cardIcon">📍</view>
           <PinyinText
-            :text="'代表地區'"
+            :text="'代表地区'"
             :char-style="{ fontSize: '18px', fontWeight: 'bold', color: '#C2185B' }"
             :pinyin-style="{ fontSize: '10px', color: '#F48FB1' }"
           />
@@ -103,6 +105,7 @@
           <text>问博士</text>
         </view>
       </view>
+      </template>
     </scroll-view>
   </view>
 </template>
@@ -110,12 +113,14 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import PinyinText from '../../components/PinyinText'
+import LoadingSpinner from '../../components/LoadingSpinner'
 import { TERRAIN_DETAILS } from '../../data/learnDetails'
 import { callFunction } from '../../utils/cloud'
 import { TERRAIN_DISPLAY_CONFIG } from '../../constants'
 import type { TerrainItem } from '../../types'
 
 const detail = ref<TerrainItem>(TERRAIN_DETAILS['山地'])
+const loading = ref(false)
 
 const cardBg = computed(() => [
   '#E8F5E9', // 地形特征 - 绿
@@ -149,6 +154,7 @@ function onAsk() {
 }
 
 async function loadDetail(name: string) {
+  loading.value = true
   try {
     const res = await callFunction('getTerrainDetail', { name })
     if (res.code === 0 && res.data) {
@@ -162,9 +168,14 @@ async function loadDetail(name: string) {
         bannerIcon: config.bannerIcon,
         pageBg: config.pageBg,
       }
+    } else {
+      uni.showToast({ title: '加载失败，请检查网络', icon: 'none' })
     }
   } catch (error) {
     console.error('加载地形详情失败:', error)
+    uni.showToast({ title: '加载失败，请检查网络', icon: 'none' })
+  } finally {
+    loading.value = false
   }
 }
 
@@ -172,7 +183,14 @@ onMounted(() => {
   const pages = getCurrentPages()
   const currentPage = pages[pages.length - 1]
   const options = (currentPage as any)?.options || {}
-  const name = options.name || '山地'
+  // options.name 正常导航时会被小程序框架自动 decode；开发者工具"编译模式"里手动配置的
+  // 启动参数是原样透传的，这里兜底再 decode 一次，避免带着 % 编码去查库查不到
+  let name = options.name || '山地'
+  try {
+    name = decodeURIComponent(name)
+  } catch (e) {
+    // 不是合法的 URI 编码，说明本来就是普通文本，原样使用即可
+  }
 
   loadDetail(name)
 

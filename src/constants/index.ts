@@ -252,64 +252,8 @@ export const KNOWLEDGE_CATEGORIES: KnowledgeCategory[] = [
   },
 ]
 
-const PANDA_IMG =
-  'https://neeko-copilot.bytedance.net/api/text_to_image?prompt=cute%20giant%20panda%20sitting%20eating%20bamboo%20watercolor%20cartoon%20style%20green%20forest%20background&image_size=square_hd'
-const TIGER_IMG =
-  'https://neeko-copilot.bytedance.net/api/text_to_image?prompt=cute%20siberian%20tiger%20cub%20sitting%20grass%20watercolor%20cartoon%20style%20warm%20colors&image_size=square_hd'
-const MONKEY_IMG =
-  'https://neeko-copilot.bytedance.net/api/text_to_image?prompt=cute%20golden%20snub%20nosed%20monkey%20sitting%20on%20branch%20snow%20mountain%20background%20watercolor%20cartoon%20style&image_size=square_hd'
-const ELEPHANT_IMG =
-  'https://neeko-copilot.bytedance.net/api/text_to_image?prompt=cute%20asian%20elephant%20standing%20grassland%20watercolor%20cartoon%20style%20green%20trees%20background&image_size=square_hd'
-const CRANE_IMG =
-  'https://neeko-copilot.bytedance.net/api/text_to_image?prompt=cute%20red%20crowned%20crane%20standing%20in%20water%20reeds%20watercolor%20cartoon%20style%20blue%20sky%20background&image_size=square_hd'
-
-export const KNOWLEDGE_ANIMALS: KnowledgeAnimal[] = [
-  {
-    id: 1,
-    name: '大熊猫',
-    image: PANDA_IMG,
-    protectionLevel: '国家一级保护动物',
-    protectionBgColor: '#E8F5E9',
-    protectionTextColor: '#2E7D32',
-    borderColor: '#66BB6A',
-  },
-  {
-    id: 2,
-    name: '东北虎',
-    image: TIGER_IMG,
-    protectionLevel: '国家一级保护动物',
-    protectionBgColor: '#FFF3E0',
-    protectionTextColor: '#E65100',
-    borderColor: '#FFA726',
-  },
-  {
-    id: 3,
-    name: '金丝猴',
-    image: MONKEY_IMG,
-    protectionLevel: '国家一级保护动物',
-    protectionBgColor: '#E3F2FD',
-    protectionTextColor: '#1565C0',
-    borderColor: '#42A5F5',
-  },
-  {
-    id: 4,
-    name: '亚洲象',
-    image: ELEPHANT_IMG,
-    protectionLevel: '国家一级保护动物',
-    protectionBgColor: '#EDE7F6',
-    protectionTextColor: '#4527A0',
-    borderColor: '#9575CD',
-  },
-  {
-    id: 5,
-    name: '丹顶鹤',
-    image: CRANE_IMG,
-    protectionLevel: '国家一级保护动物',
-    protectionBgColor: '#FCE4EC',
-    protectionTextColor: '#C2185B',
-    borderColor: '#F48FB1',
-  },
-]
+// ─── 动物列表兜底数据（云函数 getAnimalList 调用失败/尚未返回时的初始占位，不预置具体动物内容）───
+export const KNOWLEDGE_ANIMALS: KnowledgeAnimal[] = []
 
 // ─── 展示字段映射配置（数据库不存储，前端生成）───────────────────────
 
@@ -339,6 +283,79 @@ export const PROTECTION_COLOR_MAP: Record<string, ProtectionColorConfig> = {
     bgColor: '#F5F5F5',
     textColor: '#757575',
     borderColor: '#E0E0E0',
+  },
+  // ─── IUCN 世界自然保护联盟红色名录等级（用于中国境外/通用物种，比国内法定等级更严谨通用）───
+  // 短格式（数据库 animal 集合实际存储的格式，与 seedData/docs/animal_import.json 保持一致）
+  '家养动物': {
+    bgColor: '#E8F5E9',
+    textColor: '#2E7D32',
+    borderColor: '#66BB6A',
+  },
+  '无危': {
+    bgColor: '#F5F5F5',
+    textColor: '#757575',
+    borderColor: '#E0E0E0',
+  },
+  '近危': {
+    bgColor: '#E3F2FD',
+    textColor: '#1565C0',
+    borderColor: '#42A5F5',
+  },
+  '易危': {
+    bgColor: '#FFF8E1',
+    textColor: '#F57F17',
+    borderColor: '#FBC02D',
+  },
+  '濒危': {
+    bgColor: '#FFF3E0',
+    textColor: '#E65100',
+    borderColor: '#FFA726',
+  },
+  '极危': {
+    bgColor: '#FFEBEE',
+    textColor: '#C62828',
+    borderColor: '#EF5350',
+  },
+  '野外灭绝': {
+    bgColor: '#EDE7F6',
+    textColor: '#4A148C',
+    borderColor: '#7E57C2',
+  },
+  // 长格式（兼容旧版 IUCN 全称写法，历史数据/文案中可能出现）
+  '家养动物（IUCN未评估）': {
+    bgColor: '#E8F5E9',
+    textColor: '#2E7D32',
+    borderColor: '#66BB6A',
+  },
+  'IUCN无危（LC）': {
+    bgColor: '#F5F5F5',
+    textColor: '#757575',
+    borderColor: '#E0E0E0',
+  },
+  'IUCN近危（NT）': {
+    bgColor: '#E3F2FD',
+    textColor: '#1565C0',
+    borderColor: '#42A5F5',
+  },
+  'IUCN易危（VU）': {
+    bgColor: '#FFF8E1',
+    textColor: '#F57F17',
+    borderColor: '#FBC02D',
+  },
+  'IUCN濒危（EN）': {
+    bgColor: '#FFF3E0',
+    textColor: '#E65100',
+    borderColor: '#FFA726',
+  },
+  'IUCN极危（CR）': {
+    bgColor: '#FFEBEE',
+    textColor: '#C62828',
+    borderColor: '#EF5350',
+  },
+  'IUCN野外灭绝（EW）': {
+    bgColor: '#EDE7F6',
+    textColor: '#4A148C',
+    borderColor: '#7E57C2',
   },
 }
 
@@ -381,6 +398,52 @@ export const ANIMAL_DISPLAY_CONFIG: Record<string, DisplayConfig> = {
   金丝猴: { bannerIcon: '🐵', pageBg: '#E3F2FD' },
   亚洲象: { bannerIcon: '🐘', pageBg: '#EDE7F6' },
   丹顶鹤: { bannerIcon: '🦢', pageBg: '#FCE4EC' },
+  // ─── 以下与 docs/animal_import.json 的 45 种动物同步 ───
+  羊驼: { bannerIcon: '🦙', pageBg: '#E8F5E9' },
+  獾: { bannerIcon: '🦡', pageBg: '#F5F5F5' },
+  熊: { bannerIcon: '🐻', pageBg: '#F5F5F5' },
+  海狸: { bannerIcon: '🦫', pageBg: '#F5F5F5' },
+  蜜蜂: { bannerIcon: '🐝', pageBg: '#F5F5F5' },
+  金丝雀: { bannerIcon: '🐤', pageBg: '#E8F5E9' },
+  猫: { bannerIcon: '🐱', pageBg: '#E8F5E9' },
+  牛: { bannerIcon: '🐄', pageBg: '#E8F5E9' },
+  鹤: { bannerIcon: '🦢', pageBg: '#F5F5F5' },
+  乌鸦: { bannerIcon: '🐦‍⬛', pageBg: '#F5F5F5' },
+  狗: { bannerIcon: '🐶', pageBg: '#E8F5E9' },
+  海豚: { bannerIcon: '🐬', pageBg: '#F5F5F5' },
+  鸭: { bannerIcon: '🦆', pageBg: '#F5F5F5' },
+  鹰: { bannerIcon: '🦅', pageBg: '#F5F5F5' },
+  大象: { bannerIcon: '🐘', pageBg: '#FFF3E0' },
+  麋鹿: { bannerIcon: '🦌', pageBg: '#EDE7F6' },
+  狐狸: { bannerIcon: '🦊', pageBg: '#F5F5F5' },
+  青蛙: { bannerIcon: '🐸', pageBg: '#F5F5F5' },
+  长颈鹿: { bannerIcon: '🦒', pageBg: '#FFF8E1' },
+  山羊: { bannerIcon: '🐐', pageBg: '#E8F5E9' },
+  河马: { bannerIcon: '🦛', pageBg: '#FFF8E1' },
+  马: { bannerIcon: '🐴', pageBg: '#E8F5E9' },
+  鬣狗: { bannerIcon: '🐾', pageBg: '#F5F5F5' },
+  豹: { bannerIcon: '🐆', pageBg: '#FFF8E1' },
+  狮子: { bannerIcon: '🦁', pageBg: '#FFF8E1' },
+  蜥蜴: { bannerIcon: '🦎', pageBg: '#F5F5F5' },
+  猴子: { bannerIcon: '🐒', pageBg: '#F5F5F5' },
+  骡鹿: { bannerIcon: '🦌', pageBg: '#F5F5F5' },
+  水獭: { bannerIcon: '🦦', pageBg: '#E3F2FD' },
+  猫头鹰: { bannerIcon: '🦉', pageBg: '#F5F5F5' },
+  孔雀: { bannerIcon: '🦚', pageBg: '#F5F5F5' },
+  企鹅: { bannerIcon: '🐧', pageBg: '#E3F2FD' },
+  猪: { bannerIcon: '🐷', pageBg: '#E8F5E9' },
+  浣熊: { bannerIcon: '🦝', pageBg: '#F5F5F5' },
+  犀牛: { bannerIcon: '🦏', pageBg: '#FFF3E0' },
+  公鸡: { bannerIcon: '🐓', pageBg: '#E8F5E9' },
+  海豹: { bannerIcon: '🦭', pageBg: '#F5F5F5' },
+  鲨鱼: { bannerIcon: '🦈', pageBg: '#FFF8E1' },
+  羊: { bannerIcon: '🐑', pageBg: '#E8F5E9' },
+  蛇: { bannerIcon: '🐍', pageBg: '#F5F5F5' },
+  老虎: { bannerIcon: '🐯', pageBg: '#FFF3E0' },
+  鲸鱼: { bannerIcon: '🐋', pageBg: '#FFF3E0' },
+  狼: { bannerIcon: '🐺', pageBg: '#F5F5F5' },
+  啄木鸟: { bannerIcon: '🐦', pageBg: '#F5F5F5' },
+  斑马: { bannerIcon: '🦓', pageBg: '#E3F2FD' },
 }
 
 // ─── TTS 朗读相关常量 ─────────────────────────────────────────────

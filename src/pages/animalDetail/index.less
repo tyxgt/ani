@@ -134,16 +134,17 @@
 }
 
 .summaryBanner {
+  // 背景色/边框色由内联 style 按 detail.protectionBgColor/borderColor 动态设置，这里只是数据未到达前的兜底默认值
   margin: 16px 16px 0;
   padding: 14px 20px;
   border-radius: 30px;
-  background: linear-gradient(90deg, #FCE4EC 0%, #F8BBD0 100%);
-  border: 3px dashed #F48FB1;
+  background: #F5F5F5;
+  border: 3px dashed #E0E0E0;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 12px;
-  box-shadow: 0 4px 12px rgba(244, 143, 177, 0.2);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 
   .bannerIcon {
     font-size: 28px;
@@ -151,9 +152,10 @@
   }
 
   .bannerText {
+    // color 由内联 style 按 detail.protectionTextColor 动态设置，这里是兜底默认值
     font-size: 20px;
     font-weight: bold;
-    color: #AD1457;
+    color: #757575;
     text-shadow: 1px 1px 0 #fff;
   }
 }

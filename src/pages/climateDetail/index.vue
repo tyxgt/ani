@@ -16,6 +16,8 @@
     </view>
 
     <scroll-view scroll-y :class="styles.scrollView">
+      <LoadingSpinner v-if="loading && !detail.id" />
+      <template v-else>
       <!-- 顶部大图 -->
       <view :class="styles.heroImageWrap">
         <image :class="styles.heroImage" :src="detail.image" mode="aspectFill" />
@@ -42,7 +44,7 @@
         >
           <view :class="styles.cardIcon">🌡️</view>
           <PinyinText
-            :text="'氣溫'"
+            :text="'气温'"
             :char-style="{ fontSize: '18px', fontWeight: 'bold', color: '#2E7D32' }"
             :pinyin-style="{ fontSize: '10px', color: '#66BB6A' }"
           />
@@ -66,7 +68,7 @@
         >
           <view :class="styles.cardIcon">🍃</view>
           <PinyinText
-            :text="'特點'"
+            :text="'特点'"
             :char-style="{ fontSize: '18px', fontWeight: 'bold', color: '#1565C0' }"
             :pinyin-style="{ fontSize: '10px', color: '#64B5F6' }"
           />
@@ -78,7 +80,7 @@
         >
           <view :class="styles.cardIcon">📍</view>
           <PinyinText
-            :text="'代表地區'"
+            :text="'代表地区'"
             :char-style="{ fontSize: '18px', fontWeight: 'bold', color: '#C2185B' }"
             :pinyin-style="{ fontSize: '10px', color: '#F48FB1' }"
           />
@@ -96,13 +98,14 @@
       <view :class="styles.actionBar">
         <view :class="[styles.actionBtn, styles.listenBtn]" @click="onListen" @tap="onListen">
           <text :class="styles.actionIcon">🔊</text>
-          <text>聽介紹</text>
+          <text>听介绍</text>
         </view>
         <view :class="[styles.actionBtn, styles.askBtn]" @click="onAsk" @tap="onAsk">
           <text :class="styles.actionIcon">🤖</text>
-          <text>問博士</text>
+          <text>问博士</text>
         </view>
       </view>
+      </template>
     </scroll-view>
   </view>
 </template>
@@ -110,18 +113,20 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import PinyinText from '../../components/PinyinText'
+import LoadingSpinner from '../../components/LoadingSpinner'
 import { CLIMATE_DETAILS } from '../../data/learnDetails'
 import { callFunction } from '../../utils/cloud'
 import { CLIMATE_DISPLAY_CONFIG } from '../../constants'
 import type { ClimateItem } from '../../types'
 
 const detail = ref<ClimateItem>(CLIMATE_DETAILS['温带气候'])
+const loading = ref(false)
 
 const cardBg = computed(() => [
-  '#E8F5E9', // 氣溫 - 绿
+  '#E8F5E9', // 气温 - 绿
   '#FFF8E1', // 降水 - 黄
-  '#E3F2FD', // 特點 - 蓝
-  '#FCE4EC', // 代表地區 - 粉
+  '#E3F2FD', // 特点 - 蓝
+  '#FCE4EC', // 代表地区 - 粉
 ])
 
 const displayConfig = computed(() => {
@@ -141,7 +146,7 @@ function goBack() {
 }
 
 function onListen() {
-  uni.showToast({ title: '語音介紹開發中', icon: 'none' })
+  uni.showToast({ title: '语音介绍开发中', icon: 'none' })
 }
 
 function onAsk() {
@@ -149,6 +154,7 @@ function onAsk() {
 }
 
 async function loadDetail(name: string) {
+  loading.value = true
   try {
     const res = await callFunction('getClimateDetail', { name })
     if (res.code === 0 && res.data) {
@@ -162,9 +168,14 @@ async function loadDetail(name: string) {
         bannerIcon: config.bannerIcon,
         pageBg: config.pageBg,
       }
+    } else {
+      uni.showToast({ title: '加载失败，请检查网络', icon: 'none' })
     }
   } catch (error) {
     console.error('加载气候详情失败:', error)
+    uni.showToast({ title: '加载失败，请检查网络', icon: 'none' })
+  } finally {
+    loading.value = false
   }
 }
 
@@ -172,7 +183,14 @@ onMounted(() => {
   const pages = getCurrentPages()
   const currentPage = pages[pages.length - 1]
   const options = (currentPage as any)?.options || {}
-  const name = options.name || '温带气候'
+  // options.name 正常导航时会被小程序框架自动 decode；开发者工具"编译模式"里手动配置的
+  // 启动参数是原样透传的，这里兜底再 decode 一次，避免带着 % 编码去查库查不到
+  let name = options.name || '温带气候'
+  try {
+    name = decodeURIComponent(name)
+  } catch (e) {
+    // 不是合法的 URI 编码，说明本来就是普通文本，原样使用即可
+  }
 
   loadDetail(name)
 

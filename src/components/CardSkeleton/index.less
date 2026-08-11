@@ -1,0 +1,55 @@
+// 骨架屏卡片尺寸对齐 LearnCard（src/components/LearnCard/index.less），
+// 避免真实列表加载完成后替换骨架屏时产生布局跳动
+.list {
+  width: 100%;
+}
+
+.card {
+  box-sizing: border-box;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  background: #fff;
+  border-radius: 20px;
+  padding: 12px;
+  margin-bottom: 12px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+}
+
+.imgSkeleton {
+  width: 80px;
+  height: 80px;
+  border-radius: 16px;
+  margin-right: 12px;
+  flex-shrink: 0;
+  background: #E0E0E0;
+  animation: shimmer 1.2s infinite ease-in-out;
+}
+
+.info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+.lineSkeleton {
+  height: 18px;
+  width: 60%;
+  border-radius: 9px;
+  background: #E0E0E0;
+  animation: shimmer 1.2s infinite ease-in-out;
+}
+
+.tagSkeleton {
+  height: 22px;
+  width: 40%;
+  border-radius: 11px;
+}
+
+@keyframes shimmer {
+  0% { opacity: 1; }
+  50% { opacity: 0.4; }
+  100% { opacity: 1; }
+}
