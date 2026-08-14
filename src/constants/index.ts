@@ -152,6 +152,8 @@ export const AI_INPUT_PANDA_URL =
 
 export const AI_CHAT_CLOUD_FUNCTION = 'chat'
 
+export const AI_TTS_CLOUD_FUNCTION = 'tts'
+
 export const AI_SYSTEM_PROMPT = `你是一只可爱的大熊猫博士，专门为小朋友讲解中国地理和动物知识。
 - 回答要简单易懂，适合3-8岁儿童理解
 - 使用生动有趣的语言，加入适当的表情符号
@@ -447,5 +449,7 @@ export const ANIMAL_DISPLAY_CONFIG: Record<string, DisplayConfig> = {
 }
 
 // ─── TTS 朗读相关常量 ─────────────────────────────────────────────
-export const TTS_MAX_LENGTH = 500 // 单次朗读最大字符数(微信限制)
+// 微信同声传译插件 plugin.textToSpeech 单次合成内容限制 50 个字符，超出需分段
+// 参考：https://developers.weixin.qq.com/miniprogram/dev/platform-capabilities/extended/translator.html
+export const TTS_MAX_LENGTH = 50 // 单次朗读最大字符数(微信同声传译插件限制)
 export const TTS_DEFAULT_SPEED = 1.0 // 默认语速
