@@ -1,13 +1,14 @@
 <template>
+  <AuthGate>
   <view :class="styles.minePage">
     <view :class="styles.content">
       <view :class="styles.userSection">
         <view :class="styles.userInfo">
-          <PinyinText v-if="isLoggedIn && douyinUserInfo?.nickName" :text="douyinUserInfo.nickName"
+          <PinyinText v-if="douyinUserInfo?.nickName" :text="douyinUserInfo.nickName"
             :charStyle="{ fontSize: '48rpx', fontWeight: 'bold', color: '#2C3E50' }"
             :pinyinStyle="{ fontSize: '28rpx', color: '#5D6D7E' }" />
-          <text v-else :class="styles.loginTip" @click="handleLogin">
-            {{ !ready ? '加载中...' : '点击登录' }}
+          <text v-else :class="styles.loginTip" @click="openProfileModal">
+            点击完善资料
           </text>
         </view>
       </view>
@@ -37,8 +38,8 @@
 
     <CustomTabBar :current="2" />
 
-    <!-- 登录弹窗 -->
-    <view v-if="showLoginModal" :class="styles.loginModal" @click="closeLoginModal">
+    <!-- 完善资料弹窗（登录已在 App 启动时自动完成，这里只填昵称，不阻塞功能使用） -->
+    <view v-if="showProfileModal" :class="styles.loginModal" @click="closeProfileModal">
       <view :class="styles.loginModalContent" @click.stop>
         <text :class="styles.loginModalTitle">完善个人信息</text>
         <!-- #ifdef MP-WEIXIN -->
@@ -53,16 +54,18 @@
             @input="onNicknameInputH5" />
         </view>
         <!-- #endif -->
-        <view :class="styles.loginModalBtn" @click="confirmLogin">
-          <text :class="styles.loginModalBtnText">确认登录</text>
+        <view :class="styles.loginModalBtn" @click="confirmProfile">
+          <text :class="styles.loginModalBtnText">确认</text>
         </view>
-        <text :class="styles.loginModalSkip" @click="skipLogin">跳过</text>
+        <text :class="styles.loginModalSkip" @click="skipProfile">跳过</text>
       </view>
     </view>
   </view>
+  </AuthGate>
 </template>
 
 <script setup lang="ts">
+import AuthGate from "../../components/AuthGate";
 import { ref, computed, useCssModule } from "vue";
 import { storeToRefs } from "pinia";
 import CustomTabBar from "../../components/CustomTabBar";
@@ -77,35 +80,32 @@ const iconStyleMap = ICON_STYLE_MAP
 
 // ─── 全局响应式状态 ─────────────────────────────────────────────
 const store = useUserStore()
-const { isLoggedIn, userInfo: douyinUserInfo } = storeToRefs(store)
+const { userInfo: douyinUserInfo } = storeToRefs(store)
 
-// 页面是否已就绪
-const ready = ref(true)
-
-// 登录弹窗状态
-const showLoginModal = ref(false)
+// 完善资料弹窗状态（登录本身已在 App 启动时静默完成，这里只负责昵称）
+const showProfileModal = ref(false)
 const tempNickName = ref('')
 
+// 使用任何功能前都需要登录，登录本身不可退出（会自动重新登录），
+// 这里保留的是"清除本地资料"（昵称等），而不是真正意义上的登出
 const displayMenuList = computed<MenuItem[]>(() => {
   const baseList = [...MENU_LIST]
-  if (isLoggedIn.value) {
-    baseList.push({
-      id: 999,
-      name: '退出登录',
-      icon: 'logout',
-      action: 'logout',
-    })
-  }
+  baseList.push({
+    id: 999,
+    name: '清除本地资料',
+    icon: 'logout',
+    action: 'logout',
+  })
   return baseList
 })
 
-const handleLogin = () => {
+const openProfileModal = () => {
   tempNickName.value = ''
-  showLoginModal.value = true
+  showProfileModal.value = true
 }
 
-const closeLoginModal = () => {
-  showLoginModal.value = false
+const closeProfileModal = () => {
+  showProfileModal.value = false
 }
 
 const onNicknameInput = (e: any) => {
@@ -116,41 +116,17 @@ const onNicknameInputH5 = (e: any) => {
   tempNickName.value = e.detail.value || ''
 }
 
-const confirmLogin = async () => {
-  try {
-    uni.showLoading({ title: '登录中...' })
-    const nickName = tempNickName.value || ''
-    const userInfo = await store.login(nickName)
-    if (userInfo) {
-      showLoginModal.value = false
-      uni.showToast({ title: '登录成功', icon: 'success' })
-    } else {
-      uni.showToast({ title: '登录失败', icon: 'none' })
-    }
-  } catch (error) {
-    console.error('登录失败:', error)
-    uni.showToast({ title: (error as Error).message || '登录失败', icon: 'none' })
-  } finally {
-    uni.hideLoading()
+const confirmProfile = () => {
+  const nickName = tempNickName.value || ''
+  const result = store.updateProfile(nickName)
+  showProfileModal.value = false
+  if (result) {
+    uni.showToast({ title: '保存成功', icon: 'success' })
   }
 }
 
-const skipLogin = async () => {
-  try {
-    uni.showLoading({ title: '登录中...' })
-    const userInfo = await store.login('')
-    if (userInfo) {
-      showLoginModal.value = false
-      uni.showToast({ title: '登录成功', icon: 'success' })
-    } else {
-      uni.showToast({ title: '登录失败', icon: 'none' })
-    }
-  } catch (error) {
-    console.error('登录失败:', error)
-    uni.showToast({ title: (error as Error).message || '登录失败', icon: 'none' })
-  } finally {
-    uni.hideLoading()
-  }
+const skipProfile = () => {
+  showProfileModal.value = false
 }
 
 const handleMenuClick = (item: { action: string; name: string }) => {
@@ -190,11 +166,14 @@ const handleMenuClick = (item: { action: string; name: string }) => {
     case "logout":
       uni.showModal({
         title: "提示",
-        content: "确定要退出登录吗？",
+        content: "确定要清除本地资料吗？清除后会重新静默登录。",
         success: (res) => {
           if (res.confirm) {
             store.logout()
-            uni.showToast({ title: '已退出登录', icon: 'success' })
+            uni.showToast({ title: '已清除，正在重新登录', icon: 'none' })
+            // 使用任何功能前都需要登录：清除本地资料后立刻重新静默登录，
+            // 不让用户停留在"未登录"状态
+            store.silentLogin()
           }
         },
       })

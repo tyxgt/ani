@@ -119,15 +119,21 @@
     min-height: 120px;
   }
 
+  .cardHeader {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
   .cardIcon {
-    width: 48px;
-    height: 48px;
+    width: 36px;
+    height: 36px;
     border-radius: 50%;
     background: #fff;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 28px;
+    font-size: 20px;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
     flex-shrink: 0;
   }
@@ -149,14 +155,6 @@
   .bannerIcon {
     font-size: 28px;
     flex-shrink: 0;
-  }
-
-  .bannerText {
-    // color 由内联 style 按 detail.protectionTextColor 动态设置，这里是兜底默认值
-    font-size: 20px;
-    font-weight: bold;
-    color: #757575;
-    text-shadow: 1px 1px 0 #fff;
   }
 }
 

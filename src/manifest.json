@@ -61,14 +61,7 @@
         "usingComponents" : true,
         "permission" : {},
         "requiredPrivateInfos" : [],
-        "lazyCodeLoading" : "requiredComponents",
-        "plugins" : {
-            "WechatSI" : {
-                /* 版本号以官方文档示例为准，添加插件后请在小程序管理后台核对当前最新版本号 */
-                "version" : "0.0.7",
-                "provider" : "wx069ba97219f66d99"
-            }
-        }
+        "lazyCodeLoading" : "requiredComponents"
     },
     "mp-alipay" : {
         "usingComponents" : true

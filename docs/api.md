@@ -6,6 +6,15 @@
 >
 > 统一返回格式：`CloudFunctionResult<T>` = `{ code: number, msg: string, data: T | null }`
 
+## 鉴权说明（使用任何功能前都需要登录）
+
+- App 启动时会自动静默调用 `login`（`wx.login()` 不需要用户点击授权，全程无感），换取 JWT 格式的 `token`，本地持久化保存。
+- 除 `login` 本身外，**其余所有云函数请求参数都必须携带 `token` 字段**（微信小程序端由 `src/utils/cloud.ts` 的 `callFunction()` 统一自动注入，调用方不需要手动传）。
+- 各云函数用共享的 `JWT_SECRET`（云开发控制台环境变量）校验 `token` 的签名与有效期，校验失败统一返回 `code: 401`。
+- 前端 `callFunction()` 收到 `401` 会自动清空本地登录态并重新静默登录（`handleCloudError`），页面上的 `AuthGate` 组件会据此自动展示"登录中"过渡态，整个过程用户无需手动操作。
+- 本次鉴权改造仅覆盖**微信小程序端**；抖音小程序端的登录（`cloud.getWXContext()` 是微信云开发专属 API）留待后续单独修复。
+- `seedData` 云函数是数据初始化用的管理员工具，不面向用户功能，未加入本次鉴权范围。
+
 ---
 
 ## 接口 1：用户登录 ⭐ 已实现
@@ -13,15 +22,16 @@
 | 项目 | 内容 |
 |------|------|
 | **云函数名称** | `login` |
-| **当前状态** | ✅ 已实现（基础版本） |
+| **当前状态** | ✅ 已实现（JWT 版本） |
 | **实现文件** | `cloudfunctions/login/index.js` + `src/utils/auth.ts` |
-| **请求方式** | `callFunction('login', { code })` |
+| **请求方式** | `callFunction('login', { code })`，App 启动时自动静默调用，无需用户点击 |
+| **环境变量** | `JWT_SECRET`（云开发控制台为 `login` 及全部受保护云函数配置同一个值） |
 
 ### 请求参数
 
 | 字段 | 类型 | 必填 | 说明 |
 |------|------|------|------|
-| `code` | `string` | 是 | 平台登录凭证（`tt.login` / `wx.login` 获取） |
+| `code` | `string` | 否 | 平台登录凭证（`wx.login` 获取；微信云开发实际通过 `cloud.getWXContext()` 直接拿 openid，`code` 仅作兼容保留） |
 
 ### 返回数据
 
@@ -29,7 +39,7 @@
 |------|------|------|------|
 | `code` | `number` | 0=成功 -1=失败 401=未授权 |
 | `msg` | `string` | 提示信息(成功时为空) |
-| `data.token` | `string` | 登录令牌（32 字节 hex） |
+| `data.token` | `string` | 登录令牌，**JWT**（`{ openid, unionid, exp }`，HMAC-SHA256 签名） |
 | `data.openid` | `string` | 用户平台标识 |
 | `data.unionid` | `string` | 平台统一标识（微信专属） |
 | `data.expiresAt` | `number` | 过期时间戳（7 天后） |
@@ -37,7 +47,6 @@
 ### 待完善
 
 - 返回数据中应包含用户昵称和头像
-- 升级为 JWT 或含用户态的 token
 - 补齐抖音云函数实现
 
 ---
@@ -104,19 +113,20 @@
 
 ---
 
-## 接口 4：获取区域详情 ⬜ 待实现
+## 接口 4：获取区域详情 ✅ 已实现
 
 | 项目 | 内容 |
 |------|------|
 | **云函数名称** | `getRegionDetail` |
-| **当前状态** | ⬜ 待实现 |
-| **当前 Mock** | `src/data/regionDetail.ts` - `REGION_DETAILS` |
+| **当前状态** | ✅ 已实现（服务端字段名为 `name`，与下方保持一致；失败时前端回退到本地 Mock `REGION_DETAILS`） |
+| **实现文件** | `cloudfunctions/getRegionDetail/index.js` |
 
 ### 请求参数
 
 | 字段 | 类型 | 必填 | 说明 |
 |------|------|------|------|
-| `regionId` | `string` | 是 | 区域标识 |
+| `token` | `string` | 是 | 登录令牌 |
+| `name` | `string` | 是 | 区域名称（如"西南地区"） |
 
 ### 返回数据
 
@@ -128,7 +138,7 @@
 | `data.pinyin` | `string` | 拼音 |
 | `data.description` | `string` | 详细描述 |
 | `data.geoFeatures` | `GeoFeature[]` | 地理特征列表（3 项） |
-| `data.animals` | `RegionAnimal[]` | 代表动物列表（4 项） |
+| `data.provinces` | `string[]` | 包含省份列表 |
 
 **`GeoFeature` 结构**：
 
@@ -138,17 +148,6 @@
 | `pinyin` | `string` | 拼音 |
 | `icon` | `string` | 图标 URL |
 | `bgColor` | `string` | 卡片背景色 |
-
-**`RegionAnimal` 结构**：
-
-| 字段 | 类型 | 说明 |
-|------|------|------|------|
-| `name` | `string` | 动物名称 |
-| `pinyin` | `string` | 拼音 |
-| `image` | `string` | 图片 URL |
-| `location` | `string` | 分布位置描述 |
-| `locationColor` | `string` | 位置标签颜色 |
-| `animalId` | `string` | 动物 ID（关联动物详情接口） |
 
 ---
 
@@ -164,7 +163,7 @@
 
 | 字段 | 类型 | 必填 | 说明 |
 |------|------|------|------|
-| 无 | - | - | 公开数据 |
+| `token` | `string` | 是 | 登录令牌 |
 
 ### 返回数据
 
@@ -199,7 +198,7 @@
 
 | 字段 | 类型 | 必填 | 说明 |
 |------|------|------|------|
-| 无 | - | - | 公开数据 |
+| `token` | `string` | 是 | 登录令牌 |
 
 ### 返回数据
 
@@ -238,6 +237,7 @@
 
 | 字段 | 类型 | 必填 | 说明 |
 |------|------|------|------|
+| `token` | `string` | 是 | 登录令牌 |
 | `name` | `string` | 是 | 地形名称 |
 
 ### 返回数据
@@ -263,7 +263,7 @@
 
 | 字段 | 类型 | 必填 | 说明 |
 |------|------|------|------|
-| 无 | - | - | 公开数据 |
+| `token` | `string` | 是 | 登录令牌 |
 
 ### 返回数据
 
@@ -302,6 +302,7 @@
 
 | 字段 | 类型 | 必填 | 说明 |
 |------|------|------|------|
+| `token` | `string` | 是 | 登录令牌 |
 | `name` | `string` | 是 | 气候名称 |
 
 ### 返回数据
@@ -327,7 +328,7 @@
 
 | 字段 | 类型 | 必填 | 说明 |
 |------|------|------|------|
-| 无 | - | - | 公开数据 |
+| `token` | `string` | 是 | 登录令牌 |
 
 ### 返回数据
 
@@ -366,6 +367,7 @@
 
 | 字段 | 类型 | 必填 | 说明 |
 |------|------|------|------|
+| `token` | `string` | 是 | 登录令牌 |
 | `name` | `string` | 是 | 动物名称 |
 
 ### 返回数据
@@ -390,7 +392,7 @@
 
 | 字段 | 类型 | 必填 | 说明 |
 |------|------|------|------|
-| `token` | `string` | 否 | 登录令牌 |
+| `token` | `string` | 是 | 登录令牌 |
 | `message` | `string` | 是 | 用户提问内容 |
 | `history` | `ChatMessage[]` | 否 | 历史对话记录 |
 | `sessionId` | `string` | 否 | 会话标识 |
@@ -405,6 +407,34 @@
 | `data.sessionId` | `string` | 会话标识（用于续传） |
 
 > **部署依赖**：需在微信云开发控制台为 chat 云函数配置环境变量 `DEEPSEEK_API_KEY`（DeepSeek API 密钥），并在 `cloudfunctions/chat/` 目录下执行 `npm install` 安装依赖。
+
+---
+
+## 接口 12.5：语音合成（TTS）✅ 已实现
+
+| 项目 | 内容 |
+|------|------|
+| **云函数名称** | `tts` |
+| **当前状态** | ✅ 已实现（对接腾讯云 TextToVoice） |
+| **实现文件** | `cloudfunctions/tts/index.js` + `src/utils/tts.ts` |
+
+### 请求参数
+
+| 字段 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| `token` | `string` | 是 | 登录令牌 |
+| `text` | `string` | 是 | 待朗读文本（超长会自动分段） |
+
+### 返回数据
+
+| 字段 | 类型 | 说明 |
+|------|------|------|------|
+| `code` | `number` | 0=成功 |
+| `msg` | `string` | 提示信息(成功时为空) |
+| `data.audioList` | `string[]` | base64 编码的 mp3 音频分段数组，前端按序播放 |
+| `data.codec` | `string` | 编码格式，固定 `mp3` |
+
+> **部署依赖**：需在微信云开发控制台为 tts 云函数配置环境变量 `TENCENT_SECRET_ID` / `TENCENT_SECRET_KEY`（腾讯云 API 密钥）。
 
 ---
 
@@ -527,11 +557,11 @@ if (detailRes.code === 0) {
 
 | 阶段 | 接口 | 说明 |
 |------|------|------|
-| **Phase 0** | `login` | 已实现，可直接使用 |
-| **Phase 1** | `getKnowledgeCategories`, `getTerrainList`, `getTerrainDetail`, `getClimateList`, `getClimateDetail`, `getAnimalList`, `getAnimalDetail` | ✅ 已实现，知识库三表完整接口 |
-| **Phase 2** | `chat` | 已实现，对接 AI 模型 |
+| **Phase 0** | `login` | ✅ 已实现（JWT 版本），App 启动自动静默调用，使用任何功能前都需要先完成登录 |
+| **Phase 1** | `getKnowledgeCategories`, `getTerrainList`, `getTerrainDetail`, `getClimateList`, `getClimateDetail`, `getAnimalList`, `getAnimalDetail`, `getRegionDetail` | ✅ 已实现，知识库/区域详情接口，均已加 token 校验 |
+| **Phase 2** | `chat`, `tts` | 已实现，对接 AI 模型 / 语音合成，均已加 token 校验 |
 | **Phase 3** | `updateUserInfo`, `submitFeedback`, `userProgress` | 待实现，用户相关功能 |
-| **Phase 4** | `getConfig`, `getRegions`, `getRegionDetail` | 待实现，后台可配置能力 |
+| **Phase 4** | `getConfig`, `getRegions` | 待实现，后台可配置能力 |
 
 ---
 
@@ -597,7 +627,7 @@ if (detailRes.code === 0) {
 | `LoginData` | 登录返回数据 |
 | `DouyinUserInfo` / `WechatUserInfo` | 用户信息 |
 | `MenuItem` | 菜单项 |
-| `RegionDetail` / `RegionAnimal` / `RegionGeoFeature` | 区域详情相关 |
+| `RegionDetail` / `RegionGeoFeature` | 区域详情相关 |
 | `KnowledgeCategory` / `KnowledgeAnimal` | 知识百科相关 |
 | `TerrainItem` / `ClimateItem` / `AnimalDetailItem` | 学习详情页类型 |
 | `ChatMessage` | AI 对话消息 |

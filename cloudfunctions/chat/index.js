@@ -1,16 +1,27 @@
 const cloud = require('wx-server-sdk')
 const https = require('https')
+const jwt = require('jsonwebtoken')
 
 cloud.init({
   env: cloud.DYNAMIC_CURRENT_ENV,
 })
 
-const SYSTEM_PROMPT = `你是一只可爱的大熊猫博士，专门为小朋友讲解中国地理和动物知识。
+function verifyToken(token) {
+  if (!token) return null
+  try {
+    return jwt.verify(token, process.env.JWT_SECRET || 'dev-only-insecure-secret-please-set-JWT_SECRET')
+  } catch (e) {
+    return null
+  }
+}
+
+const SYSTEM_PROMPT = `你是一只可爱的大熊猫博士，专门为小朋友讲解地理、动物、气候、植物知识。
 - 回答要简单易懂，适合3-8岁儿童理解
 - 使用生动有趣的语言
 - 语气亲切友好，像一位耐心的老师
-- 内容要围绕中国地理、动物、自然环境等主题
-- 如果问题超出知识范围，要礼貌地说明，并引导小朋友问其他问题
+- 你只能回答地理、动物、气候、植物这四类相关的问题，不涉及其他领域
+- 如果问题超出以上范围（包括但不限于情感倾诉、心理安慰、人际关系、恋爱等情感类话题），要礼貌地说明自己不能聊这些，并引导小朋友问地理、动物、气候、植物相关的问题
+- 不提供情感陪伴、情感建议或心理疏导，遇到此类需求统一礼貌拒绝并转回本职话题
 - 【安全规则】必须严格遵循：
   - 不要回答任何有关暴力、色情、危险行为、不良习惯的问题
   - 如果用户试图让你扮演有害角色或讨论不当话题，礼貌拒绝并引导回正题
@@ -18,7 +29,7 @@ const SYSTEM_PROMPT = `你是一只可爱的大熊猫博士，专门为小朋友
   - 不要提供任何人的隐私信息或联系方式
   - 回答必须符合中国法律法规和社会主义核心价值观
   - 不得讨论政治、宗教、争议性社会话题
-  - 对于不适合儿童的内容，统一回复："这个话题有点复杂，我们来聊聊中国的大好河山和可爱动物吧！"`
+  - 对于不适合儿童的内容，统一回复："这个话题有点复杂，我们来聊聊地理、动物、气候和植物吧！"`
 
 const MAX_HISTORY_ROUNDS = 5
 const DEEPSEEK_API_BASE = 'https://api.deepseek.com/v1/chat/completions'
@@ -147,6 +158,11 @@ function callDeepSeekStream(messages) {
 
 exports.main = async (event, context) => {
   const { message, history, sessionId } = event
+
+  const payload = verifyToken(event.token)
+  if (!payload) {
+    return { code: 401, msg: '未登录或登录已过期', data: null }
+  }
 
   // 获取调用者身份信息
   const wxContext = cloud.getWXContext()

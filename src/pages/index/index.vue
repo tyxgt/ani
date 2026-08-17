@@ -1,4 +1,5 @@
 <template>
+  <AuthGate>
   <view :class="styles.homePage">
     <image :class="styles.background" :src="backgroundUrl" mode="aspectFill" />
 
@@ -25,9 +26,11 @@
 
     <CustomTabBar :current="0" />
   </view>
+  </AuthGate>
 </template>
 
 <script setup lang="ts">
+import AuthGate from "../../components/AuthGate";
 import { ref } from "vue";
 import CustomTabBar from "../../components/CustomTabBar";
 import PinyinText from "../../components/PinyinText";

@@ -53,7 +53,6 @@
   }
 
   .introText {
-    text-align: left;
     line-height: 2.0;
 
     :global(.charGroup) {
@@ -118,72 +117,24 @@
   // }
 }
 
-.animalsScroll {
+.provincesWrap {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  padding: 16px 20px;
+}
+
+.provinceChip {
+  box-sizing: border-box;
   width: 100%;
-  white-space: nowrap;
-}
-
-.animalsList {
-  display: inline-flex;
-  gap: 16px;
-  padding: 16px 20px 16px;
-}
-
-.animalCard {
-  width: 170px;
-  flex-shrink: 0;
-  background: #fff;
-  border-radius: 20px;
-  overflow: hidden;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
-  border: 3px solid #fff;
-  display: inline-block;
-  vertical-align: top;
-
-  .animalImageWrap {
-    width: 100%;
-    height: 160px;
-    overflow: hidden;
-    background: #F5F5F5;
-  }
-
-  .animalImage {
-    width: 100%;
-    height: 100%;
-  }
-
-  .animalInfo {
-    padding: 12px 10px;
-    text-align: center;
-
-    :global(.pinyinRow) {
-      justify-content: center;
-      margin-bottom: 4px;
-    }
-
-    :global(.pinyin) {
-      color: #8D6E63;
-    }
-
-    :global(.char) {
-      color: #5D4037;
-    }
-  }
-
-  .animalLocation {
-    margin-top: 8px;
-    padding: 4px 6px;
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 4px;
-    font-weight: bold;
-  }
-
-  .locationDot {
-    font-size: 12px;
-  }
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #E8F5E9;
+  border-radius: 16px;
+  padding: 8px 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  border: 2px solid #fff;
 }
 
 .bottomSpacer {

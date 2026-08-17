@@ -1,10 +1,20 @@
 const cloud = require('wx-server-sdk')
 const https = require('https')
 const crypto = require('crypto')
+const jwt = require('jsonwebtoken')
 
 cloud.init({
   env: cloud.DYNAMIC_CURRENT_ENV,
 })
+
+function verifyToken(token) {
+  if (!token) return null
+  try {
+    return jwt.verify(token, process.env.JWT_SECRET || 'dev-only-insecure-secret-please-set-JWT_SECRET')
+  } catch (e) {
+    return null
+  }
+}
 
 // ─── 腾讯云语音合成(TTS) TextToVoice ─────────────────────────────
 // 文档: https://cloud.tencent.com/document/product/1073/37995
@@ -142,6 +152,11 @@ function generateSessionId() {
 
 exports.main = async (event, context) => {
   const { text } = event
+
+  const payload = verifyToken(event.token)
+  if (!payload) {
+    return { code: 401, msg: '未登录或登录已过期', data: null }
+  }
 
   const wxContext = cloud.getWXContext()
   const { OPENID } = wxContext

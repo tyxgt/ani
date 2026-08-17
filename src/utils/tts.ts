@@ -1,4 +1,4 @@
-import { TTS_MAX_LENGTH, AI_TTS_CLOUD_FUNCTION } from '../constants'
+import { AI_TTS_CLOUD_FUNCTION } from '../constants'
 import { callFunction } from './cloud'
 
 // ─── TTS 播放状态 ─────────────────────────────────────────────
@@ -17,8 +17,7 @@ let currentStatus: TTSStatus = 'idle'
 let audioContext: any = null
 let currentSpeechUtterance: SpeechSynthesisUtterance | null = null
 
-// 长文本分段相关（文本分段 - 微信插件路径 / 音频分段 - 腾讯云路径复用同一套队列播放逻辑）
-let textQueue: string[] = []
+// 长文本分段相关（音频分段 - 腾讯云路径的队列播放逻辑）
 let audioQueue: string[] = []
 let isPlayingQueue = false
 
@@ -27,12 +26,8 @@ let isPlayingQueue = false
  */
 export function isTTSSupported(): boolean {
   // #ifdef MP-WEIXIN
-  // 语音合成依赖「微信同声传译」插件（需在 manifest.json 声明 + 小程序后台添加插件）
-  try {
-    return typeof requirePlugin === 'function' && !!requirePlugin('WechatSI')
-  } catch (e) {
-    return false
-  }
+  // 朗读能力依赖腾讯云 TTS 云函数，微信小程序下始终可用
+  return true
   // #endif
 
   // #ifdef H5
@@ -79,7 +74,7 @@ function speakTextTencentCloud(options: TTSOptions): Promise<void> {
 
         const audioList: string[] = res.data.audioList
         const codec: string = res.data.codec || 'mp3'
-        const mimeType = codec === 'wav' ? 'audio/wav' : 'audio/mp3'
+        const fileExt = codec === 'wav' ? 'wav' : 'mp3'
 
         audioQueue = audioList.slice()
         isPlayingQueue = true
@@ -99,8 +94,31 @@ function speakTextTencentCloud(options: TTSOptions): Promise<void> {
             return
           }
 
+          // 真机（尤其 iOS）上 InnerAudioContext.src 不支持直接播放 data: base64 URI，
+          // 会报 errCode 10001 / INNERERRCODE:-1100（在此服务器上找不到所请求的URL），
+          // 开发者工具模拟器里因为走 PC 端 WebView 反而不会暴露这个问题。
+          // 这里先把 base64 落地成本地临时文件，再用文件路径播放，真机和模拟器都能正常工作。
+          const tempFilePath = `${wx.env.USER_DATA_PATH}/tts_${Date.now()}_${Math.random().toString(36).slice(2, 8)}.${fileExt}`
+
+          try {
+            wx.getFileSystemManager().writeFileSync(tempFilePath, chunk, 'base64')
+          } catch (err) {
+            console.error('[TTS] 音频临时文件写入失败:', err)
+            currentStatus = 'idle'
+            isPlayingQueue = false
+            reject(err)
+            return
+          }
+
+          const cleanupTempFile = () => {
+            wx.getFileSystemManager().unlink({
+              filePath: tempFilePath,
+              fail: () => {},
+            })
+          }
+
           audioContext = uni.createInnerAudioContext()
-          audioContext.src = `data:${mimeType};base64,${chunk}`
+          audioContext.src = tempFilePath
 
           audioContext.onPlay(() => {
             currentStatus = 'playing'
@@ -114,6 +132,7 @@ function speakTextTencentCloud(options: TTSOptions): Promise<void> {
               audioContext.destroy()
             } catch (e) {}
             audioContext = null
+            cleanupTempFile()
 
             if (audioQueue.length > 0) {
               setTimeout(playNext, 80)
@@ -129,6 +148,7 @@ function speakTextTencentCloud(options: TTSOptions): Promise<void> {
             console.error('[TTS] 腾讯云音频播放错误:', err)
             currentStatus = 'idle'
             isPlayingQueue = false
+            cleanupTempFile()
             reject(err)
           })
 
@@ -141,121 +161,6 @@ function speakTextTencentCloud(options: TTSOptions): Promise<void> {
         currentStatus = 'idle'
         reject(err)
       })
-  })
-}
-
-/**
- * 微信TTS实现 - 使用「微信同声传译」插件 (WechatSI) 的 textToSpeech
- * 文档：https://developers.weixin.qq.com/miniprogram/dev/platform-capabilities/extended/translator.html
- * 注意：单次合成内容限制 50 个字符，需分段；分段大小见 TTS_MAX_LENGTH
- */
-function speakTextWechatNative(options: TTSOptions): Promise<void> {
-  return new Promise((resolve, reject) => {
-    const { content, onStart, onEnd, onError } = options
-
-    let plugin: any = null
-    try {
-      plugin = typeof requirePlugin === 'function' ? requirePlugin('WechatSI') : null
-    } catch (e) {
-      plugin = null
-    }
-
-    if (!plugin || typeof plugin.textToSpeech !== 'function') {
-      reject(new Error('同声传译插件不可用，请检查 manifest.json 插件声明及小程序后台插件添加情况'))
-      return
-    }
-
-    // 分段处理（textToSpeech 单次限制 50 个字符）
-    textQueue = []
-    const text = content.trim()
-    for (let i = 0; i < text.length; i += TTS_MAX_LENGTH) {
-      textQueue.push(text.slice(i, i + TTS_MAX_LENGTH))
-    }
-
-    if (textQueue.length === 0) {
-      resolve()
-      return
-    }
-
-    currentStatus = 'loading'
-    isPlayingQueue = true
-
-    const playNext = () => {
-      if (currentStatus === 'idle' || !isPlayingQueue) {
-        resolve()
-        return
-      }
-
-      const chunk = textQueue.shift()
-      if (!chunk) {
-        // 所有段落播放完毕
-        currentStatus = 'idle'
-        isPlayingQueue = false
-        onEnd?.()
-        resolve()
-        return
-      }
-
-      plugin.textToSpeech({
-        lang: 'zh_CN',
-        content: chunk,
-        success: (res: any) => {
-          if (res.retcode !== 0 || !res.filename) {
-            console.error('[TTS] 合成失败：', res)
-            currentStatus = 'idle'
-            isPlayingQueue = false
-            reject(new Error('语音合成失败'))
-            return
-          }
-
-          // 播放合成的音频
-          audioContext = uni.createInnerAudioContext()
-          audioContext.src = res.filename
-
-          audioContext.onPlay(() => {
-            currentStatus = 'playing'
-            console.log('[TTS] 开始播放段落')
-            onStart?.()
-          })
-
-          audioContext.onEnded(() => {
-            console.log('[TTS] 段落播放完毕')
-            try {
-              audioContext.destroy()
-            } catch (e) {}
-            audioContext = null
-
-            if (textQueue.length > 0) {
-              // 继续播放下一段
-              setTimeout(playNext, 100)
-            } else {
-              // 全部播放完毕
-              currentStatus = 'idle'
-              isPlayingQueue = false
-              onEnd?.()
-              resolve()
-            }
-          })
-
-          audioContext.onError((err: any) => {
-            console.error('[TTS] 播放错误:', err)
-            currentStatus = 'idle'
-            isPlayingQueue = false
-            reject(err)
-          })
-
-          audioContext.play()
-        },
-        fail: (err: any) => {
-          console.error('[TTS] 合成失败:', err)
-          currentStatus = 'idle'
-          isPlayingQueue = false
-          reject(err)
-        },
-      })
-    }
-
-    playNext()
   })
 }
 
@@ -299,7 +204,7 @@ function speakTextH5(options: TTSOptions): Promise<void> {
 }
 
 /**
- * 朗读文本 - 多级降级策略
+ * 朗读文本 - 按平台分发（微信小程序走腾讯云 TTS，H5 走浏览器原生合成）
  */
 export async function speakText(options: TTSOptions): Promise<void> {
   const { content, onStart, onEnd, onError } = options
@@ -318,22 +223,8 @@ export async function speakText(options: TTSOptions): Promise<void> {
   const textToSpeak = content.trim()
 
   // #ifdef MP-WEIXIN
-  // 优先使用腾讯云 TTS（音质更好、无 50 字限制），失败后降级到微信同声传译插件
   try {
-    console.log('[TTS] 优先尝试腾讯云 TTS')
     await speakTextTencentCloud({
-      content: textToSpeak,
-      onStart,
-      onEnd,
-      onError,
-    })
-    return
-  } catch (cloudError) {
-    console.warn('[TTS] 腾讯云 TTS 调用失败，降级到微信同声传译插件:', cloudError)
-  }
-
-  try {
-    await speakTextWechatNative({
       content: textToSpeak,
       onStart,
       onEnd,
@@ -387,7 +278,6 @@ export async function speakText(options: TTSOptions): Promise<void> {
  */
 export function stopSpeaking(): void {
   isPlayingQueue = false
-  textQueue = []
   audioQueue = []
 
   if (currentStatus === 'idle') {

@@ -1,4 +1,5 @@
 <template>
+  <AuthGate>
   <view :class="styles.climateListPage">
     <!-- 自定义导航栏 -->
     <view :class="styles.listNavHeader">
@@ -42,9 +43,11 @@
       </view>
     </scroll-view>
   </view>
+  </AuthGate>
 </template>
 
 <script setup lang="ts">
+import AuthGate from '../../components/AuthGate'
 import { ref, onMounted } from 'vue'
 import PinyinText from '../../components/PinyinText'
 import CardSkeleton from '../../components/CardSkeleton'

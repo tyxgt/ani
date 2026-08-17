@@ -84,20 +84,12 @@ export interface RegionGeoFeature {
   bgColor: string
 }
 
-export interface RegionAnimal {
-  name: string
-  pinyin: string
-  image: string
-  location: string
-  locationColor: string
-}
-
 export interface RegionDetail {
   name: string
   pinyin: string
   description: string
   geoFeatures: RegionGeoFeature[]
-  animals: RegionAnimal[]
+  provinces: string[]
 }
 
 // ─── 聊天消息相关类型 ───────────────────────────────────────────

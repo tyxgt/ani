@@ -1,4 +1,5 @@
 <template>
+  <AuthGate>
   <view :class="styles.regionDetailPage">
     <!-- 自定义导航栏头部 -->
     <view :class="styles.regionNavHeader">
@@ -31,6 +32,7 @@
             <text :class="styles.titleIcon">🍃</text>
             <PinyinText
               :text="'地区介绍'"
+              char-group-width="46px"
               :char-style="{ fontSize: '26px', fontWeight: 'bold', color: '#2E7D32', lineHeight: '1.2' }"
               :pinyin-style="{ fontSize: '16px', color: '#81C784', lineHeight: '1.2' }"
             />
@@ -39,7 +41,6 @@
           <view :class="styles.introText">
             <PinyinText
               :text="regionDetail.description"
-              align="left"
               :char-style="{ fontSize: '18px', color: '#5D4037', lineHeight: '1.2' }"
               :pinyin-style="{ fontSize: '12px', color: '#A1887F', lineHeight: '1.2' }"
             />
@@ -51,6 +52,7 @@
           <text :class="styles.dividerIcon">🏔️</text>
           <PinyinText
             :text="'地理特色'"
+            char-group-width="42px"
             :char-style="{ fontSize: '26px', fontWeight: 'bold', color: '#2E7D32' }"
             :pinyin-style="{ fontSize: '14px', color: '#81C784' }"
           />
@@ -74,50 +76,30 @@
 
         <view :class="styles.divider">
           <view :class="styles.dashLine"></view>
-          <text :class="styles.dividerIcon">🐾</text>
+          <text :class="styles.dividerIcon">📍</text>
           <PinyinText
-            :text="'代表动物'"
+            :text="'包含省份'"
+            char-group-width="42px"
             :char-style="{ fontSize: '26px', fontWeight: 'bold', color: '#2E7D32' }"
             :pinyin-style="{ fontSize: '14px', color: '#81C784' }"
           />
           <view :class="styles.dashLine"></view>
         </view>
 
-        <scroll-view scroll-x :class="styles.animalsScroll" show-scrollbar="false">
-          <view :class="styles.animalsList">
-            <view
-              :class="styles.animalCard"
-              v-for="(animal, index) in regionDetail.animals"
-              :key="index"
-            >
-              <view :class="styles.animalImageWrap">
-                <image
-                  :class="styles.animalImage"
-                  :src="animal.image"
-                  mode="aspectFill"
-                />
-              </view>
-              <view :class="styles.animalInfo">
-                <PinyinText
-                  :text="animal.name"
-                  display-mode="horizontal"
-                  :char-style="{ fontSize: '18px', fontWeight: 'bold' }"
-                  :pinyin-style="{ fontSize: '12px' }"
-                />
-                <view
-                  :class="styles.animalLocation"
-                  :style="{ background: animal.locationColor + '20', color: animal.locationColor }"
-                >
-                  <PinyinText
-                    :text="animal.location"
-                    :char-style="{ fontSize: '13px', fontWeight: 'bold', color: animal.locationColor }"
-                    :pinyin-style="{ fontSize: '10px', color: animal.locationColor, opacity: 0.7 }"
-                  />
-                </view>
-              </view>
-            </view>
+        <view :class="styles.provincesWrap">
+          <view
+            :class="styles.provinceChip"
+            v-for="(province, index) in regionDetail.provinces"
+            :key="index"
+          >
+            <PinyinText
+              :text="province"
+              display-mode="horizontal"
+              :char-style="{ fontSize: '16px', fontWeight: 'bold', color: '#2E7D32' }"
+              :pinyin-style="{ fontSize: '10px', color: '#81C784' }"
+            />
           </view>
-        </scroll-view>
+        </view>
 
         <view :class="styles.bottomSpacer"></view>
       </template>
@@ -130,13 +112,16 @@
 
     <!-- <CustomTabBar :current="0" /> -->
   </view>
+  </AuthGate>
 </template>
 
 <script setup lang="ts">
+import AuthGate from '../../components/AuthGate'
 import { ref, computed, onMounted } from 'vue'
 import PinyinText from '../../components/PinyinText'
 import { REGION_IMAGE_URLS } from '../../constants'
 import { REGION_DETAILS } from '../../data/regionDetail'
+import { callFunction } from '../../utils/cloud'
 import type { RegionDetail } from '../../types'
 
 const regionDetail = ref<RegionDetail>(REGION_DETAILS['西南地区'])
@@ -156,11 +141,7 @@ function goBack() {
 async function fetchRegionDetail(regionName: string) {
   loading.value = true
   try {
-    const res = await uni.cloud.callFunction({
-      name: 'getRegionDetail',
-      data: { name: regionName },
-    })
-    const result = (res as any).result
+    const result = await callFunction('getRegionDetail', { name: regionName })
     if (result && result.code === 0 && result.data) {
       regionDetail.value = result.data
     } else {
@@ -179,7 +160,16 @@ onMounted(() => {
   const pages = getCurrentPages()
   const currentPage = pages[pages.length - 1]
   const options = (currentPage as any)?.options || {}
-  const regionName = options.name || '西南地区'
+  // options.name 正常导航时会被小程序框架自动 decode；但开发者工具"编译模式"里手动配置的
+  // 启动参数是原样透传的，如果那里填的是从 URL 里拷出来的已编码字符串（如 %E5%8D%8E%E4%B8%AD%E5%9C%B0%E5%8C%BA），
+  // 就会带着 % 编码原样传给云函数，导致按精确匹配查库查不到。这里兜底再 decode 一次，
+  // 未编码的普通文本 decode 是无副作用的
+  let regionName = options.name || '西南地区'
+  try {
+    regionName = decodeURIComponent(regionName)
+  } catch (e) {
+    // 不是合法的 URI 编码，说明本来就是普通文本，原样使用即可
+  }
   fetchRegionDetail(regionName)
 })
 </script>

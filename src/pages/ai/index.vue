@@ -1,4 +1,5 @@
 <template>
+  <AuthGate>
   <view :class="styles.aiPage">
     <image :class="styles.bgImage" :src="AI_BACKGROUND_URL" mode="aspectFill" />
 
@@ -35,9 +36,11 @@
       </view>
     </view>
   </view>
+  </AuthGate>
 </template>
 
 <script setup lang="ts">
+import AuthGate from '../../components/AuthGate'
 import { ref, nextTick, onUnmounted } from 'vue'
 import { storeToRefs } from 'pinia'
 import PinyinText from '../../components/PinyinText'

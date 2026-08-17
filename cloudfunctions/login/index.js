@@ -1,5 +1,5 @@
 const cloud = require('wx-server-sdk')
-const crypto = require('crypto')
+const jwt = require('jsonwebtoken')
 
 cloud.init({
   env: cloud.DYNAMIC_CURRENT_ENV,
@@ -7,8 +7,12 @@ cloud.init({
 
 const TOKEN_EXPIRES_IN = 7 * 24 * 3600
 
-function generateToken() {
-  return crypto.randomBytes(32).toString('hex')
+// 生产环境必须在云开发控制台为本函数配置 JWT_SECRET 环境变量；
+// 未配置时使用固定兜底值仅方便本地联调，不能用于线上。
+const JWT_SECRET = process.env.JWT_SECRET || 'dev-only-insecure-secret-please-set-JWT_SECRET'
+
+function generateToken(payload) {
+  return jwt.sign(payload, JWT_SECRET, { expiresIn: TOKEN_EXPIRES_IN })
 }
 
 exports.main = async (event, context) => {
@@ -28,8 +32,8 @@ exports.main = async (event, context) => {
     }
   }
 
-  const token = generateToken()
   const expiresAt = Date.now() + TOKEN_EXPIRES_IN * 1000
+  const token = generateToken({ openid: OPENID, unionid: UNIONID || null })
 
   console.log('[login] 登录成功, openid:', OPENID)
 

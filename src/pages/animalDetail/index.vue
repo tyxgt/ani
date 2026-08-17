@@ -1,4 +1,5 @@
 <template>
+  <AuthGate>
   <view :class="styles.detailPage" :style="{ '--detail-bg': detail.pageBg }">
     <!-- 自定义导航栏 -->
     <view :class="styles.detailNavHeader">
@@ -42,49 +43,73 @@
           :class="styles.attributeCard"
           :style="{ background: cardBg[0] }"
         >
-          <view :class="styles.cardIcon">🎋</view>
+          <view :class="styles.cardHeader">
+            <view :class="styles.cardIcon">🎋</view>
+            <PinyinText
+              :text="'栖息地'"
+              :char-style="{ fontSize: '18px', fontWeight: 'bold', color: '#2E7D32' }"
+              :pinyin-style="{ fontSize: '10px', color: '#66BB6A' }"
+            />
+          </view>
           <PinyinText
-            :text="'栖息地'"
-            :char-style="{ fontSize: '18px', fontWeight: 'bold', color: '#2E7D32' }"
-            :pinyin-style="{ fontSize: '10px', color: '#66BB6A' }"
+            :text="detail.habitat"
+            :char-style="{ fontSize: '14px', color: '#555', lineHeight: '1.5' }"
+            :pinyin-style="{ fontSize: '9px', color: '#999' }"
           />
-          <text :class="styles.cardValue">{{ detail.habitat }}</text>
         </view>
         <view
           :class="styles.attributeCard"
           :style="{ background: cardBg[1] }"
         >
-          <view :class="styles.cardIcon">🎋</view>
+          <view :class="styles.cardHeader">
+            <view :class="styles.cardIcon">🎋</view>
+            <PinyinText
+              :text="'爱吃的食物'"
+              :char-style="{ fontSize: '18px', fontWeight: 'bold', color: '#E65100' }"
+              :pinyin-style="{ fontSize: '10px', color: '#FFB74D' }"
+            />
+          </view>
           <PinyinText
-            :text="'爱吃的食物'"
-            :char-style="{ fontSize: '18px', fontWeight: 'bold', color: '#E65100' }"
-            :pinyin-style="{ fontSize: '10px', color: '#FFB74D' }"
+            :text="detail.food"
+            :char-style="{ fontSize: '14px', color: '#555', lineHeight: '1.5' }"
+            :pinyin-style="{ fontSize: '9px', color: '#999' }"
           />
-          <text :class="styles.cardValue">{{ detail.food }}</text>
         </view>
         <view
           :class="styles.attributeCard"
           :style="{ background: cardBg[2] }"
         >
-          <view :class="styles.cardIcon">💤</view>
+          <view :class="styles.cardHeader">
+            <view :class="styles.cardIcon">💤</view>
+            <PinyinText
+              :text="'生活习性'"
+              :char-style="{ fontSize: '18px', fontWeight: 'bold', color: '#1565C0' }"
+              :pinyin-style="{ fontSize: '10px', color: '#64B5F6' }"
+            />
+          </view>
           <PinyinText
-            :text="'生活习性'"
-            :char-style="{ fontSize: '18px', fontWeight: 'bold', color: '#1565C0' }"
-            :pinyin-style="{ fontSize: '10px', color: '#64B5F6' }"
+            :text="detail.habits"
+            :char-style="{ fontSize: '14px', color: '#555', lineHeight: '1.5' }"
+            :pinyin-style="{ fontSize: '9px', color: '#999' }"
           />
-          <text :class="styles.cardValue">{{ detail.habits }}</text>
         </view>
         <view
           :class="styles.attributeCard"
           :style="{ background: cardBg[3] }"
         >
-          <view :class="styles.cardIcon">🐼</view>
+          <view :class="styles.cardHeader">
+            <view :class="styles.cardIcon">🐼</view>
+            <PinyinText
+              :text="'有趣的小秘密'"
+              :char-style="{ fontSize: '18px', fontWeight: 'bold', color: '#C2185B' }"
+              :pinyin-style="{ fontSize: '10px', color: '#F48FB1' }"
+            />
+          </view>
           <PinyinText
-            :text="'有趣的小秘密'"
-            :char-style="{ fontSize: '18px', fontWeight: 'bold', color: '#C2185B' }"
-            :pinyin-style="{ fontSize: '10px', color: '#F48FB1' }"
+            :text="detail.secret"
+            :char-style="{ fontSize: '14px', color: '#555', lineHeight: '1.5' }"
+            :pinyin-style="{ fontSize: '9px', color: '#999' }"
           />
-          <text :class="styles.cardValue">{{ detail.secret }}</text>
         </view>
       </view>
 
@@ -97,26 +122,42 @@
         }"
       >
         <text :class="styles.bannerIcon">🛡️</text>
-        <text :class="styles.bannerText" :style="{ color: detail.protectionTextColor }">{{ detail.protectionLevel }}</text>
+        <PinyinText
+          :text="detail.protectionLevel"
+          :char-style="{ fontSize: '20px', fontWeight: 'bold', color: detail.protectionTextColor, textShadow: '1px 1px 0 #fff' }"
+          :pinyin-style="{ fontSize: '11px', color: detail.protectionTextColor }"
+        />
       </view>
 
       <!-- 底部双按钮 -->
       <view :class="styles.actionBar">
         <view :class="[styles.actionBtn, styles.listenBtn]" @click="onListen" @tap="onListen">
           <text :class="styles.actionIcon">🔊</text>
-          <text>听介绍</text>
+          <PinyinText
+            :text="'听介绍'"
+            display-mode="horizontal"
+            :char-style="{ fontSize: '22px', fontWeight: 'bold', color: '#fff' }"
+            :pinyin-style="{ fontSize: '12px', color: 'rgba(255,255,255,0.85)' }"
+          />
         </view>
         <view :class="[styles.actionBtn, styles.askBtn]" @click="onAsk" @tap="onAsk">
           <text :class="styles.actionIcon">🤖</text>
-          <text>问博士</text>
+          <PinyinText
+            :text="'问博士'"
+            display-mode="horizontal"
+            :char-style="{ fontSize: '22px', fontWeight: 'bold', color: '#fff' }"
+            :pinyin-style="{ fontSize: '12px', color: 'rgba(255,255,255,0.85)' }"
+          />
         </view>
       </view>
       </template>
     </scroll-view>
   </view>
+  </AuthGate>
 </template>
 
 <script setup lang="ts">
+import AuthGate from '../../components/AuthGate'
 import { ref, computed, onMounted } from 'vue'
 import PinyinText from '../../components/PinyinText'
 import LoadingSpinner from '../../components/LoadingSpinner'

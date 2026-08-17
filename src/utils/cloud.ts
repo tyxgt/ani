@@ -1,5 +1,7 @@
 import type { CloudFunctionResult } from '../types'
-import { ERROR_CODE, CLOUD_ENV, CLOUD_SERVICE_ID, CLOUD_FUNCTION_PATH, WX_CLOUD_ENV } from '../constants'
+import { ERROR_CODE, CLOUD_ENV, CLOUD_SERVICE_ID, CLOUD_FUNCTION_PATH, WX_CLOUD_ENV, TOKEN_KEY } from '../constants'
+import { authManager } from './auth'
+import { useUserStore } from '../stores/user'
 
 let cloudInstance: any = null
 let wxCloudInitialized = false
@@ -131,10 +133,18 @@ export function initCloud(): void {
   // #endif
 }
 
-export async function callFunction(
+// 使用任何功能前都需要登录：除 login 自身外，所有云函数调用统一注入本地保存的
+// token，由各云函数校验；调用方不需要在每个调用点手动传 token。
+function withToken(name: string, data: Record<string, any>): Record<string, any> {
+  if (name === 'login') return data
+  return { ...data, token: uni.getStorageSync(TOKEN_KEY) || '' }
+}
+
+async function callFunctionRaw(
   name: string,
-  data: Record<string, any> = {}
+  rawData: Record<string, any> = {}
 ): Promise<CloudFunctionResult> {
+  const data = withToken(name, rawData)
   // #ifdef MP-TOUTIAO
   try {
     if (!cloudInstance) {
@@ -274,12 +284,34 @@ export async function callFunction(
   // #endif
 }
 
+/**
+ * 统一云函数调用入口：自动注入 token（见 withToken），并在服务端返回 401
+ * （未登录/登录已过期）时自动触发登录自愈——清空本地登录态、把 Pinia 的
+ * authReady/isLoggedIn 打回"登录中"，并重新静默登录。页面侧的 AuthGate
+ * 组件会因为 store 状态变化自动重新展示 loading，登录成功后自动恢复，
+ * 调用方不需要额外处理 401。
+ */
+export async function callFunction(
+  name: string,
+  data: Record<string, any> = {}
+): Promise<CloudFunctionResult> {
+  const result = await callFunctionRaw(name, data)
+  if (name !== 'login') {
+    handleCloudError(result)
+  }
+  return result
+}
+
 export function handleCloudError(result: CloudFunctionResult): boolean {
   if (result.code === ERROR_CODE.UNAUTHORIZED) {
-    uni.removeStorageSync('token')
-    uni.removeStorageSync('userInfo')
+    console.warn('[Cloud] 收到 401，登录已过期，自动重新登录')
+    authManager.logout()
+    const userStore = useUserStore()
+    userStore.markAuthPending()
+    // fire-and-forget：不阻塞当前这次调用的返回，页面通过 AuthGate 感知登录中状态
+    userStore.silentLogin()
     uni.showToast({
-      title: '登录已过期，请重新登录',
+      title: '登录已过期，正在重新登录',
       icon: 'none',
     })
     return true

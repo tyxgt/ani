@@ -1,4 +1,5 @@
 <template>
+  <AuthGate>
   <view
     :class="styles.mapPage"
     @touchstart="onTouchStart"
@@ -80,9 +81,11 @@
 
     <CustomTabBar :current="0" />
   </view>
+  </AuthGate>
 </template>
 
 <script setup lang="ts">
+import AuthGate from "../../components/AuthGate";
 import { ref, onMounted, onUnmounted, nextTick, watch } from "vue";
 import regionData from "../../data/regions.json";
 import CustomTabBar from "../../components/CustomTabBar";

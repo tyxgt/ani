@@ -12,6 +12,9 @@ export const useUserStore = defineStore('user', () => {
   // ─── State ───────────────────────────────────────────────────
   const isLoggedIn = ref(authManager.isLoggedIn(true))
   const userInfo = ref<DouyinUserInfo | null>(authManager.getUserInfo(true))
+  // 是否已经完成过一次启动时的静默登录尝试（无论成功与否）。
+  // AuthGate 组件靠这个状态区分"登录中"和"登录失败需要重试"。
+  const authReady = ref(isLoggedIn.value)
 
   // 初始化状态修复：如果 storage 有 userInfo 但 isLoggedIn 为 false，强制修复
   if (!isLoggedIn.value) {
@@ -74,15 +77,26 @@ export const useUserStore = defineStore('user', () => {
     return result
   }
 
+  // 登录本身已经在 App 启动时静默完成，这里只用于登录后"完善资料"
+  // （昵称/头像），不重新触发 wx.login。
+  function updateProfile(nickName: string, avatarUrl = ''): DouyinUserInfo | null {
+    console.log('[UserStore] updateProfile:', { nickName })
+    const result = authManager.updateUserProfile({ nickName, avatarUrl })
+    if (result) refreshState()
+    return result
+  }
+
   async function silentLogin(): Promise<void> {
     console.log('[UserStore] silentLogin 开始')
     try {
       await authManager.silentLogin()
     } catch (e) {
       console.error('[UserStore] 静默登录失败:', e)
+    } finally {
+      refreshState()
+      authReady.value = true
+      console.log('[UserStore] silentLogin 完成:', { isLoggedIn: isLoggedIn.value })
     }
-    refreshState()
-    console.log('[UserStore] silentLogin 完成')
   }
 
   function logout(): void {
@@ -91,5 +105,12 @@ export const useUserStore = defineStore('user', () => {
     refreshState()
   }
 
-  return { isLoggedIn, userInfo, refreshState, login, silentLogin, logout }
+  // 供 401 自愈流程调用：把状态打回"登录中"，触发页面上的 AuthGate 重新展示 loading，
+  // 随后调用方应当再次调用 silentLogin() 重新换取 token。
+  function markAuthPending(): void {
+    authReady.value = false
+    isLoggedIn.value = false
+  }
+
+  return { isLoggedIn, userInfo, authReady, refreshState, login, updateProfile, silentLogin, logout, markAuthPending }
 })

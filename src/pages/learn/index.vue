@@ -1,4 +1,5 @@
 <template>
+  <AuthGate>
   <view :class="styles.learnPage">
     <view :class="styles.header">
       <view :class="styles.titleRow">
@@ -40,9 +41,11 @@
 
     <CustomTabBar :current="1" />
   </view>
+  </AuthGate>
 </template>
 
 <script setup lang="ts">
+import AuthGate from '../../components/AuthGate'
 import { ref, computed, onMounted } from 'vue'
 import CustomTabBar from '../../components/CustomTabBar'
 import PinyinText from '../../components/PinyinText'
