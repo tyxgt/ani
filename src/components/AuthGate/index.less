@@ -8,20 +8,61 @@
   box-sizing: border-box;
 }
 
-.retry {
+.loginModal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.loginModalContent {
+  width: 600rpx;
+  background: #fff;
+  border-radius: 32rpx;
+  padding: 48rpx;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: 16px;
-  padding: 40px;
+  box-shadow: 0 16rpx 48rpx rgba(0, 0, 0, 0.2);
 }
 
-.retryIcon {
-  font-size: 56px;
+.loginModalIcon {
+  font-size: 80rpx;
+  margin-bottom: 24rpx;
 }
 
-.retryText {
+.loginModalTitle {
+  font-size: 40rpx;
+  font-weight: bold;
+  color: #2C3E50;
+  margin-bottom: 16rpx;
+}
+
+.loginModalDesc {
   font-size: 28rpx;
   color: #999;
+  margin-bottom: 48rpx;
+  text-align: center;
+}
+
+.loginModalBtn {
+  width: 100%;
+  height: 88rpx;
+  background: linear-gradient(135deg, #4A90D9 0%, #357ABD 100%);
+  border-radius: 44rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .loginModalBtnText {
+    font-size: 32rpx;
+    font-weight: bold;
+    color: #fff;
+  }
 }

@@ -304,14 +304,15 @@ export async function callFunction(
 
 export function handleCloudError(result: CloudFunctionResult): boolean {
   if (result.code === ERROR_CODE.UNAUTHORIZED) {
-    console.warn('[Cloud] 收到 401，登录已过期，自动重新登录')
+    console.warn('[Cloud] 收到 401，登录已过期，提示用户手动重新登录')
     authManager.logout()
     const userStore = useUserStore()
-    userStore.markAuthPending()
-    // fire-and-forget：不阻塞当前这次调用的返回，页面通过 AuthGate 感知登录中状态
-    userStore.silentLogin()
+    // 清登录态后同步 Pinia 为未登录，但 authReady 保持 true，
+    // 让 AuthGate 显示"请先登录"弹窗，而不是"登录中..."loading。
+    // 不自动调 silentLogin，交给用户手动登录。
+    userStore.refreshState()
     uni.showToast({
-      title: '登录已过期，正在重新登录',
+      title: '登录已过期，请重新登录',
       icon: 'none',
     })
     return true

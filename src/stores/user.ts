@@ -12,9 +12,10 @@ export const useUserStore = defineStore('user', () => {
   // ─── State ───────────────────────────────────────────────────
   const isLoggedIn = ref(authManager.isLoggedIn(true))
   const userInfo = ref<DouyinUserInfo | null>(authManager.getUserInfo(true))
-  // 是否已经完成过一次启动时的静默登录尝试（无论成功与否）。
-  // AuthGate 组件靠这个状态区分"登录中"和"登录失败需要重试"。
-  const authReady = ref(isLoggedIn.value)
+  // 是否已经完成过一次启动时的登录态判断（无论成功与否）。
+  // 现在启动不自动 silentLogin，因此默认 true（从 storage 同步完即视为 ready）。
+  // AuthGate 组件靠这个状态区分"登录中"和"需要登录/手动重试"。
+  const authReady = ref(true)
 
   // 初始化状态修复：如果 storage 有 userInfo 但 isLoggedIn 为 false，强制修复
   if (!isLoggedIn.value) {

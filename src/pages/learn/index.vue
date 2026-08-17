@@ -46,7 +46,9 @@
 
 <script setup lang="ts">
 import AuthGate from '../../components/AuthGate'
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
+import { onShow, onHide } from '@dcloudio/uni-app'
+import { storeToRefs } from 'pinia'
 import CustomTabBar from '../../components/CustomTabBar'
 import PinyinText from '../../components/PinyinText'
 import LearnCard from '../../components/LearnCard'
@@ -57,7 +59,8 @@ import {
   PROTECTION_COLOR_MAP,
 } from '../../constants'
 import { TERRAIN_DETAILS, CLIMATE_DETAILS } from '../../data/learnDetails'
-import { preloadLearnData } from '../../utils/preload'
+import { preloadLearnData, invalidateLearnData } from '../../utils/preload'
+import { useUserStore } from '../../stores/user'
 import type { LearnCardItem, KnowledgeCategory } from '../../types'
 
 const categories = ref<KnowledgeCategory[]>(KNOWLEDGE_CATEGORIES)
@@ -66,6 +69,15 @@ const terrains = ref(Object.values(TERRAIN_DETAILS))
 const climates = ref(Object.values(CLIMATE_DETAILS))
 const activeCategory = ref(3)
 const loading = ref(true)
+
+// ─── 登录态变化触发的数据重载 ────────────────────────────────────
+// 登录成功（isLoggedIn false→true）后清空预加载缓存并重新拉取数据。
+const userStore = useUserStore()
+const { isLoggedIn } = storeToRefs(userStore)
+// 标记是否需要重载：watch 在隐藏态触发时置 true，待 onShow 时执行
+const needReload = ref(false)
+// 标记页面当前是否处于显示态：控制 watch 内是否立即拉取，避免隐藏态并发请求
+const isActive = ref(false)
 
 const cardList = computed<LearnCardItem[]>(() => {
   if (activeCategory.value === 1) {
@@ -120,6 +132,8 @@ function onCardClick(card: LearnCardItem) {
 }
 
 async function loadData() {
+  // 未登录时不发起请求（请求也只会 401），等登录成功后由 watch 或 onShow 触发重取
+  if (!isLoggedIn.value) return
   loading.value = true
   try {
     const [catRes, terrainRes, climateRes, animalRes] = await preloadLearnData()
@@ -157,6 +171,32 @@ async function loadData() {
 
 onMounted(() => {
   loadData()
+})
+
+// 登录态从 false→true 时（首次登录成功、401 自愈后重新登录）清空预加载缓存并重取
+watch(isLoggedIn, (val, old) => {
+  if (!old && val) {
+    invalidateLearnData()
+    needReload.value = true
+    // 页面当前显示态则立即重载；隐藏态则等 onShow 时执行，避免并发
+    if (isActive.value) {
+      loadData()
+      needReload.value = false
+    }
+  }
+})
+
+onShow(() => {
+  isActive.value = true
+  // 兜底：watch 在隐藏态触发并置 needReload 时，切回本 tab 执行重载
+  if (needReload.value) {
+    loadData()
+    needReload.value = false
+  }
+})
+
+onHide(() => {
+  isActive.value = false
 })
 </script>
 

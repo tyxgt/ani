@@ -20,3 +20,9 @@ export function preloadLearnData() {
   }
   return learnDataPromise
 }
+
+// 清空预加载缓存：登录态变化（false→true）、401 自愈后调用，
+// 使下次 preloadLearnData() 重新发起请求，而非复用旧的（可能失败的）结果。
+export function invalidateLearnData() {
+  learnDataPromise = null
+}

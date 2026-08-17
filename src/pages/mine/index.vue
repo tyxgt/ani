@@ -1,5 +1,5 @@
 <template>
-  <AuthGate>
+  <AuthGate :manualLogin="true">
   <view :class="styles.minePage">
     <view :class="styles.content">
       <view :class="styles.userSection">
@@ -8,7 +8,7 @@
             :charStyle="{ fontSize: '48rpx', fontWeight: 'bold', color: '#2C3E50' }"
             :pinyinStyle="{ fontSize: '28rpx', color: '#5D6D7E' }" />
           <text v-else :class="styles.loginTip" @click="openProfileModal">
-            点击完善资料
+            点击登录
           </text>
         </view>
       </view>
@@ -36,12 +36,10 @@
       </view>
     </view>
 
-    <CustomTabBar :current="2" />
-
-    <!-- 完善资料弹窗（登录已在 App 启动时自动完成，这里只填昵称，不阻塞功能使用） -->
+    <!-- 登录/完善个人信息弹窗（登录本身已完成，这里负责昵称头像） -->
     <view v-if="showProfileModal" :class="styles.loginModal" @click="closeProfileModal">
       <view :class="styles.loginModalContent" @click.stop>
-        <text :class="styles.loginModalTitle">完善个人信息</text>
+        <text :class="styles.loginModalTitle">登录</text>
         <!-- #ifdef MP-WEIXIN -->
         <view :class="styles.nicknameField">
           <input type="nickname" :class="styles.nicknameInput" placeholder="请输入昵称" :value="tempNickName"
@@ -62,6 +60,7 @@
     </view>
   </view>
   </AuthGate>
+  <CustomTabBar :current="2" />
 </template>
 
 <script setup lang="ts">
@@ -82,17 +81,16 @@ const iconStyleMap = ICON_STYLE_MAP
 const store = useUserStore()
 const { userInfo: douyinUserInfo } = storeToRefs(store)
 
-// 完善资料弹窗状态（登录本身已在 App 启动时静默完成，这里只负责昵称）
+// 登录/完善资料弹窗状态（登录由用户手动触发，这里负责昵称头像）
 const showProfileModal = ref(false)
 const tempNickName = ref('')
 
-// 使用任何功能前都需要登录，登录本身不可退出（会自动重新登录），
-// 这里保留的是"清除本地资料"（昵称等），而不是真正意义上的登出
+// 退出登录：清除本地 token 与用户信息，回到可手动登录状态，不自动重登
 const displayMenuList = computed<MenuItem[]>(() => {
   const baseList = [...MENU_LIST]
   baseList.push({
     id: 999,
-    name: '清除本地资料',
+    name: '退出登录',
     icon: 'logout',
     action: 'logout',
   })
@@ -166,14 +164,12 @@ const handleMenuClick = (item: { action: string; name: string }) => {
     case "logout":
       uni.showModal({
         title: "提示",
-        content: "确定要清除本地资料吗？清除后会重新静默登录。",
+        content: "确定要退出登录吗？下次进入需要重新登录。",
         success: (res) => {
           if (res.confirm) {
             store.logout()
-            uni.showToast({ title: '已清除，正在重新登录', icon: 'none' })
-            // 使用任何功能前都需要登录：清除本地资料后立刻重新静默登录，
-            // 不让用户停留在"未登录"状态
-            store.silentLogin()
+            uni.showToast({ title: '已退出登录', icon: 'none' })
+            // 不再自动重新登录，用户手动点 AuthGate 的"登录"按钮才会重新登录
           }
         },
       })
