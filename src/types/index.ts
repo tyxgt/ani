@@ -68,6 +68,10 @@ export interface LoginData {
   token: string
   openid: string
   expiresAt: number
+  userCode?: string | null
+  isVip?: boolean
+  vipExpireAt?: number | null
+  vipType?: 'week' | 'month' | null
 }
 
 export interface MenuItem {

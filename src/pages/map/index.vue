@@ -79,7 +79,7 @@
       </view>
     </view>
 
-    <CustomTabBar :current="0" />
+    <CustomTabBar current="/pages/index/index" />
   </view>
   </AuthGate>
 </template>

@@ -77,6 +77,12 @@
   margin-bottom: 20rpx;
 }
 
+.userCode {
+  font-size: 24rpx;
+  color: #999;
+  margin-top: 8rpx;
+}
+
 .loginTip {
   font-size: 36rpx;
   color: #4A90D9;
@@ -132,11 +138,11 @@
   padding: 36rpx 40rpx;
   border-bottom: 2rpx solid #ECF0F1;
   transition: background-color 0.2s;
-  
+
   &:last-child {
     border-bottom: none;
   }
-  
+
   &:active {
     background-color: #F8F9FA;
   }
@@ -178,16 +184,18 @@
 }
 
 .menuText {
-  flex: 1;
   display: flex;
   flex-direction: column;
   align-self: flex-start;
+  position: relative;
 }
 
 .arrow {
   font-size: 40rpx;
   color: #BDC3C7;
   font-weight: 300;
+  position: absolute;
+  right: 50px;
 }
 
 .loginModal {

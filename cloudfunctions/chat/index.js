@@ -6,6 +6,12 @@ cloud.init({
   env: cloud.DYNAMIC_CURRENT_ENV,
 })
 
+const db = cloud.database()
+
+function isVipActive(user) {
+  return !!(user && user.vipExpireAt && user.vipExpireAt > Date.now())
+}
+
 function verifyToken(token) {
   if (!token) return null
   try {
@@ -187,9 +193,22 @@ exports.main = async (event, context) => {
   }
   
   try {
+    // 会员权限校验：唯一不可绕过的防线（前端入口隐藏可以被跳过直接调用本云函数）。
+    // 查询异常同样按"非会员"处理（fail-closed），不能因为数据库故障误放行。
+    const userRes = await db.collection('user').where({ openid: OPENID }).get()
+    const user = userRes.data && userRes.data[0]
+
+    if (!isVipActive(user)) {
+      return {
+        code: 40001, // NEED_MEMBERSHIP
+        msg: '暂不可用',
+        data: null,
+      }
+    }
+
     const messages = buildMessages(history, message.trim())
     console.log('[chat] 构建消息完成，共', messages.length, '条')
-    
+
     const reply = await callDeepSeekStream(messages)
     console.log('[chat] DeepSeek 回复成功，长度:', reply.length)
     

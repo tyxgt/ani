@@ -4,7 +4,9 @@ import type { UserInfo, MenuItem, KnowledgeCategory, KnowledgeAnimal } from '../
 export const TOKEN_KEY = 'token'
 export const USER_INFO_KEY = 'userInfo'
 export const EXPIRES_AT_KEY = 'expiresAt'
+export const VIP_INFO_KEY = 'vipInfo'
 export const LOGIN_CLOUD_FUNCTION = 'login'
+export const GET_MEMBERSHIP_CLOUD_FUNCTION = 'getMembership'
 export const CLOUD_ENV = 'env-a22YxZSttQ'
 export const CLOUD_SERVICE_ID = '1m5svld6xb0hr'
 export const CLOUD_FUNCTION_PATH = '/index'
@@ -15,6 +17,7 @@ export const ERROR_CODE = {
   SUCCESS: 0,
   GENERAL_ERROR: -1,
   UNAUTHORIZED: 401,
+  NEED_MEMBERSHIP: 40001,
 }
 
 // ─── 地图常量 ──────────────────────────────────────────────────
@@ -141,6 +144,10 @@ export const BTN_ICON_URL =
   'https://tt3ccf4a72a2ab53a201-env-a22yxzsttq.tos-cn-beijing.volces.com/moutain.png'
 
 // ─── AI 助手常量 ──────────────────────────────────────────────────
+// 对话（AI 问博士）相关功能总开关：本版本暂不发布，先设为 false；
+// 后续要恢复时改成 true 即可，不需要再去 CustomTabBar / 各详情页改代码。
+export const AI_CHAT_ENABLED = true
+
 export const AI_PANDA_URL =
   'https://tt3ccf4a72a2ab53a201-env-a22yxzsttq.tos-cn-beijing.volces.com/chatsys.png'
 
@@ -182,20 +189,20 @@ export const DEFAULT_USER_INFO: UserInfo = {
 }
 
 export const MENU_LIST: MenuItem[] = [
-  {
-    id: 1,
-    name: '设置',
-    icon: 'settings',
-    action: 'settings',
-  },
+  // {
+  //   id: 1,
+  //   name: '设置',
+  //   icon: 'settings',
+  //   action: 'settings',
+  // },
   { id: 2, name: '关于我们', icon: 'about', action: 'about' },
-  {
-    id: 3,
-    name: '意见反馈',
-    icon: 'feedback',
-    action: 'feedback',
-  },
-  { id: 4, name: '分享', icon: 'share', action: 'share' },
+  // {
+  //   id: 3,
+  //   name: '意见反馈',
+  //   icon: 'feedback',
+  //   action: 'feedback',
+  // },
+  // { id: 4, name: '分享', icon: 'share', action: 'share' },
 ]
 
 export const ICON_STYLE_MAP: Record<string, string> = {

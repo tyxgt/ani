@@ -129,8 +129,8 @@
         />
       </view>
 
-      <!-- 底部双按钮 -->
-      <view :class="styles.actionBar">
+      <!-- "听介绍"/"问博士"（对话功能）由 AI_CHAT_ENABLED 开关 + 会员状态共同控制 -->
+      <view v-if="AI_CHAT_ENABLED && isVip" :class="styles.actionBar">
         <view :class="[styles.actionBtn, styles.listenBtn]" @click="onListen" @tap="onListen">
           <text :class="styles.actionIcon">🔊</text>
           <PinyinText
@@ -159,11 +159,15 @@
 <script setup lang="ts">
 import AuthGate from '../../components/AuthGate'
 import { ref, computed, onMounted } from 'vue'
+import { storeToRefs } from 'pinia'
 import PinyinText from '../../components/PinyinText'
 import LoadingSpinner from '../../components/LoadingSpinner'
 import { callFunction } from '../../utils/cloud'
-import { PROTECTION_COLOR_MAP, ANIMAL_DISPLAY_CONFIG } from '../../constants'
+import { PROTECTION_COLOR_MAP, ANIMAL_DISPLAY_CONFIG, AI_CHAT_ENABLED } from '../../constants'
+import { useUserStore } from '../../stores/user'
 import type { AnimalDetailItem } from '../../types'
+
+const { isVip } = storeToRefs(useUserStore())
 
 // 动物内容全部来自云函数 getAnimalDetail，这里只是数据到达前的占位默认值，不预置任何具体动物的真实内容
 const EMPTY_DETAIL: AnimalDetailItem = {

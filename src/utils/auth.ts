@@ -1,11 +1,21 @@
 import type { DouyinUserInfo, LoginData } from '../types'
-import { TOKEN_KEY, USER_INFO_KEY, EXPIRES_AT_KEY, LOGIN_CLOUD_FUNCTION } from '../constants'
+import { TOKEN_KEY, USER_INFO_KEY, EXPIRES_AT_KEY, VIP_INFO_KEY, LOGIN_CLOUD_FUNCTION, GET_MEMBERSHIP_CLOUD_FUNCTION } from '../constants'
 import { callFunction } from './cloud'
+
+export interface VipInfo {
+  userCode: string | null
+  isVip: boolean
+  vipExpireAt: number | null
+  vipType: 'week' | 'month' | null
+}
+
+const EMPTY_VIP_INFO: VipInfo = { userCode: null, isVip: false, vipExpireAt: null, vipType: null }
 
 class AuthManager {
   private _token: string = ''
   private _userInfo: DouyinUserInfo | null = null
   private _expiresAt: number = 0
+  private _vipInfo: VipInfo = { ...EMPTY_VIP_INFO }
   private _loginPromise: Promise<DouyinUserInfo | null> | null = null
 
   constructor() {
@@ -14,10 +24,12 @@ class AuthManager {
     this._expiresAt = uni.getStorageSync(EXPIRES_AT_KEY) || 0
     this._checkTokenExpired()
     this._userInfo = this._parseUserInfo(this._userInfo)
+    this._vipInfo = this._parseVipInfo(uni.getStorageSync(VIP_INFO_KEY))
     console.log('[Auth] 构造函数:', {
       hasToken: !!this._token,
       userInfo: this._userInfo,
       expiresAt: this._expiresAt,
+      vipInfo: this._vipInfo,
     })
   }
 
@@ -61,6 +73,56 @@ class AuthManager {
       try { return JSON.parse(stored) as DouyinUserInfo } catch {}
     }
     return null
+  }
+
+  getVipInfo(fresh = false): VipInfo {
+    if (fresh) {
+      this._vipInfo = this._parseVipInfo(uni.getStorageSync(VIP_INFO_KEY))
+    }
+    return this._vipInfo
+  }
+
+  private _parseVipInfo(stored: any): VipInfo {
+    if (!stored) return { ...EMPTY_VIP_INFO }
+    const obj = typeof stored === 'string' ? (() => { try { return JSON.parse(stored) } catch { return null } })() : stored
+    if (!obj || typeof obj !== 'object') return { ...EMPTY_VIP_INFO }
+    return {
+      userCode: obj.userCode ?? null,
+      isVip: !!obj.isVip,
+      vipExpireAt: obj.vipExpireAt ?? null,
+      vipType: obj.vipType ?? null,
+    }
+  }
+
+  private _setVipInfo(loginData: Partial<LoginData>): void {
+    this._vipInfo = {
+      userCode: loginData.userCode ?? null,
+      isVip: !!loginData.isVip,
+      vipExpireAt: loginData.vipExpireAt ?? null,
+      vipType: loginData.vipType ?? null,
+    }
+    try {
+      uni.setStorageSync(VIP_INFO_KEY, JSON.stringify(this._vipInfo))
+    } catch (e) {
+      console.error('[Auth] 会员状态存储失败:', e)
+    }
+  }
+
+  // 静默刷新会员状态：不依赖 token 是否过期，随时可调用（供 tabBar 页面
+  // onShow 时调用），失败时保留当前状态，不抛出到 UI。
+  async refreshMembership(): Promise<VipInfo> {
+    if (!this.isLoggedIn(true)) {
+      return this._vipInfo
+    }
+    try {
+      const result = await callFunction(GET_MEMBERSHIP_CLOUD_FUNCTION, {})
+      if (result.code === 0 && result.data) {
+        this._setVipInfo(result.data)
+      }
+    } catch (e) {
+      console.error('[Auth] 刷新会员状态失败:', e)
+    }
+    return this._vipInfo
   }
 
   async silentLogin(): Promise<DouyinUserInfo | null> {
@@ -139,6 +201,7 @@ class AuthManager {
           nickName,
           avatarUrl,
         }
+        this._setVipInfo(loginData)
         this._saveToStorage()
         console.log('登录成功:', this._token)
         return this._userInfo
@@ -190,6 +253,7 @@ class AuthManager {
           nickName,
           avatarUrl,
         }
+        this._setVipInfo(loginData)
         this._saveToStorage()
         console.log('微信登录成功:', this._token)
         return this._userInfo
@@ -255,9 +319,11 @@ class AuthManager {
     this._token = ''
     this._userInfo = null
     this._expiresAt = 0
+    this._vipInfo = { ...EMPTY_VIP_INFO }
     uni.removeStorageSync(TOKEN_KEY)
     uni.removeStorageSync(USER_INFO_KEY)
     uni.removeStorageSync(EXPIRES_AT_KEY)
+    uni.removeStorageSync(VIP_INFO_KEY)
   }
 
   private _saveToStorage(): void {

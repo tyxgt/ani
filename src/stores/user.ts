@@ -17,6 +17,13 @@ export const useUserStore = defineStore('user', () => {
   // AuthGate 组件靠这个状态区分"登录中"和"需要登录/手动重试"。
   const authReady = ref(true)
 
+  // ─── 会员状态：来自登录响应快照 + tabBar 页面 onShow 时的静默刷新 ──────
+  const vipInfo = ref(authManager.getVipInfo(true))
+  const isVip = ref(vipInfo.value.isVip)
+  const vipExpireAt = ref(vipInfo.value.vipExpireAt)
+  const vipType = ref(vipInfo.value.vipType)
+  const userCode = ref(vipInfo.value.userCode)
+
   // 初始化状态修复：如果 storage 有 userInfo 但 isLoggedIn 为 false，强制修复
   if (!isLoggedIn.value) {
     const storedToken = uni.getStorageSync('token')
@@ -64,10 +71,26 @@ export const useUserStore = defineStore('user', () => {
       }
     }
 
+    const newVipInfo = authManager.getVipInfo(true)
+    vipInfo.value = newVipInfo
+    isVip.value = newVipInfo.isVip
+    vipExpireAt.value = newVipInfo.vipExpireAt
+    vipType.value = newVipInfo.vipType
+    userCode.value = newVipInfo.userCode
+
     console.log('[UserStore] refreshState:', {
       isLoggedIn: isLoggedIn.value,
       userInfo: userInfo.value ? { ...userInfo.value } : null,
+      isVip: isVip.value,
     })
+  }
+
+  // 静默刷新会员状态：不弹任何提示，供 tabBar 页面 onShow 调用。
+  // 未登录时直接跳过（不需要也不应该触发登录流程）。
+  async function refreshMembership(): Promise<void> {
+    if (!isLoggedIn.value) return
+    await authManager.refreshMembership()
+    refreshState()
   }
 
   async function login(nickName: string, avatarUrl = ''): Promise<DouyinUserInfo | null> {
@@ -113,5 +136,20 @@ export const useUserStore = defineStore('user', () => {
     isLoggedIn.value = false
   }
 
-  return { isLoggedIn, userInfo, authReady, refreshState, login, updateProfile, silentLogin, logout, markAuthPending }
+  return {
+    isLoggedIn,
+    userInfo,
+    authReady,
+    isVip,
+    vipExpireAt,
+    vipType,
+    userCode,
+    refreshState,
+    refreshMembership,
+    login,
+    updateProfile,
+    silentLogin,
+    logout,
+    markAuthPending,
+  }
 })

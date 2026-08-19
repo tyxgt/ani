@@ -42,10 +42,11 @@
 <script setup lang="ts">
 import AuthGate from '../../components/AuthGate'
 import { ref, nextTick, onUnmounted } from 'vue'
+import { onShow } from '@dcloudio/uni-app'
 import { storeToRefs } from 'pinia'
 import PinyinText from '../../components/PinyinText'
 import MessageItem from '../../components/MessageItem'
-import { AI_BACKGROUND_URL, AI_INPUT_PANDA_URL, AI_CHAT_CLOUD_FUNCTION, AI_CHAT_MAX_HISTORY_ROUNDS, AI_TYPEWRITER_SPEED } from '../../constants'
+import { AI_BACKGROUND_URL, AI_INPUT_PANDA_URL, AI_CHAT_CLOUD_FUNCTION, AI_CHAT_MAX_HISTORY_ROUNDS, AI_TYPEWRITER_SPEED, ERROR_CODE } from '../../constants'
 import { callFunction } from '../../utils/cloud'
 import { useUserStore } from '../../stores/user'
 import type { ChatMessage } from '../../types'
@@ -87,7 +88,19 @@ const loading = ref(false)
 const sessionId = ref<string>('')
 
 const userStore = useUserStore()
-const { isLoggedIn } = storeToRefs(userStore)
+const { isLoggedIn, isVip } = storeToRefs(userStore)
+
+// 页面级兜底：非会员不允许停留在这个页面（入口已经在 tabBar/详情页隐藏，
+// 这里防的是页面实例被缓存住、或者非常规方式直接跳转过来的情况）。
+// 静默跳走，不做任何提示。
+onShow(async () => {
+  if (isLoggedIn.value) {
+    await userStore.refreshMembership()
+  }
+  if (isLoggedIn.value && !isVip.value) {
+    uni.switchTab({ url: '/pages/index/index' })
+  }
+})
 
 let typingTimer: ReturnType<typeof setInterval> | null = null
 let currentTypingMsgIndex: number | null = null
@@ -232,6 +245,16 @@ async function sendMessage() {
 
       const reply = res.data.reply
       typeWriter(reply, assistantMsgId)
+    } else if (res.code === ERROR_CODE.NEED_MEMBERSHIP) {
+      // 服务端二次校验拦截：理论上走不到这里（入口已隐藏、onShow 已拦截），
+      // 出现说明本地会员状态短暂过期了——静默撤回占位消息，不弹任何提示，
+      // 刷新会员状态后离开页面。
+      const msgIndex = messages.value.findIndex(m => m.id === assistantMsgId)
+      if (msgIndex !== -1) {
+        messages.value.splice(msgIndex, 1)
+      }
+      await userStore.refreshMembership()
+      uni.switchTab({ url: '/pages/index/index' })
     } else {
       const msgIndex = messages.value.findIndex(m => m.id === assistantMsgId)
       if (msgIndex !== -1) {

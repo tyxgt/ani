@@ -43,6 +43,12 @@
 | `data.openid` | `string` | 用户平台标识 |
 | `data.unionid` | `string` | 平台统一标识（微信专属） |
 | `data.expiresAt` | `number` | 过期时间戳（7 天后） |
+| `data.userCode` | `string \| null` | 6 位数字识别码，首次登录时生成并落库，用于人工核对身份（见下方"会员开通（人工）操作说明"） |
+| `data.isVip` | `boolean` | 当前是否是有效会员（`vipExpireAt` 大于当前时间） |
+| `data.vipExpireAt` | `number \| null` | 会员到期时间戳（毫秒），未开通为 `null` |
+| `data.vipType` | `'week' \| 'month' \| null` | 最近一次开通的套餐类型，仅展示用，不参与权限判断 |
+
+> `login` 内部会按 `openid` upsert `user` 集合（不存在则创建并生成 `userCode`），这部分逻辑失败不会阻断登录本身——查询/写入异常时会员字段按未开通兜底，用户仍可正常登录使用免费功能。
 
 ### 待完善
 
@@ -408,6 +414,16 @@
 
 > **部署依赖**：需在微信云开发控制台为 chat 云函数配置环境变量 `DEEPSEEK_API_KEY`（DeepSeek API 密钥），并在 `cloudfunctions/chat/` 目录下执行 `npm install` 安装依赖。
 
+### 权限说明
+
+本接口仅限会员使用。在 `token` 校验和参数校验通过后、真正调用 DeepSeek 之前，会按 `OPENID` 查询 `user` 集合校验 `vipExpireAt` 是否有效；查询异常同样按未开通处理（fail-closed）。非会员/未开通返回：
+
+| `code` | 含义 |
+|------|------|
+| `40001` | 未开通会员（`NEED_MEMBERSHIP`），`data` 为 `null` |
+
+前端不会对这个错误码弹出任何提示——对话入口本身在非会员时就不会出现（见"会员开通（人工）操作说明"），这里只是服务端兜底，防止绕过前端直接调用云函数。
+
 ---
 
 ## 接口 12.5：语音合成（TTS）✅ 已实现
@@ -435,6 +451,34 @@
 | `data.codec` | `string` | 编码格式，固定 `mp3` |
 
 > **部署依赖**：需在微信云开发控制台为 tts 云函数配置环境变量 `TENCENT_SECRET_ID` / `TENCENT_SECRET_KEY`（腾讯云 API 密钥）。
+
+---
+
+## 接口 12.6：查询会员状态 ✅ 已实现
+
+| 项目 | 内容 |
+|------|------|
+| **云函数名称** | `getMembership` |
+| **当前状态** | ✅ 已实现（纯查询，不做任何写操作） |
+| **实现文件** | `cloudfunctions/getMembership/index.js` + `src/utils/auth.ts` |
+
+用于前端在 tabBar 页面（`index`/`ai`/`learn`/`mine`）`onShow` 时静默刷新会员状态，不依赖登录 token 是否过期——管理员手动改完数据库后，用户切换一次 tab 就能立刻感知，不需要重新登录。全程无 UI，不弹任何提示。
+
+### 请求参数
+
+| 字段 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| `token` | `string` | 是 | 登录令牌 |
+
+### 返回数据
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| `code` | `number` | 0=成功 401=未授权 |
+| `msg` | `string` | 提示信息(成功时为空) |
+| `data.isVip` | `boolean` | 当前是否是有效会员 |
+| `data.vipExpireAt` | `number \| null` | 会员到期时间戳（毫秒） |
+| `data.vipType` | `'week' \| 'month' \| null` | 最近一次开通的套餐类型 |
 
 ---
 
@@ -614,6 +658,45 @@ if (detailRes.code === 0) {
 | `protectionLevel` | String | 是 | 保护级别 |
 | `createdAt` | Date | 是 | 创建时间（自动） |
 | `updatedAt` | Date | 是 | 更新时间（自动） |
+
+### 用户表 (`user`)
+
+| 字段名 | 类型 | 必填 | 说明 |
+|--------|------|------|------|
+| `_id` | String | 是 | 文档ID（自动生成） |
+| `openid` | String | 是 | 微信 openid，唯一索引 |
+| `unionid` | String \| null | 否 | 微信 unionid |
+| `userCode` | String | 是 | 6 位数字识别码，首次登录时生成 |
+| `vipExpireAt` | Number \| null | 否 | 会员到期时间戳（毫秒），`null` 或早于当前时间均视为未开通/已过期——**唯一的权限判断依据** |
+| `vipType` | String \| null | 否 | `'week'` \| `'month'`，最近一次开通的套餐类型，仅备注用 |
+| `createdAt` | Date | 是 | 首次登录时间（自动） |
+| `updatedAt` | Date | 是 | 最近一次登录时间（自动） |
+
+> **数据库安全规则**：云开发控制台里需把本集合设为「所有人不可读不可写」——前端全程不直接读写这个集合，都是通过 `login`/`getMembership`/`chat` 云函数（管理员态）访问，锁死可以避免用户绕过前端直接改自己的 `vipExpireAt`。
+
+---
+
+## 会员开通（人工）操作说明
+
+对话功能（`chat`）目前是纯人工开通的付费会员制，项目里没有接入真实微信支付、也没有任何购买/兑换页面——线下收款后，管理员在云开发控制台手动改 `user` 集合的字段即可生效。
+
+**套餐**：周卡（7 天）、月卡（30 天）。用固定天数而不是自然周/自然月，避免大小月带来的歧义。
+
+**操作步骤**：
+
+1. 用户把"我的"页面上展示的 6 位识别码（`userCode`）发给你。
+2. 在云开发控制台的 `user` 集合里，用 `where({ userCode: 'xxxxxx' })` 或直接筛选找到对应记录。
+3. 按下面的公式计算新的 `vipExpireAt` 并写入该字段（同时更新 `vipType` 为 `'week'` 或 `'month'`）：
+
+   ```
+   新 vipExpireAt = max(当前时间, 记录里原有的 vipExpireAt) + 套餐时长
+   周卡时长 = 7 × 24 × 3600 × 1000 毫秒
+   月卡时长 = 30 × 24 × 3600 × 1000 毫秒
+   ```
+
+   用 `max(当前时间, 原到期时间)` 而不是直接从今天起算，是为了让提前续费的用户不吃亏——到期前续费会在原有基础上顺延，而不是浪费剩余天数。
+
+4. 保存后，用户下次切换 tabBar（`onShow` 会静默调用 `getMembership` 刷新状态）就能看到 AI 入口出现，不需要重新登录或重启小程序。
 
 ---
 

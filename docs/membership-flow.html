@@ -1,0 +1,518 @@
+<title>会员开通流程</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@500;600;700&family=Noto+Sans+SC:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+  :root {
+    --ink: #1C2621;
+    --text: #3B453D;
+    --text-secondary: #6B766D;
+    --bg: #F5F7F3;
+    --surface: #FFFFFF;
+    --surface-alt: #EAEEE6;
+    --border: #D8DED3;
+    --accent: #2F7A52;
+    --accent-soft: #E4EFE8;
+    --accent-2: #45549E;
+    --accent-2-soft: #E7E9F5;
+    --accent-warn: #9C7A16;
+    --accent-warn-soft: #F3ECD6;
+    --code-bg: #EEF1EA;
+    --shadow: 0 1px 2px rgba(28, 38, 33, 0.06), 0 8px 24px rgba(28, 38, 33, 0.05);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ink: #EDF2EA;
+      --text: #C9D2C7;
+      --text-secondary: #93A092;
+      --bg: #12160F;
+      --surface: #1B211A;
+      --surface-alt: #212820;
+      --border: #2C352A;
+      --accent: #5FC98A;
+      --accent-soft: #1E2E24;
+      --accent-2: #96A3EC;
+      --accent-2-soft: #232A46;
+      --accent-warn: #E0B84D;
+      --accent-warn-soft: #33301C;
+      --code-bg: #1D231C;
+      --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 24px rgba(0, 0, 0, 0.35);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --ink: #EDF2EA;
+    --text: #C9D2C7;
+    --text-secondary: #93A092;
+    --bg: #12160F;
+    --surface: #1B211A;
+    --surface-alt: #212820;
+    --border: #2C352A;
+    --accent: #5FC98A;
+    --accent-soft: #1E2E24;
+    --accent-2: #96A3EC;
+    --accent-2-soft: #232A46;
+    --accent-warn: #E0B84D;
+    --accent-warn-soft: #33301C;
+    --code-bg: #1D231C;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 24px rgba(0, 0, 0, 0.35);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Noto Sans SC', -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    font-size: 16px;
+    line-height: 1.75;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .page {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 64px 24px 96px;
+  }
+
+  h1, h2, h3 {
+    font-family: 'Noto Serif SC', Georgia, 'Songti SC', serif;
+    color: var(--ink);
+    text-wrap: balance;
+    margin: 0;
+  }
+
+  .kicker {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 12.5px;
+    letter-spacing: 0.06em;
+    color: var(--accent);
+    margin: 0 0 14px;
+  }
+
+  h1 {
+    font-size: clamp(30px, 5vw, 40px);
+    font-weight: 700;
+    line-height: 1.25;
+  }
+
+  .dek {
+    margin: 18px 0 0;
+    max-width: 62ch;
+    font-size: 17.5px;
+    color: var(--text-secondary);
+    line-height: 1.7;
+  }
+
+  .hero {
+    padding-bottom: 40px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  section {
+    margin-top: 56px;
+  }
+
+  h2 {
+    font-size: 22px;
+    font-weight: 600;
+    margin-bottom: 18px;
+  }
+
+  h2 .num {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    color: var(--accent);
+    font-weight: 500;
+    margin-right: 10px;
+    font-size: 18px;
+  }
+
+  p { margin: 0 0 16px; max-width: 66ch; }
+  p:last-child { margin-bottom: 0; }
+
+  .tldr {
+    background: var(--accent-soft);
+    border-left: 3px solid var(--accent);
+    border-radius: 4px;
+    padding: 20px 24px;
+    margin-top: 20px;
+  }
+  .tldr p { margin: 0; max-width: 60ch; color: var(--ink); }
+  .tldr strong { color: var(--accent); font-weight: 600; }
+
+  code {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.88em;
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 1px 6px;
+    color: var(--ink);
+  }
+
+  /* ── diagram ─────────────────────────────────────────── */
+  .diagram-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    padding: 8px 16px 4px;
+    overflow-x: auto;
+  }
+  .diagram-wrap svg { display: block; width: 100%; height: auto; color: var(--ink); }
+  figure { margin: 20px 0 0; }
+  figcaption {
+    margin-top: 14px;
+    font-size: 14px;
+    color: var(--text-secondary);
+    line-height: 1.65;
+    max-width: 64ch;
+  }
+  figcaption .dot {
+    display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+    margin-right: 4px; vertical-align: middle;
+  }
+
+  /* ── tables ──────────────────────────────────────────── */
+  .table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 10px; }
+  table { width: 100%; border-collapse: collapse; font-size: 14.5px; background: var(--surface); }
+  th, td { text-align: left; padding: 11px 16px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  th {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-weight: 500;
+    font-size: 12px;
+    letter-spacing: 0.04em;
+    color: var(--text-secondary);
+    background: var(--surface-alt);
+    white-space: nowrap;
+  }
+  tr:last-child td { border-bottom: none; }
+  td.field { font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 13.5px; color: var(--accent); white-space: nowrap; }
+  td.note { color: var(--text-secondary); }
+
+  /* ── numbered steps (genuinely sequential) ──────────────── */
+  .steps { list-style: none; margin: 0; padding: 0; counter-reset: step; }
+  .steps li {
+    counter-increment: step;
+    display: grid;
+    grid-template-columns: 34px 1fr;
+    gap: 14px;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .steps li:last-child { border-bottom: none; }
+  .steps li::before {
+    content: counter(step);
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 13px;
+    color: var(--accent-2);
+    background: var(--accent-2-soft);
+    width: 26px; height: 26px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .steps .step-title { color: var(--ink); font-weight: 500; }
+  .steps .step-detail { color: var(--text-secondary); font-size: 14.5px; margin-top: 3px; }
+
+  /* ── formula ─────────────────────────────────────────── */
+  .formula {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 22px 24px;
+  }
+  .formula .line {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 15px;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink);
+    white-space: nowrap;
+    overflow-x: auto;
+  }
+  .formula .line + .line { margin-top: 10px; }
+  .formula .line .op { color: var(--accent-2); }
+  .formula .why {
+    margin-top: 16px;
+    font-size: 14.5px;
+    color: var(--text-secondary);
+    border-top: 1px solid var(--border);
+    padding-top: 14px;
+  }
+
+  /* ── checklist ───────────────────────────────────────── */
+  .checklist { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+  .checklist li {
+    display: flex; gap: 12px; align-items: flex-start;
+    background: var(--accent-warn-soft);
+    border: 1px solid color-mix(in srgb, var(--accent-warn) 35%, var(--border));
+    border-radius: 8px;
+    padding: 13px 16px;
+  }
+  .checklist .box {
+    flex: none; width: 16px; height: 16px; margin-top: 3px;
+    border: 1.5px solid var(--accent-warn); border-radius: 4px;
+  }
+  .checklist .label { color: var(--ink); }
+  .checklist .label .sub { display: block; color: var(--text-secondary); font-size: 13.5px; margin-top: 2px; }
+
+  /* ── faq ─────────────────────────────────────────────── */
+  .faq-item + .faq-item { margin-top: 24px; }
+  .faq-item .q { color: var(--ink); font-weight: 600; margin-bottom: 6px; }
+  .faq-item .q::before { content: "Q. "; color: var(--accent); font-family: 'JetBrains Mono', ui-monospace, monospace; }
+  .faq-item .a { color: var(--text); }
+  .faq-item .a::before { content: "A. "; color: var(--text-secondary); font-family: 'JetBrains Mono', ui-monospace, monospace; }
+
+  footer {
+    margin-top: 72px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+    font-size: 13px;
+    color: var(--text-secondary);
+  }
+
+  @media (max-width: 520px) {
+    .page { padding: 40px 18px 72px; }
+    th, td { padding: 9px 12px; }
+  }
+</style>
+
+<div class="page">
+
+  <div class="hero">
+    <p class="kicker">对话功能 · 权限设计</p>
+    <h1>会员开通流程</h1>
+    <p class="dek">这个小程序没有收银台。判断一个人能不能和熊猫博士聊天，从头到尾只看数据库里一个时间戳字段。这份文档把"谁在什么时候做什么"讲清楚。</p>
+  </div>
+
+  <div class="tldr">
+    <p>一句话说完整个机制：<strong>「AI 对话」这个入口出不出现，只取决于 <code>user</code> 表里 <code>vipExpireAt</code> 这个时间戳有没有过期。</strong>没有支付网关、没有审核后台——你在云开发控制台手动改这一个字段，就是"开通会员"的全部操作。</p>
+  </div>
+
+  <section>
+    <h2><span class="num">01</span>完整流程</h2>
+    <p>从用户点开小程序，到你帮他开通，再到他自己看到入口重新出现，一共是这 7 步。</p>
+
+    <figure>
+      <div class="diagram-wrap">
+        <svg viewBox="0 0 820 900" role="img" aria-label="从用户打开小程序发现无法对话，到用户报识别码、你在云开发控制台手动开通、系统自动刷新、入口重新出现的七步流程">
+          <defs>
+            <marker id="arrow" viewBox="0 0 8 8" refX="4" refY="4" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <path d="M0,0 L8,4 L0,8 z" fill="currentColor" opacity="0.5" />
+            </marker>
+          </defs>
+
+          <!-- legend -->
+          <g font-family="Noto Sans SC, sans-serif" font-size="12.5">
+            <circle cx="26" cy="28" r="5" fill="#2F7A52" />
+            <text x="38" y="32" fill="currentColor" opacity="0.75">用户（小程序里）</text>
+            <circle cx="176" cy="28" r="5" fill="#8A968B" />
+            <text x="188" y="32" fill="currentColor" opacity="0.75">系统（自动查询）</text>
+            <circle cx="336" cy="28" r="5" fill="#45549E" />
+            <text x="348" y="32" fill="currentColor" opacity="0.75">你（云开发控制台）</text>
+          </g>
+
+          <!-- spine -->
+          <line x1="70" y1="70" x2="70" y2="430" stroke="currentColor" stroke-opacity="0.28" stroke-width="2" />
+          <line x1="70" y1="430" x2="70" y2="570" stroke="currentColor" stroke-opacity="0.28" stroke-width="2" stroke-dasharray="3 6" />
+          <line x1="70" y1="570" x2="70" y2="810" stroke="currentColor" stroke-opacity="0.28" stroke-width="2" />
+
+          <!-- step 1 -->
+          <circle cx="70" cy="90" r="9" fill="#2F7A52" />
+          <text x="102" y="76" font-size="11.5" fill="#2F7A52" font-family="JetBrains Mono, monospace" letter-spacing="0.03em">用户</text>
+          <text x="102" y="96" font-size="15.5" fill="currentColor" font-family="Noto Sans SC, sans-serif" font-weight="500">打开小程序，点「AI」标签</text>
+          <text x="102" y="118" font-size="12.5" fill="currentColor" fill-opacity="0.6" font-family="Noto Sans SC, sans-serif">tabBar 组件尝试渲染 AI 入口</text>
+
+          <!-- step 2 -->
+          <circle cx="70" cy="210" r="9" fill="#8A968B" />
+          <text x="102" y="196" font-size="11.5" fill="#8A968B" font-family="JetBrains Mono, monospace" letter-spacing="0.03em">系统</text>
+          <text x="102" y="216" font-size="15.5" fill="currentColor" font-family="Noto Sans SC, sans-serif" font-weight="500">查询 user.vipExpireAt</text>
+          <text x="102" y="238" font-size="12.5" fill="currentColor" fill-opacity="0.6" font-family="Noto Sans SC, sans-serif">为空或早于当前时间 → 判定「非会员」</text>
+
+          <!-- step 3 -->
+          <circle cx="70" cy="330" r="9" fill="#2F7A52" />
+          <text x="102" y="316" font-size="11.5" fill="#2F7A52" font-family="JetBrains Mono, monospace" letter-spacing="0.03em">用户</text>
+          <text x="102" y="336" font-size="15.5" fill="currentColor" font-family="Noto Sans SC, sans-serif" font-weight="500">看不到「AI」入口</text>
+          <text x="102" y="358" font-size="12.5" fill="currentColor" fill-opacity="0.6" font-family="Noto Sans SC, sans-serif">tabBar 图标、详情页「问博士」按钮都不渲染，没有任何提示</text>
+
+          <!-- step 4 (offline) -->
+          <circle cx="70" cy="450" r="9" fill="#8A968B" stroke="currentColor" stroke-opacity="0.25" stroke-width="2" />
+          <text x="102" y="436" font-size="11.5" fill="currentColor" fill-opacity="0.55" font-family="JetBrains Mono, monospace" letter-spacing="0.03em">线下 · 小程序之外</text>
+          <text x="102" y="456" font-size="15.5" fill="currentColor" font-family="Noto Sans SC, sans-serif" font-weight="500">用户复制识别码，微信私聊 + 转账给你</text>
+          <text x="102" y="478" font-size="12.5" fill="currentColor" fill-opacity="0.6" font-family="Noto Sans SC, sans-serif">唯一不发生在小程序里的一步，用虚线标出</text>
+
+          <!-- step 5 -->
+          <circle cx="70" cy="570" r="9" fill="#45549E" />
+          <text x="102" y="556" font-size="11.5" fill="#45549E" font-family="JetBrains Mono, monospace" letter-spacing="0.03em">你</text>
+          <text x="102" y="576" font-size="15.5" fill="currentColor" font-family="Noto Sans SC, sans-serif" font-weight="500">云开发控制台按识别码定位记录</text>
+          <text x="102" y="598" font-size="12.5" fill="currentColor" fill-opacity="0.6" font-family="Noto Sans SC, sans-serif">按续费公式算出新的 vipExpireAt，手动写入</text>
+
+          <!-- step 6 -->
+          <circle cx="70" cy="690" r="9" fill="#8A968B" />
+          <text x="102" y="676" font-size="11.5" fill="#8A968B" font-family="JetBrains Mono, monospace" letter-spacing="0.03em">系统</text>
+          <text x="102" y="696" font-size="15.5" fill="currentColor" font-family="Noto Sans SC, sans-serif" font-weight="500">用户切换一次 tab，onShow 自动查询</text>
+          <text x="102" y="718" font-size="12.5" fill="currentColor" fill-opacity="0.6" font-family="Noto Sans SC, sans-serif">不用重新登录，静默完成，没有 loading</text>
+
+          <!-- step 7 -->
+          <circle cx="70" cy="810" r="9" fill="#2F7A52" />
+          <text x="102" y="796" font-size="11.5" fill="#2F7A52" font-family="JetBrains Mono, monospace" letter-spacing="0.03em">用户</text>
+          <text x="102" y="816" font-size="15.5" fill="currentColor" font-family="Noto Sans SC, sans-serif" font-weight="500">「AI」入口重新出现，可以对话</text>
+          <text x="102" y="838" font-size="12.5" fill="currentColor" fill-opacity="0.6" font-family="Noto Sans SC, sans-serif">chat 云函数仍会在背后再查一次，双重保险</text>
+        </svg>
+      </div>
+      <figcaption>
+        <span class="dot" style="background:#2F7A52"></span>绿色是用户在小程序里的动作，
+        <span class="dot" style="background:#8A968B"></span>灰色是系统自动完成的查询，
+        <span class="dot" style="background:#45549E"></span>靛蓝是你在云开发控制台的动作；第 4 步是唯一发生在小程序之外的一步，用虚线连接标出。
+      </figcaption>
+    </figure>
+  </section>
+
+  <section>
+    <h2><span class="num">02</span>入口消失在哪几个地方</h2>
+    <p>非会员看不到「AI 对话」这四个字，具体是下面三处同时生效——前两处是"藏起来"，最后一行才是真正拦人的防线。</p>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>位置</th><th>文件</th><th>触发条件</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>底部 tabBar 的「AI」图标</td>
+            <td class="field">CustomTabBar/index.vue</td>
+            <td class="note"><code>AI_CHAT_ENABLED && isVip</code></td>
+          </tr>
+          <tr>
+            <td>地形 / 气候 / 动物详情页的「问博士」按钮</td>
+            <td class="field">terrainDetail 等 3 个页面</td>
+            <td class="note">同上</td>
+          </tr>
+          <tr>
+            <td>chat 云函数本身（服务端兜底，不可绕过）</td>
+            <td class="field">cloudfunctions/chat</td>
+            <td class="note">查库 <code>vipExpireAt</code>，未过期才放行 DeepSeek，否则返回 <code>40001</code></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="num">03</span><code>user</code> 表字段速查</h2>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>字段</th><th>谁能改</th><th>说明</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="field">openid</td>
+            <td class="note">系统自动写入</td>
+            <td class="note">微信身份标识，唯一</td>
+          </tr>
+          <tr>
+            <td class="field">userCode</td>
+            <td class="note">系统自动生成</td>
+            <td class="note">6 位数字，用户在"我的"页复制后报给你核对身份</td>
+          </tr>
+          <tr>
+            <td class="field">vipExpireAt</td>
+            <td class="note"><strong style="color:var(--ink)">只有你手动改</strong></td>
+            <td class="note">会员到期时间戳（毫秒）；<code>null</code> 或早于当前时间 = 未开通——<strong style="color:var(--ink)">唯一的权限判断依据</strong></td>
+          </tr>
+          <tr>
+            <td class="field">vipType</td>
+            <td class="note">只有你手动改</td>
+            <td class="note"><code>'week'</code> / <code>'month'</code>，仅备注，不参与权限判断</td>
+          </tr>
+          <tr>
+            <td class="field">createdAt / updatedAt</td>
+            <td class="note">系统自动</td>
+            <td class="note">首次登录 / 最近一次登录时间</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="num">04</span>你要做的操作</h2>
+    <ol class="steps">
+      <li>
+        <div>
+          <div class="step-title">收到识别码</div>
+          <div class="step-detail">用户把「我的」页面上的 6 位识别码发给你（线下转账 + 微信私聊）</div>
+        </div>
+      </li>
+      <li>
+        <div>
+          <div class="step-title">在云开发控制台找到那条记录</div>
+          <div class="step-detail">数据库 → <code>user</code> 集合 → 用 <code>userCode</code> 筛选定位</div>
+        </div>
+      </li>
+      <li>
+        <div>
+          <div class="step-title">按公式算出新的到期时间并写入</div>
+          <div class="step-detail">填 <code>vipExpireAt</code>，顺手把 <code>vipType</code> 改成 <code>week</code> 或 <code>month</code>（公式见下）</div>
+        </div>
+      </li>
+      <li>
+        <div>
+          <div class="step-title">保存，不用通知用户</div>
+          <div class="step-detail">他下次切一下底部标签（比如切到「学习」再切回来），小程序会自动查到最新状态</div>
+        </div>
+      </li>
+    </ol>
+  </section>
+
+  <section>
+    <h2><span class="num">05</span>续费公式</h2>
+    <div class="formula">
+      <div class="line">新 vipExpireAt <span class="op">=</span> max(当前时间, 记录里原有的 vipExpireAt) <span class="op">+</span> 套餐时长</div>
+      <div class="line">周卡 <span class="op">=</span> 7 天 <span class="op">=</span> 604800000 毫秒</div>
+      <div class="line">月卡 <span class="op">=</span> 30 天 <span class="op">=</span> 2592000000 毫秒</div>
+      <div class="why">用 <code>max(...)</code> 而不是直接从今天起算，是为了让提前续费的人不吃亏——快到期时续费，新周期会接在原有到期时间后面，而不是浪费掉还没用完的天数。</div>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="num">06</span>还差两步才能真正生效</h2>
+    <ul class="checklist">
+      <li>
+        <span class="box"></span>
+        <span class="label">部署三个云函数：<code>login</code> / <code>chat</code> / <code>getMembership</code>
+          <span class="sub"><code>getMembership</code> 是新增的，目录下要先执行一次 npm install 再上传</span>
+        </span>
+      </li>
+      <li>
+        <span class="box"></span>
+        <span class="label">把 <code>user</code> 集合的数据库权限设成「所有人不可读不可写」
+          <span class="sub">前端全程不直接读写这张表，都是走云函数，锁死更安全</span>
+        </span>
+      </li>
+    </ul>
+  </section>
+
+  <section>
+    <h2><span class="num">07</span>常见疑问</h2>
+
+    <div class="faq-item">
+      <div class="q">我改完数据库，用户要等多久才能看到变化？</div>
+      <div class="a">不用等 token 过期（最长可能快 7 天）。只要他在小程序里切换一次底部标签，哪怕是切到「学习」再切回来，<code>onShow</code> 就会静默查一次最新状态，AI 图标立刻出现。</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="q">用户会不会看到「请开通会员」之类的提示？</div>
+      <div class="a">不会。整个流程里没有任何弹窗或提示文案——非会员从头到尾就是看不到「AI」这个入口，好像这个功能根本不存在一样。</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="q">万一有人绕过界面，直接调用 chat 云函数呢？</div>
+      <div class="a"><code>chat</code> 云函数自己会再查一次 <code>vipExpireAt</code>，没过期才会真的去问 DeepSeek；查询本身失败也按未开通处理。这是唯一一道改不掉、绕不过的检查。</div>
+    </div>
+  </section>
+
+  <footer>
+    对应改动：<code>cloudfunctions/login</code> · <code>cloudfunctions/getMembership</code> · <code>cloudfunctions/chat</code> · <code>src/stores/user.ts</code> · <code>src/components/CustomTabBar</code>
+  </footer>
+
+</div>

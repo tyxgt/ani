@@ -123,8 +123,8 @@
         />
       </view>
 
-      <!-- 底部双按钮 -->
-      <view :class="styles.actionBar">
+      <!-- "听介绍"/"问博士"（对话功能）由 AI_CHAT_ENABLED 开关 + 会员状态共同控制 -->
+      <view v-if="AI_CHAT_ENABLED && isVip" :class="styles.actionBar">
         <view :class="[styles.actionBtn, styles.listenBtn]" @click="onListen" @tap="onListen">
           <text :class="styles.actionIcon">🔊</text>
           <PinyinText
@@ -153,12 +153,16 @@
 <script setup lang="ts">
 import AuthGate from '../../components/AuthGate'
 import { ref, computed, onMounted } from 'vue'
+import { storeToRefs } from 'pinia'
 import PinyinText from '../../components/PinyinText'
 import LoadingSpinner from '../../components/LoadingSpinner'
 import { CLIMATE_DETAILS } from '../../data/learnDetails'
 import { callFunction } from '../../utils/cloud'
-import { CLIMATE_DISPLAY_CONFIG } from '../../constants'
+import { CLIMATE_DISPLAY_CONFIG, AI_CHAT_ENABLED } from '../../constants'
+import { useUserStore } from '../../stores/user'
 import type { ClimateItem } from '../../types'
+
+const { isVip } = storeToRefs(useUserStore())
 
 const detail = ref<ClimateItem>(CLIMATE_DETAILS['温带气候'])
 const loading = ref(false)

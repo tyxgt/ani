@@ -39,7 +39,7 @@
       </scroll-view>
     </view>
 
-    <CustomTabBar :current="1" />
+    <CustomTabBar current="/pages/learn/index" />
   </view>
   </AuthGate>
 </template>
@@ -188,6 +188,8 @@ watch(isLoggedIn, (val, old) => {
 
 onShow(() => {
   isActive.value = true
+  // 静默刷新会员状态：不弹提示，只是让 tabBar 上的 AI 入口能及时反映最新状态
+  userStore.refreshMembership()
   // 兜底：watch 在隐藏态触发并置 needReload 时，切回本 tab 执行重载
   if (needReload.value) {
     loadData()

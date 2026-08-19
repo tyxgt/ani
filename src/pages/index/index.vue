@@ -24,7 +24,7 @@
       />
     </view>
 
-    <CustomTabBar :current="0" />
+    <CustomTabBar current="/pages/index/index" />
   </view>
   </AuthGate>
 </template>
@@ -32,9 +32,18 @@
 <script setup lang="ts">
 import AuthGate from "../../components/AuthGate";
 import { ref } from "vue";
+import { onShow } from "@dcloudio/uni-app";
 import CustomTabBar from "../../components/CustomTabBar";
 import PinyinText from "../../components/PinyinText";
 import { HOME_BACKGROUND_URL, HOME_PANDA_URL, AUDIO_ICON_URL, BTN_ICON_URL } from "../../constants";
+import { useUserStore } from "../../stores/user";
+
+const userStore = useUserStore();
+
+// 静默刷新会员状态：不弹提示，只是让 tabBar 上的 AI 入口能及时反映最新状态
+onShow(() => {
+  userStore.refreshMembership();
+});
 
 const backgroundUrl = ref(HOME_BACKGROUND_URL);
 const pandaUrl = ref(HOME_PANDA_URL);
