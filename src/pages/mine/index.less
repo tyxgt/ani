@@ -78,9 +78,31 @@
 }
 
 .userCode {
-  font-size: 24rpx;
-  color: #999;
-  margin-top: 8rpx;
+  display: inline-flex;
+  align-items: center;
+  margin-top: 16rpx;
+  padding: 8rpx 24rpx;
+  background: rgba(74, 144, 217, 0.08);
+  border: 2rpx solid rgba(74, 144, 217, 0.25);
+  border-radius: 28rpx;
+  transition: opacity 0.2s;
+
+  &:active {
+    opacity: 0.6;
+  }
+}
+
+.userCodeLabel {
+  font-size: 22rpx;
+  color: #4A90D9;
+  opacity: 0.7;
+}
+
+.userCodeValue {
+  font-size: 26rpx;
+  color: #357ABD;
+  font-weight: 600;
+  letter-spacing: 2rpx;
 }
 
 .loginTip {

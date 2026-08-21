@@ -10,9 +10,10 @@
             <text v-else :class="styles.loginTip" @click="openProfileModal">
               点击登录
             </text>
-            <text v-if="userCode" :class="styles.userCode" @click="copyUserCode">
-              识别码：{{ userCode }}
-            </text>
+            <view v-if="userCode" :class="styles.userCode" @click="copyUserCode">
+              <text :class="styles.userCodeLabel">ID：</text>
+              <text :class="styles.userCodeValue">{{ userCode }}</text>
+            </view>
           </view>
         </view>
 
@@ -48,7 +49,7 @@
           <!-- #ifdef MP-WEIXIN -->
           <view :class="styles.nicknameField">
             <input type="nickname" :class="styles.nicknameInput" placeholder="请输入昵称" :value="tempNickName"
-              @blur="onNicknameInput" />
+              @input="onNicknameInput" @blur="onNicknameInput" />
           </view>
           <!-- #endif -->
           <!-- #ifndef MP-WEIXIN -->
@@ -85,7 +86,7 @@ const iconStyleMap = ICON_STYLE_MAP
 
 // ─── 全局响应式状态 ─────────────────────────────────────────────
 const store = useUserStore()
-const { userInfo: douyinUserInfo, userCode } = storeToRefs(store)
+const { userInfo: douyinUserInfo, userCode, isLoggedIn } = storeToRefs(store)
 
 const copyUserCode = () => {
   if (!userCode.value) return
@@ -135,12 +136,37 @@ const onNicknameInputH5 = (e: any) => {
   tempNickName.value = e.detail.value || ''
 }
 
-const confirmProfile = () => {
-  const nickName = tempNickName.value || ''
-  const result = store.updateProfile(nickName)
-  showProfileModal.value = false
-  if (result) {
-    uni.showToast({ title: '保存成功', icon: 'success' })
+const confirmSubmitting = ref(false)
+
+const confirmProfile = async () => {
+  const nickName = (tempNickName.value || '').trim()
+  if (!nickName) {
+    uni.showToast({ title: '请输入昵称', icon: 'none' })
+    return
+  }
+  if (confirmSubmitting.value) return
+  confirmSubmitting.value = true
+  uni.showLoading({ title: '保存中...', mask: true })
+  try {
+    // 正常情况下这里只是"补昵称"（登录早已在 AuthGate 完成）。
+    // 但如果此时其实还没有登录成功（token/用户信息缺失，比如登录态过期后
+    // 用户没有重新走登录），只补资料是没有意义的——直接带上刚输入的昵称
+    // 走一次完整登录，一步到位，避免用户点确认却因为"未登录"静默失败。
+    const result = isLoggedIn.value
+      ? store.updateProfile(nickName)
+      : await store.login(nickName)
+    if (result) {
+      showProfileModal.value = false
+      uni.showToast({ title: '保存成功', icon: 'success' })
+    } else {
+      uni.showToast({ title: '保存失败，请重试', icon: 'none' })
+    }
+  } catch (e) {
+    console.error('[Mine] 保存昵称失败:', e)
+    uni.showToast({ title: '保存失败，请重试', icon: 'none' })
+  } finally {
+    uni.hideLoading()
+    confirmSubmitting.value = false
   }
 }
 

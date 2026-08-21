@@ -15,7 +15,12 @@
 
     <scroll-view :class="styles.chatList" scroll-y :scroll-top="scrollTop" :scroll-into-view="scrollToId">
       <view :class="styles.chatListInner">
-        <MessageItem v-for="msg in messages" :key="msg.id" :message="msg" />
+        <template v-for="item in chatListItems" :key="item.key">
+          <view v-if="item.type === 'divider'" :class="styles.dateDivider">
+            <text :class="styles.dateDividerText">{{ item.label }}</text>
+          </view>
+          <MessageItem v-else :message="item.message" />
+        </template>
       </view>
     </scroll-view>
 
@@ -41,15 +46,23 @@
 
 <script setup lang="ts">
 import AuthGate from '../../components/AuthGate'
-import { ref, nextTick, onUnmounted } from 'vue'
+import { ref, computed, nextTick, onUnmounted } from 'vue'
 import { onShow } from '@dcloudio/uni-app'
 import { storeToRefs } from 'pinia'
 import PinyinText from '../../components/PinyinText'
 import MessageItem from '../../components/MessageItem'
-import { AI_BACKGROUND_URL, AI_INPUT_PANDA_URL, AI_CHAT_CLOUD_FUNCTION, AI_CHAT_MAX_HISTORY_ROUNDS, AI_TYPEWRITER_SPEED, ERROR_CODE } from '../../constants'
+import { AI_BACKGROUND_URL, AI_INPUT_PANDA_URL, AI_CHAT_CLOUD_FUNCTION, GET_CHAT_HISTORY_CLOUD_FUNCTION, AI_CHAT_MAX_HISTORY_ROUNDS, AI_TYPEWRITER_SPEED, ERROR_CODE } from '../../constants'
 import { callFunction } from '../../utils/cloud'
 import { useUserStore } from '../../stores/user'
-import type { ChatMessage } from '../../types'
+import { useChatStore } from '../../stores/chat'
+import type { ChatMessage, PendingAskContext, RemoteChatMessage } from '../../types'
+
+// 从详情页带着上下文进来时，针对不同实体类型给的引导语提示词
+const ASK_HINT_BY_TYPE: Record<PendingAskContext['entityType'], string> = {
+  动物: '它生活在哪里、爱吃什么，还是有什么小秘密',
+  地形: '它是怎么形成的、长什么样',
+  气候: '这种气候什么样、会怎么影响我们的生活',
+}
 
 const STORAGE_KEY = 'chat_messages'
 
@@ -62,24 +75,77 @@ function getWelcomeMessage(): ChatMessage {
   }
 }
 
+// 修复历史存档里残留的"打字中"占位气泡：如果上次退出小程序时正好卡在逐字动画
+// 中途（或者请求成功但还没来得及把完整内容存下来就被杀进程），本地存储里会留下
+// 一条 typing:true 且内容为空/不完整的助手消息，重新进入时只会一直显示"..."转圈，
+// 且再也不会更新。这里统一收尾：有部分内容的直接定格显示，没内容的（真没收到
+// 回复）直接丢弃，不留一个永远转圈的空气泡。
+function sanitizeRestoredMessages(list: ChatMessage[]): ChatMessage[] {
+  return list
+    .map(msg => (msg.typing ? { ...msg, typing: false } : msg))
+    .filter(msg => msg.role !== 'assistant' || msg.content)
+}
+
 const messages = ref<ChatMessage[]>([])
+
+// 本地历史是不是空的（只有兜底插入的欢迎语）——是的话说明这台设备/这次安装
+// 没有可用历史，onShow 时要去服务端拉一次云端存档看看能不能补回来。
+let needsRemoteHistorySync = false
+// 不管拉取成功与否，一次会话内只尝试一次，避免每次切 tab 回来都打一次数据库。
+let remoteHistoryFetchAttempted = false
 
 // 从本地存储恢复历史对话
 try {
   const saved = uni.getStorageSync(STORAGE_KEY)
   if (saved) {
     const parsed = JSON.parse(saved) as ChatMessage[]
-    if (Array.isArray(parsed) && parsed.length > 0) {
-      messages.value = parsed
+    const sanitized = Array.isArray(parsed) ? sanitizeRestoredMessages(parsed) : []
+    if (sanitized.length > 0) {
+      messages.value = sanitized
     } else {
       messages.value.push(getWelcomeMessage())
+      needsRemoteHistorySync = true
     }
   } else {
     messages.value.push(getWelcomeMessage())
+    needsRemoteHistorySync = true
   }
 } catch {
   messages.value.push(getWelcomeMessage())
+  needsRemoteHistorySync = true
 }
+
+// 聊天记录按日期分组展示用：message.id 在所有创建路径上（本地新建/服务端历史拉取）
+// 都是毫秒级时间戳，直接拿来算日期，不需要给 ChatMessage 额外加字段。
+function getDateLabel(date: Date): string {
+  const now = new Date()
+  const startOfDay = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime()
+  const diffDays = Math.round((startOfDay(now) - startOfDay(date)) / 86400000)
+  if (diffDays === 0) return '今天'
+  if (diffDays === 1) return '昨天'
+  const sameYear = date.getFullYear() === now.getFullYear()
+  return sameYear ? `${date.getMonth() + 1}月${date.getDate()}日` : `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日`
+}
+
+// 把 messages 拍平成"日期分割线 + 消息"混合列表，供模板一次性 v-for，
+// 不引入会话概念，纯展示层分组。
+type ChatListItem =
+  | { type: 'divider'; key: string; label: string }
+  | { type: 'message'; key: number; message: ChatMessage }
+
+const chatListItems = computed<ChatListItem[]>(() => {
+  const items: ChatListItem[] = []
+  let lastLabel = ''
+  for (const msg of messages.value) {
+    const label = getDateLabel(new Date(msg.id))
+    if (label !== lastLabel) {
+      items.push({ type: 'divider', key: `divider-${msg.id}`, label })
+      lastLabel = label
+    }
+    items.push({ type: 'message', key: msg.id, message: msg })
+  }
+  return items
+})
 
 const inputValue = ref('')
 const scrollTop = ref(99999)
@@ -89,6 +155,59 @@ const sessionId = ref<string>('')
 
 const userStore = useUserStore()
 const { isLoggedIn, isVip } = storeToRefs(userStore)
+const chatStore = useChatStore()
+
+// 当前会话正在围绕哪个实体提问（来自详情页"问博士"）：非持久化，只在
+// 本次页面存活期间生效，每条消息发送时会带给云函数做上下文注入。
+const activeAskContext = ref<PendingAskContext | null>(null)
+
+// 消费详情页传来的待处理上下文：插入一条引导气泡 + 预填输入框。
+// 只在这里读取一次并清空，避免用户后续手动切 tab 回来时被重复触发。
+function consumeAskContext() {
+  const context = chatStore.consumePendingAsk()
+  if (!context) return
+
+  activeAskContext.value = context
+  stopTyping()
+
+  const hint = ASK_HINT_BY_TYPE[context.entityType] || '有什么想知道的'
+  messages.value.push({
+    id: Date.now(),
+    role: 'assistant',
+    content: `想问关于「${context.entityName}」的什么呀？${hint}，尽管问我吧！`,
+    time: getTimeString(),
+  })
+  saveMessages()
+  scrollToBottom()
+
+  inputValue.value = `关于${context.entityName}，`
+}
+
+// 本地历史为空时，去服务端把之前存档的聊天记录拉回来（换设备/重装小程序场景）。
+// 只是"本地为空时补一次"，不是多端实时同步——同一账号在另一台设备上产生的
+// 新消息，不会实时同步过来，只有本地存储为空时才会去查一次云端。
+async function maybeSyncRemoteHistory() {
+  if (remoteHistoryFetchAttempted || !needsRemoteHistorySync) return
+  remoteHistoryFetchAttempted = true
+
+  try {
+    const res = await callFunction(GET_CHAT_HISTORY_CLOUD_FUNCTION, {})
+    if (res.code === 0 && Array.isArray(res.data) && res.data.length > 0) {
+      messages.value = (res.data as RemoteChatMessage[]).map(item => ({
+        id: item.id,
+        role: item.role,
+        content: item.content,
+        time: getTimeString(new Date(item.time)),
+      }))
+      saveMessages()
+      scrollToBottom()
+    }
+    // res.data 是空数组：真正的第一次聊天，保留本地已插入的欢迎语，不做任何事
+  } catch (e) {
+    console.error('[Chat] 拉取云端历史失败:', e)
+    // 静默降级为只用欢迎语，不弹 toast——跟 getMembership 失败按"非会员"静默兜底同一风格
+  }
+}
 
 // 页面级兜底：非会员不允许停留在这个页面（入口已经在 tabBar/详情页隐藏，
 // 这里防的是页面实例被缓存住、或者非常规方式直接跳转过来的情况）。
@@ -99,7 +218,10 @@ onShow(async () => {
   }
   if (isLoggedIn.value && !isVip.value) {
     uni.switchTab({ url: '/pages/index/index' })
+    return
   }
+  await maybeSyncRemoteHistory()
+  consumeAskContext()
 })
 
 let typingTimer: ReturnType<typeof setInterval> | null = null
@@ -118,9 +240,8 @@ function goBack() {
   }
 }
 
-function getTimeString() {
-  const now = new Date()
-  return `${now.getHours()}:${now.getMinutes().toString().padStart(2, '0')}`
+function getTimeString(date: Date = new Date()) {
+  return `${date.getHours()}:${date.getMinutes().toString().padStart(2, '0')}`
 }
 
 function scrollToBottom() {
@@ -172,6 +293,7 @@ function typeWriter(fullContent: string, msgId: number) {
       currentTypingMsgIndex = null
       fullReplyContent = ''
       scrollToBottom()
+      saveMessages() // 打字动画播完才是真正的完整内容，这里必须再存一次，不能只指望 finally 里那次（那时内容还是空的）
     }
   }, AI_TYPEWRITER_SPEED)
 }
@@ -238,6 +360,8 @@ async function sendMessage() {
       message: content,
       history: recentHistory,
       sessionId: sessionId.value,
+      entityType: activeAskContext.value?.entityType,
+      entityName: activeAskContext.value?.entityName,
     })
 
     if (res.code === 0 && res.data && res.data.reply) {

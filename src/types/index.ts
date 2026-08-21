@@ -96,6 +96,14 @@ export interface RegionDetail {
   provinces: string[]
 }
 
+// ─── 「问博士」上下文相关类型 ───────────────────────────────────
+// 详情页点"问博士"时想问的实体：pages/ai 同时是 tabBar 页，switchTab
+// 传不了 query，所以靠这个结构经 pinia store 桥接过去（见 stores/chat.ts）。
+export interface PendingAskContext {
+  entityType: '动物' | '地形' | '气候'
+  entityName: string
+}
+
 // ─── 聊天消息相关类型 ───────────────────────────────────────────
 export interface ChatMessage {
   id: number
@@ -103,6 +111,15 @@ export interface ChatMessage {
   content: string
   time: string
   typing?: boolean
+}
+
+// getChatHistory 云函数返回的原始条目：time 是毫秒时间戳，前端用
+// getTimeString(new Date(time)) 统一格式化成 ChatMessage.time 需要的字符串。
+export interface RemoteChatMessage {
+  id: number
+  role: 'user' | 'assistant'
+  content: string
+  time: number
 }
 
 // ─── 知识库相关类型 ───────────────────────────────────────────

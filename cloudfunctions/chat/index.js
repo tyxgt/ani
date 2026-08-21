@@ -23,8 +23,12 @@ function verifyToken(token) {
 
 const SYSTEM_PROMPT = `你是一只可爱的大熊猫博士，专门为小朋友讲解地理、动物、气候、植物知识。
 - 回答要简单易懂，适合3-8岁儿童理解
-- 使用生动有趣的语言
-- 语气亲切友好，像一位耐心的老师
+- 使用生动有趣的语言，但要克制：正常问题用 4-5 句话讲清楚就行，不要展开成多个分点、除非小朋友明确要求"详细讲讲"
+- 只讲确定、公认的科学事实。不要为了让故事更生动就编造没有把握的具体细节（比如具体遇到了什么天敌、具体在什么场景下发生），拿不准的地方就讲得笼统克制一些，不能编
+- 如果这个知识点本身在科学界还有争议、有多种解释（比如"熊猫为什么是黑白色"这类经典问题，真实情况是身体不同部位有不同作用，不是一句话能讲完的"伪装说"），不要挑一个听起来最生动的说法讲得斩钉截铁，要说明"科学家有不同的看法/还在研究"，或者用"有一种说法是……"这样的口吻，不要把有争议的解释当成唯一的标准答案讲给小朋友
+- 语气亲切友好，像一位耐心的老师，不要过度使用感叹号和反问句
+- 不要用括号加动作/表情描写（比如"（笑眯了眼，爪子在地上扒拉两下）"这种舞台指示式写法），直接用语言把内容讲出来就好，不要靠动作描写来表现
+- 回答必须是纯文本，禁止使用 Markdown 格式（不要出现 **加粗**、# 标题、- 或数字列表、代码块等符号），因为界面会给每个汉字标注拼音并支持逐字朗读，多余符号会破坏显示和朗读效果
 - 你只能回答地理、动物、气候、植物这四类相关的问题，不涉及其他领域
 - 如果问题超出以上范围（包括但不限于情感倾诉、心理安慰、人际关系、恋爱等情感类话题），要礼貌地说明自己不能聊这些，并引导小朋友问地理、动物、气候、植物相关的问题
 - 不提供情感陪伴、情感建议或心理疏导，遇到此类需求统一礼貌拒绝并转回本职话题
@@ -38,16 +42,75 @@ const SYSTEM_PROMPT = `你是一只可爱的大熊猫博士，专门为小朋友
   - 对于不适合儿童的内容，统一回复："这个话题有点复杂，我们来聊聊地理、动物、气候和植物吧！"`
 
 const MAX_HISTORY_ROUNDS = 5
-const DEEPSEEK_API_BASE = 'https://api.deepseek.com/v1/chat/completions'
-const DEEPSEEK_MODEL = 'deepseek-chat'
+// const DEEPSEEK_API_BASE = 'https://api.deepseek.com/v1/chat/completions'
+// const DEEPSEEK_MODEL = 'deepseek-chat'
+// const QWEN_MODEL = 'qwen-flash-character'
+const QWEN_MODEL = 'qwen-turbo'
 
 function generateSessionId() {
   return Date.now().toString(36) + Math.random().toString(36).substr(2)
 }
 
-function buildMessages(history, userMessage) {
+// 兜底清洗：system prompt 已经要求模型别用 Markdown，但角色扮演类模型不一定严格遵守，
+// 这里把常见的 Markdown 符号剥掉，避免逐字拼音标注/朗读把 **、# 这些符号读出来或标上拼音。
+function stripMarkdown(text) {
+  if (!text) return text
+
+  const stripped = text
+    .replace(/```[a-zA-Z]*\n?/g, '')
+    .replace(/```/g, '')
+    .replace(/`([^`]+)`/g, '$1')
+    .replace(/\*\*([^*]+)\*\*/g, '$1')
+    .replace(/__([^_]+)__/g, '$1')
+    .replace(/^#{1,6}\s+/gm, '')
+    .replace(/^[ \t]*[-*+]\s+/gm, '')
+    .replace(/^[ \t]*\d+[.、]\s+/gm, '')
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim()
+
+  return stripped || text
+}
+
+// 兜底清洗：system prompt 已经要求模型别加动作/表情描写，但角色扮演类模型不一定严格
+// 遵守，这里把开头那种"（笑眯了眼，爪子在地上扒拉两下）"式的舞台指示剥掉。只处理
+// 句首，不处理句中括号——句中括号更可能是"变色龙（一种蜥蜴）"这类正常的科普解释，
+// 不能一并删掉，只有开头这种明显是"进正文前先演一段"的写法才需要清。
+function stripLeadingAction(text) {
+  if (!text) return text
+  return text.replace(/^[（(][^）)]{0,40}[）)]\s*/, '')
+}
+
+// 把这一轮问答归档到 chatMessage 集合，供 getChatHistory 云函数在用户换设备/重装小程序、
+// 本地存储为空时把历史找回来。fail-open：存档失败只记日志，不能让用户因为归档故障拿不到回复。
+async function persistChatTurn(openid, userContent, assistantContent) {
+  try {
+    // 顺序 await，不用 Promise.all：两次 add() 各自调用独立的 db.serverDate()，
+    // 并发写入不保证服务端赋时间戳的先后顺序；顺序写入才能保证 user 消息的
+    // createdAt 早于对应 assistant 消息，getChatHistory 按 createdAt 排序时才不会错位
+    await db.collection('chatMessage').add({
+      data: { openid, role: 'user', content: userContent, createdAt: db.serverDate() },
+    })
+    await db.collection('chatMessage').add({
+      data: { openid, role: 'assistant', content: assistantContent, createdAt: db.serverDate() },
+    })
+  } catch (err) {
+    console.error('[chat] 历史归档失败:', err)
+  }
+}
+
+function buildMessages(history, userMessage, entityContext) {
   const messages = [{ role: 'system', content: SYSTEM_PROMPT }]
-  
+
+  // 从详情页"问博士"带过来的上下文：孩子提问里常见"它"、"这个"这类指代词，
+  // 加这条低权重提示帮博士把指代对象锚定到当前正在看的词条上。
+  if (entityContext && entityContext.entityName) {
+    messages.push({
+      role: 'system',
+      content: `孩子当前正在看的是【${entityContext.entityName}】这个${entityContext.entityType || ''}词条，如果孩子提问模糊（比如用"它"、"这个"指代），优先按这个主题来理解和回答；如果孩子明确问了别的内容，就正常回答别的内容。`,
+    })
+  }
+
   if (history && Array.isArray(history)) {
     const recentHistory = history.slice(-MAX_HISTORY_ROUNDS * 2)
     recentHistory.forEach(msg => {
@@ -65,6 +128,7 @@ function buildMessages(history, userMessage) {
   return messages
 }
 
+/*
 function callDeepSeekStream(messages) {
   return new Promise((resolve, reject) => {
     const options = {
@@ -82,24 +146,24 @@ function callDeepSeekStream(messages) {
 
     const req = https.request(options, (res) => {
       res.setEncoding('utf8')
-      
+
       let buffer = ''
       res.on('data', (chunk) => {
         buffer += chunk
-        
+
         const lines = buffer.split('\n')
         buffer = lines.pop() || ''
-        
+
         for (const line of lines) {
           const trimmed = line.trim()
           if (!trimmed || !trimmed.startsWith('data:')) continue
-          
+
           const dataStr = trimmed.slice(5).trim()
           if (dataStr === '[DONE]') {
             resolve(fullReply)
             return
           }
-          
+
           try {
             const data = JSON.parse(dataStr)
             if (data.choices && data.choices[0] && data.choices[0].delta) {
@@ -113,7 +177,7 @@ function callDeepSeekStream(messages) {
           }
         }
       })
-      
+
       res.on('end', () => {
         if (buffer) {
           const trimmed = buffer.trim()
@@ -136,7 +200,7 @@ function callDeepSeekStream(messages) {
         }
         resolve(fullReply)
       })
-      
+
       res.on('error', (e) => {
         reject(new Error('DeepSeek 响应错误: ' + e.message))
       })
@@ -161,9 +225,107 @@ function callDeepSeekStream(messages) {
     req.end()
   })
 }
+*/
+
+function callQwenStream(messages) {
+  return new Promise((resolve, reject) => {
+    const options = {
+      hostname: 'dashscope.aliyuncs.com',
+      path: '/compatible-mode/v1/chat/completions',
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + (process.env.DASHSCOPE_API_KEY || ''),
+      },
+      timeout: 60000,
+    }
+
+    let fullReply = ''
+
+    const req = https.request(options, (res) => {
+      res.setEncoding('utf8')
+
+      let buffer = ''
+      res.on('data', (chunk) => {
+        buffer += chunk
+
+        const lines = buffer.split('\n')
+        buffer = lines.pop() || ''
+
+        for (const line of lines) {
+          const trimmed = line.trim()
+          if (!trimmed || !trimmed.startsWith('data:')) continue
+
+          const dataStr = trimmed.slice(5).trim()
+          if (dataStr === '[DONE]') {
+            resolve(fullReply)
+            return
+          }
+
+          try {
+            const data = JSON.parse(dataStr)
+            if (data.choices && data.choices[0] && data.choices[0].delta) {
+              const delta = data.choices[0].delta
+              if (delta.content) {
+                fullReply += delta.content
+              }
+            }
+          } catch (e) {
+            console.warn('[chat] 解析 SSE 数据失败:', e)
+          }
+        }
+      })
+
+      res.on('end', () => {
+        if (buffer) {
+          const trimmed = buffer.trim()
+          if (trimmed.startsWith('data:')) {
+            const dataStr = trimmed.slice(5).trim()
+            if (dataStr !== '[DONE]') {
+              try {
+                const data = JSON.parse(dataStr)
+                if (data.choices && data.choices[0] && data.choices[0].delta) {
+                  const delta = data.choices[0].delta
+                  if (delta.content) {
+                    fullReply += delta.content
+                  }
+                }
+              } catch (e) {
+                console.warn('[chat] 解析末尾 SSE 数据失败:', e)
+              }
+            }
+          }
+        }
+        resolve(fullReply)
+      })
+
+      res.on('error', (e) => {
+        reject(new Error('Qwen 响应错误: ' + e.message))
+      })
+    })
+
+    req.on('error', (e) => {
+      reject(new Error('Qwen 请求错误: ' + e.message))
+    })
+
+    req.on('timeout', () => {
+      req.destroy()
+      reject(new Error('Qwen 请求超时'))
+    })
+
+    req.write(JSON.stringify({
+      model: QWEN_MODEL,
+      messages: messages,
+      temperature: 0.5, // 调低一些，减少角色扮演模型为了"讲得生动"而编造细节的倾向
+      max_tokens: 400, // 配合 system prompt 里"2-4 句话讲清楚"的要求，硬性收住篇幅，防止万一没遵守指令
+      stream: true,
+    }))
+    req.end()
+  })
+}
 
 exports.main = async (event, context) => {
-  const { message, history, sessionId } = event
+  const { message, history, sessionId, entityType, entityName } = event
 
   const payload = verifyToken(event.token)
   if (!payload) {
@@ -206,23 +368,28 @@ exports.main = async (event, context) => {
       }
     }
 
-    const messages = buildMessages(history, message.trim())
+    const messages = buildMessages(history, message.trim(), entityName ? { entityType, entityName } : null)
     console.log('[chat] 构建消息完成，共', messages.length, '条')
 
-    const reply = await callDeepSeekStream(messages)
-    console.log('[chat] DeepSeek 回复成功，长度:', reply.length)
-    
+    // const reply = await callDeepSeekStream(messages)
+    const reply = await callQwenStream(messages)
+    console.log('[chat] Qwen 回复成功，长度:', reply.length)
+
     if (!reply) {
-      throw new Error('DeepSeek 返回空内容')
+      throw new Error('Qwen 返回空内容')
     }
-    
+
+    const cleanReply = stripLeadingAction(stripMarkdown(reply))
+
+    await persistChatTurn(OPENID, message.trim(), cleanReply)
+
     const newSessionId = sessionId || generateSessionId()
-    
+
     return {
       code: 0,
       msg: '',
       data: {
-        reply: reply,
+        reply: cleanReply,
         sessionId: newSessionId,
       },
     }

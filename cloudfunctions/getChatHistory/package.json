@@ -1,0 +1,10 @@
+{
+  "name": "getChatHistory",
+  "version": "1.0.0",
+  "description": "获取当前用户的 AI 聊天历史记录",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~2.6.3",
+    "jsonwebtoken": "^9.0.0"
+  }
+}

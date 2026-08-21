@@ -391,7 +391,7 @@
 | 项目 | 内容 |
 |------|------|
 | **云函数名称** | `chat` |
-| **当前状态** | ✅ 已实现（对接 DeepSeek API） |
+| **当前状态** | ✅ 已实现（对接阿里云百炼 `qwen-flash-character`，OpenAI 兼容格式；原 DeepSeek 调用代码保留在注释里未删除） |
 | **实现文件** | `cloudfunctions/chat/index.js` + `src/pages/ai/index.vue` |
 
 ### 请求参数
@@ -412,7 +412,7 @@
 | `data.reply` | `string` | AI 回复内容 |
 | `data.sessionId` | `string` | 会话标识（用于续传） |
 
-> **部署依赖**：需在微信云开发控制台为 chat 云函数配置环境变量 `DEEPSEEK_API_KEY`（DeepSeek API 密钥），并在 `cloudfunctions/chat/` 目录下执行 `npm install` 安装依赖。
+> **部署依赖**：需在微信云开发控制台为 chat 云函数配置环境变量 `DASHSCOPE_API_KEY`（阿里云百炼 API Key，用于调用 `qwen-flash-character`），并在 `cloudfunctions/chat/` 目录下执行 `npm install` 安装依赖。
 
 ### 权限说明
 
@@ -423,6 +423,10 @@
 | `40001` | 未开通会员（`NEED_MEMBERSHIP`），`data` 为 `null` |
 
 前端不会对这个错误码弹出任何提示——对话入口本身在非会员时就不会出现（见"会员开通（人工）操作说明"），这里只是服务端兜底，防止绕过前端直接调用云函数。
+
+### 历史记录持久化
+
+每轮问答成功后，会把这条用户消息和 AI 回复各存一条到 `chatMessage` 集合（见附录"聊天记录表"），供 [接口 12.7](#接口-127获取聊天历史-已实现) 读取。存档是 **fail-open** 的——写入失败只记日志，不影响本轮对话正常返回 `reply`。这不是实时多端同步，只是给"换设备/重装小程序"场景兜底，详见接口 12.7 说明。
 
 ---
 
@@ -479,6 +483,40 @@
 | `data.isVip` | `boolean` | 当前是否是有效会员 |
 | `data.vipExpireAt` | `number \| null` | 会员到期时间戳（毫秒） |
 | `data.vipType` | `'week' \| 'month' \| null` | 最近一次开通的套餐类型 |
+
+---
+
+## 接口 12.7：获取聊天历史 ✅ 已实现
+
+| 项目 | 内容 |
+|------|------|
+| **云函数名称** | `getChatHistory` |
+| **当前状态** | ✅ 已实现（纯查询，不做任何写操作） |
+| **实现文件** | `cloudfunctions/getChatHistory/index.js` + `src/pages/ai/index.vue` |
+
+用于前端在**本地聊天记录为空**时（换设备、清缓存、重装小程序）把 `chat` 云函数归档过的历史记录找回来。**不是多端实时同步**——只有本地存储检测为空时才会调用一次，同一账号在另一台设备上产生的新消息不会主动推送过来。
+
+服务端内部会循环分批查询突破微信云开发单次 `.get()` 100 条上限，但对前端始终是**一次调用拿到全部**（最多返回最近 200 条），不需要前端处理分页。
+
+### 请求参数
+
+| 字段 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| `token` | `string` | 是 | 登录令牌 |
+
+只校验登录态，不额外校验会员——这里只读该用户自己已产生的存档，不消耗新的 AI 调用；`ai/index.vue` 的 `onShow` 已经把非会员挡在页面之外了。
+
+### 返回数据
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| `code` | `number` | 0=成功 401=未授权 |
+| `msg` | `string` | 提示信息(成功时为空) |
+| `data` | `RemoteChatMessage[]` | 按时间正序排列的历史消息，为空数组代表该用户从未产生过对话 |
+| `data[].id` | `number` | 用 `createdAt` 时间戳合成，供前端当 Vue key 用 |
+| `data[].role` | `'user' \| 'assistant'` | 消息角色 |
+| `data[].content` | `string` | 消息内容 |
+| `data[].time` | `number` | 消息产生时间的毫秒时间戳；格式化成 `HH:mm` 交给前端 `getTimeString()` 统一处理，服务端不重复实现格式化逻辑 |
 
 ---
 
@@ -603,7 +641,7 @@ if (detailRes.code === 0) {
 |------|------|------|
 | **Phase 0** | `login` | ✅ 已实现（JWT 版本），App 启动自动静默调用，使用任何功能前都需要先完成登录 |
 | **Phase 1** | `getKnowledgeCategories`, `getTerrainList`, `getTerrainDetail`, `getClimateList`, `getClimateDetail`, `getAnimalList`, `getAnimalDetail`, `getRegionDetail` | ✅ 已实现，知识库/区域详情接口，均已加 token 校验 |
-| **Phase 2** | `chat`, `tts` | 已实现，对接 AI 模型 / 语音合成，均已加 token 校验 |
+| **Phase 2** | `chat`, `tts`, `getChatHistory` | 已实现，对接 AI 模型 / 语音合成 / 聊天历史归档与查询，均已加 token 校验 |
 | **Phase 3** | `updateUserInfo`, `submitFeedback`, `userProgress` | 待实现，用户相关功能 |
 | **Phase 4** | `getConfig`, `getRegions` | 待实现，后台可配置能力 |
 
@@ -674,6 +712,22 @@ if (detailRes.code === 0) {
 
 > **数据库安全规则**：云开发控制台里需把本集合设为「所有人不可读不可写」——前端全程不直接读写这个集合，都是通过 `login`/`getMembership`/`chat` 云函数（管理员态）访问，锁死可以避免用户绕过前端直接改自己的 `vipExpireAt`。
 
+### 聊天记录表 (`chatMessage`)
+
+消息粒度存储（一条用户消息/一条助手回复各一个文档），不区分会话（单一连续历史模型，不做多会话分组）。
+
+| 字段名 | 类型 | 必填 | 说明 |
+|--------|------|------|------|
+| `_id` | String | 是 | 文档ID（自动生成） |
+| `openid` | String | 是 | 归属用户，查询过滤字段，建议建普通索引 |
+| `role` | String | 是 | `'user'` \| `'assistant'` |
+| `content` | String | 是 | 用户消息为原始输入；助手消息为 `stripMarkdown` 清洗后的内容 |
+| `createdAt` | Date | 是 | `db.serverDate()`，唯一排序依据，同时用于合成 `getChatHistory` 返回给前端的 `id` |
+
+写入：`chat` 云函数每轮问答成功后 fail-open 写入（存档失败只记日志，不影响对话返回）。读取：`getChatHistory` 云函数，见接口 12.7。
+
+> **数据库安全规则**：云开发控制台里需把本集合设为「所有人不可读不可写」——跟 `user` 表同样的先例，前端不直接读写，全部访问走 `chat`（写）/`getChatHistory`（读）两个云函数的管理员态。
+
 ---
 
 ## 会员开通（人工）操作说明
@@ -714,4 +768,5 @@ if (detailRes.code === 0) {
 | `KnowledgeCategory` / `KnowledgeAnimal` | 知识百科相关 |
 | `TerrainItem` / `ClimateItem` / `AnimalDetailItem` | 学习详情页类型 |
 | `ChatMessage` | AI 对话消息 |
+| `RemoteChatMessage` | `getChatHistory` 返回的云端历史记录原始条目 |
 | `ProjectedPoint` / `Polygon` / `Ring` / `BBox` / `ProjectedFeature` | 地图几何数据 |

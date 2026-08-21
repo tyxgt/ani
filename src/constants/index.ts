@@ -159,6 +159,8 @@ export const AI_INPUT_PANDA_URL =
 
 export const AI_CHAT_CLOUD_FUNCTION = 'chat'
 
+export const GET_CHAT_HISTORY_CLOUD_FUNCTION = 'getChatHistory'
+
 export const AI_TTS_CLOUD_FUNCTION = 'tts'
 
 export const AI_SYSTEM_PROMPT = `你是一只可爱的大熊猫博士，专门为小朋友讲解地理、动物、气候、植物知识。

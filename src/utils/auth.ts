@@ -145,8 +145,16 @@ class AuthManager {
   }
 
   updateUserProfile(userProfile: { nickName: string; avatarUrl: string }): DouyinUserInfo | null {
+    // 正常情况下 _userInfo 在登录成功后就已经存在（哪怕昵称是空的）。
+    // 这里做一层兜底：只要本地已经拿到 token（说明登录态是有效的），
+    // 即使实例上的 _userInfo 因为某些边界情况丢失了，也不要静默失败，
+    // 而是补建一个最小可用的对象，保证昵称能正常保存。
     if (!this._userInfo) {
-      return null
+      if (!this._token) {
+        return null
+      }
+      const stored = this._parseUserInfo(uni.getStorageSync(USER_INFO_KEY))
+      this._userInfo = stored || { openid: '', nickName: '', avatarUrl: '' }
     }
     this._userInfo.nickName = userProfile.nickName
     this._userInfo.avatarUrl = userProfile.avatarUrl

@@ -33,11 +33,15 @@
         <!-- AI消息的朗读按钮 -->
         <view
           v-if="message.role === 'assistant' && !message.typing"
-          :class="[styles.speakBtn, { [styles.playing]: isPlaying }]"
+          :class="styles.speakBtn"
           @click="handleSpeak"
           @tap="handleSpeak"
         >
-          <text :class="styles.speakIcon">{{ isPlaying ? '⏹️' : '🔊' }}</text>
+          <image
+            :class="styles.speakIcon"
+            :src="isPlaying ? '/static/icons/speaker-stop.svg' : '/static/icons/speaker.svg'"
+            mode="aspectFit"
+          />
         </view>
       </view>
     </view>

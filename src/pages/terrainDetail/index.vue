@@ -160,6 +160,7 @@ import { TERRAIN_DETAILS } from '../../data/learnDetails'
 import { callFunction } from '../../utils/cloud'
 import { TERRAIN_DISPLAY_CONFIG, AI_CHAT_ENABLED } from '../../constants'
 import { useUserStore } from '../../stores/user'
+import { useChatStore } from '../../stores/chat'
 import type { TerrainItem } from '../../types'
 
 const { isVip } = storeToRefs(useUserStore())
@@ -195,6 +196,7 @@ function onListen() {
 }
 
 function onAsk() {
+  useChatStore().setPendingAsk({ entityType: '地形', entityName: detail.value.name })
   uni.switchTab({ url: '/pages/ai/index' })
 }
 
