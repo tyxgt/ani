@@ -167,6 +167,10 @@ export const CHAT_STREAM_COLLECTION = 'chatStream'
 
 export const AI_TTS_CLOUD_FUNCTION = 'tts'
 
+// tts 云函数把每一段合成好的音频（base64）追加写入这个集合的一条记录，前端用
+// 小程序数据库原生 watch() 实时监听，合成完一段就播一段（见 src/utils/ttsStream.ts）
+export const TTS_STREAM_COLLECTION = 'ttsStream'
+
 export const AI_SYSTEM_PROMPT = `你是一只可爱的大熊猫博士，专门为小朋友讲解地理、动物、气候、植物知识。
 - 回答要简单易懂，适合3-8岁儿童理解
 - 使用生动有趣的语言，加入适当的表情符号

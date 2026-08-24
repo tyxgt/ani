@@ -7,6 +7,9 @@ cloud.init({
   env: cloud.DYNAMIC_CURRENT_ENV,
 })
 
+const db = cloud.database()
+const _ = db.command
+
 function verifyToken(token) {
   if (!token) return null
   try {
@@ -150,8 +153,84 @@ function generateSessionId() {
   return 'tts-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8)
 }
 
+const TTS_STREAM_TTL_MS = 5 * 60 * 1000 // 只是"播放窗口"用的临时记录，几分钟够覆盖一次朗读，配合 TTL 索引自动清理
+
+// 分片流式推送：合成完一段就往数据库记录里追加一段，前端 watch() 到新增的
+// 分段就能立刻播放，不用等全部分段合成完。streamId 为空（前端未传，或非
+// 小程序平台不支持数据库实时推送）时整个对象退化成空操作，exports.main 的
+// 行为跟改造前完全一致。
+// 每段音频是独立的播放单元，跟文本增量不一样不能"只看最新值覆盖"——用
+// db.command.push 原子追加到 chunks 数组，前端按数组长度 diff 消费，哪怕
+// 中间某次 onChange 推送被合并/跳过也不会漏播某一段。
+function createTtsStreamWriter(streamId, openid) {
+  if (!streamId) {
+    return { pushChunk: async () => {}, markDone: async () => {}, markError: async () => {} }
+  }
+
+  let created = false
+
+  async function ensureCreated(totalChunks) {
+    if (created) return
+    created = true
+    try {
+      await db.collection('ttsStream').add({
+        data: {
+          _id: streamId,
+          openid,
+          chunks: [],
+          totalChunks,
+          codec: 'mp3',
+          status: 'streaming',
+          createdAt: db.serverDate(),
+          updatedAt: db.serverDate(),
+          expireAt: new Date(Date.now() + TTS_STREAM_TTL_MS),
+        },
+      })
+    } catch (e) {
+      console.warn('[tts] ttsStream 创建失败:', e)
+    }
+  }
+
+  async function pushChunk(chunkBase64, totalChunks) {
+    await ensureCreated(totalChunks)
+    try {
+      await db.collection('ttsStream').doc(streamId).update({
+        data: { chunks: _.push([chunkBase64]), updatedAt: db.serverDate() },
+      })
+    } catch (e) {
+      console.warn('[tts] ttsStream 追加分段失败:', e)
+    }
+  }
+
+  async function markDone() {
+    if (!created) return
+    try {
+      await db.collection('ttsStream').doc(streamId).update({
+        data: { status: 'done', updatedAt: db.serverDate() },
+      })
+    } catch (e) {
+      console.warn('[tts] ttsStream 收尾失败:', e)
+    }
+  }
+
+  async function markError() {
+    // 记录从未建过（比如失败发生在登录校验阶段）说明前端压根没开始 watch，
+    // 不需要补写任何状态。
+    if (!created) return
+    try {
+      await db.collection('ttsStream').doc(streamId).update({
+        data: { status: 'error', updatedAt: db.serverDate() },
+      })
+    } catch (e) {
+      console.warn('[tts] ttsStream 置错失败:', e)
+    }
+  }
+
+  return { pushChunk, markDone, markError }
+}
+
 exports.main = async (event, context) => {
-  const { text } = event
+  const { text, streamId } = event
 
   const payload = verifyToken(event.token)
   if (!payload) {
@@ -176,11 +255,17 @@ exports.main = async (event, context) => {
     return { code: -1, msg: 'TTS 服务未配置密钥', data: null }
   }
 
+  // 声明在 try 外层，好让 catch 块也能拿到它去标记 ttsStream 记录为 error；
+  // 这里创建的只是一个还没真正写库的空壳（真正的 add() 延迟到第一次
+  // pushChunk 才发生），markError 内部会判断 created 直接跳过未创建的记录。
+  const streamWriter = createTtsStreamWriter(streamId, OPENID)
+
   try {
     const chunks = splitText(String(text).trim())
     const audioList = []
 
-    // 依次合成各分段（腾讯云 TextToVoice 单次请求限制中文最长150字）
+    // 依次合成各分段（腾讯云 TextToVoice 单次请求限制中文最长150字），
+    // 每合成完一段就推一段给 streamWriter，前端不用等全部分段都合成完。
     for (const chunk of chunks) {
       const resp = await requestTextToVoice({
         text: chunk,
@@ -192,18 +277,22 @@ exports.main = async (event, context) => {
         throw new Error('腾讯云 TTS 未返回音频数据')
       }
       audioList.push(resp.Audio)
+      await streamWriter.pushChunk(resp.Audio, chunks.length)
     }
+
+    await streamWriter.markDone()
 
     return {
       code: 0,
       msg: '',
       data: {
-        audioList, // base64 编码的 mp3 音频分段数组，前端按序播放
+        audioList, // base64 编码的 mp3 音频分段数组，流式链路失效时的完整兜底
         codec: 'mp3',
       },
     }
   } catch (error) {
     console.error('[tts] 调用失败:', error)
+    await streamWriter.markError()
     return {
       code: -1,
       msg: error.message || 'TTS 服务暂时不可用',

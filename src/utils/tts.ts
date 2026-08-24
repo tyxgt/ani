@@ -1,5 +1,8 @@
 import { AI_TTS_CLOUD_FUNCTION } from '../constants'
 import { callFunction } from './cloud'
+import { generateStreamId } from './streamId'
+import { watchTtsStream } from './ttsStream'
+import type { TtsStreamWatcher } from './ttsStream'
 
 // ─── TTS 播放状态 ─────────────────────────────────────────────
 export type TTSStatus = 'idle' | 'loading' | 'playing' | 'paused'
@@ -20,6 +23,9 @@ let currentSpeechUtterance: SpeechSynthesisUtterance | null = null
 // 长文本分段相关（音频分段 - 腾讯云路径的队列播放逻辑）
 let audioQueue: string[] = []
 let isPlayingQueue = false
+// 当前正在监听的 ttsStream watcher：stopSpeaking() 中途打断播放时要一并关掉，
+// 避免用户点了停止之后数据库 watch 还留在后台。
+let currentTtsWatcher: TtsStreamWatcher | null = null
 
 /**
  * 检测当前平台是否支持TTS
@@ -58,108 +64,152 @@ function speakTextTencentCloud(options: TTSOptions): Promise<void> {
     const { content, onStart, onEnd, onError } = options
 
     currentStatus = 'loading'
+    audioQueue = []
+    isPlayingQueue = true
 
-    callFunction(AI_TTS_CLOUD_FUNCTION, { text: content })
+    let settled = false // resolve/reject 只能触发一次，流式和 callFunction 兜底两条路径都可能触发收尾
+    let streamDone = false // 服务端已合成完全部分段（不代表播完，只代表队列不会再有新分段进来）
+    let isPlayerBusy = false // 当前是否正在播放/准备播放某一段，避免并发触发 tryPlayNext
+    let enqueuedCount = 0 // 已经入队过的分段数量，callFunction 兜底时只补没收到过的那部分，避免重复播放
+
+    function finishSuccess() {
+      if (settled) return
+      settled = true
+      currentStatus = 'idle'
+      isPlayingQueue = false
+      onEnd?.()
+      resolve()
+    }
+
+    function finishError(err: any) {
+      if (settled) return
+      settled = true
+      currentStatus = 'idle'
+      isPlayingQueue = false
+      reject(err)
+    }
+
+    // 队列暂时空只代表"还没等到下一段"，只有 streamDone（服务端确认不会再有
+    // 新分段）且队列也空了，才是真的播完了——不能像原来那样一空就直接收尾。
+    function tryPlayNext() {
+      if (settled || !isPlayingQueue || isPlayerBusy) return
+
+      const chunk = audioQueue.shift()
+      if (!chunk) {
+        if (streamDone) finishSuccess()
+        return
+      }
+
+      isPlayerBusy = true
+
+      // 真机（尤其 iOS）上 InnerAudioContext.src 不支持直接播放 data: base64 URI，
+      // 会报 errCode 10001 / INNERERRCODE:-1100（在此服务器上找不到所请求的URL），
+      // 开发者工具模拟器里因为走 PC 端 WebView 反而不会暴露这个问题。
+      // 这里先把 base64 落地成本地临时文件，再用文件路径播放，真机和模拟器都能正常工作。
+      // codec 服务端固定传 mp3（从未真正用过 wav），直接写死后缀，不用再等
+      // callFunction 返回才知道 codec，减少一层没必要的时序依赖。
+      const tempFilePath = `${wx.env.USER_DATA_PATH}/tts_${Date.now()}_${Math.random().toString(36).slice(2, 8)}.mp3`
+
+      try {
+        wx.getFileSystemManager().writeFileSync(tempFilePath, chunk, 'base64')
+      } catch (err) {
+        console.error('[TTS] 音频临时文件写入失败:', err)
+        isPlayerBusy = false
+        finishError(err)
+        return
+      }
+
+      const cleanupTempFile = () => {
+        wx.getFileSystemManager().unlink({
+          filePath: tempFilePath,
+          fail: () => {},
+        })
+      }
+
+      audioContext = uni.createInnerAudioContext()
+      audioContext.src = tempFilePath
+
+      audioContext.onPlay(() => {
+        currentStatus = 'playing'
+        console.log('[TTS] 腾讯云段落开始播放')
+        onStart?.()
+      })
+
+      audioContext.onEnded(() => {
+        console.log('[TTS] 腾讯云段落播放完毕')
+        try {
+          audioContext.destroy()
+        } catch (e) {}
+        audioContext = null
+        cleanupTempFile()
+        isPlayerBusy = false
+        tryPlayNext()
+      })
+
+      audioContext.onError((err: any) => {
+        console.error('[TTS] 腾讯云音频播放错误:', err)
+        cleanupTempFile()
+        isPlayerBusy = false
+        finishError(err)
+      })
+
+      audioContext.play()
+    }
+
+    function enqueueChunk(chunkBase64: string) {
+      audioQueue.push(chunkBase64)
+      enqueuedCount++
+      tryPlayNext()
+    }
+
+    // 在发起 callFunction 之前就先开始 watch：不能等 callFunction 的 Promise
+    // resolve 才开始监听，那样跟"整体等完"没区别。tts 云函数即使还没合成完
+    // 第一段，watch 也能在记录创建后正常收到 onChange，收到一段就能立刻播放。
+    const streamId = generateStreamId()
+    currentTtsWatcher = watchTtsStream(streamId, {
+      onChunk(chunkBase64) {
+        enqueueChunk(chunkBase64)
+      },
+      onDone() {
+        streamDone = true
+        tryPlayNext() // 万一最后一段到达时队列恰好已经播完，需要重新判定一次收尾
+      },
+      onError() {
+        // 不单独处理，避免和下面 callFunction 的报错分支重复触发；安静地等
+        // callFunction 的返回来统一收尾。
+      },
+    })
+
+    callFunction(AI_TTS_CLOUD_FUNCTION, { text: content, streamId })
       .then((res) => {
+        currentTtsWatcher?.close()
+        currentTtsWatcher = null
+
         if (
           res.code !== 0 ||
           !res.data ||
           !Array.isArray(res.data.audioList) ||
           res.data.audioList.length === 0
         ) {
-          currentStatus = 'idle'
-          reject(new Error(res.msg || '腾讯云 TTS 合成失败'))
+          finishError(new Error(res.msg || '腾讯云 TTS 合成失败'))
           return
         }
 
+        // 兜底补全：正常情况下流式推送应该已经把所有分段都 enqueue 过了；这里
+        // 只补那些因为非小程序平台 / watch 失败等原因没能通过流式收到的剩余
+        // 分段，保证不管流式链路是否生效，最终这段话都会被完整播放——跟
+        // ai/index.vue 里 finalizeAssistantMessage 的兜底收尾同一个思路。
         const audioList: string[] = res.data.audioList
-        const codec: string = res.data.codec || 'mp3'
-        const fileExt = codec === 'wav' ? 'wav' : 'mp3'
-
-        audioQueue = audioList.slice()
-        isPlayingQueue = true
-
-        const playNext = () => {
-          if (currentStatus === 'idle' || !isPlayingQueue) {
-            resolve()
-            return
-          }
-
-          const chunk = audioQueue.shift()
-          if (!chunk) {
-            currentStatus = 'idle'
-            isPlayingQueue = false
-            onEnd?.()
-            resolve()
-            return
-          }
-
-          // 真机（尤其 iOS）上 InnerAudioContext.src 不支持直接播放 data: base64 URI，
-          // 会报 errCode 10001 / INNERERRCODE:-1100（在此服务器上找不到所请求的URL），
-          // 开发者工具模拟器里因为走 PC 端 WebView 反而不会暴露这个问题。
-          // 这里先把 base64 落地成本地临时文件，再用文件路径播放，真机和模拟器都能正常工作。
-          const tempFilePath = `${wx.env.USER_DATA_PATH}/tts_${Date.now()}_${Math.random().toString(36).slice(2, 8)}.${fileExt}`
-
-          try {
-            wx.getFileSystemManager().writeFileSync(tempFilePath, chunk, 'base64')
-          } catch (err) {
-            console.error('[TTS] 音频临时文件写入失败:', err)
-            currentStatus = 'idle'
-            isPlayingQueue = false
-            reject(err)
-            return
-          }
-
-          const cleanupTempFile = () => {
-            wx.getFileSystemManager().unlink({
-              filePath: tempFilePath,
-              fail: () => {},
-            })
-          }
-
-          audioContext = uni.createInnerAudioContext()
-          audioContext.src = tempFilePath
-
-          audioContext.onPlay(() => {
-            currentStatus = 'playing'
-            console.log('[TTS] 腾讯云段落开始播放')
-            onStart?.()
-          })
-
-          audioContext.onEnded(() => {
-            console.log('[TTS] 腾讯云段落播放完毕')
-            try {
-              audioContext.destroy()
-            } catch (e) {}
-            audioContext = null
-            cleanupTempFile()
-
-            if (audioQueue.length > 0) {
-              setTimeout(playNext, 80)
-            } else {
-              currentStatus = 'idle'
-              isPlayingQueue = false
-              onEnd?.()
-              resolve()
-            }
-          })
-
-          audioContext.onError((err: any) => {
-            console.error('[TTS] 腾讯云音频播放错误:', err)
-            currentStatus = 'idle'
-            isPlayingQueue = false
-            cleanupTempFile()
-            reject(err)
-          })
-
-          audioContext.play()
+        for (let i = enqueuedCount; i < audioList.length; i++) {
+          enqueueChunk(audioList[i])
         }
-
-        playNext()
+        streamDone = true
+        tryPlayNext()
       })
       .catch((err) => {
-        currentStatus = 'idle'
-        reject(err)
+        currentTtsWatcher?.close()
+        currentTtsWatcher = null
+        finishError(err)
       })
   })
 }
@@ -279,6 +329,11 @@ export async function speakText(options: TTSOptions): Promise<void> {
 export function stopSpeaking(): void {
   isPlayingQueue = false
   audioQueue = []
+  // 无论当前处于哪个状态都尝试关闭：正在等第一段合成完（loading）时中途叫停，
+  // 这时可能还没播放过任何一段、audioContext 还是 null，但 watcher 已经在
+  // 后台监听了，必须一并关掉，否则新分段还会继续被推进来。
+  currentTtsWatcher?.close()
+  currentTtsWatcher = null
 
   if (currentStatus === 'idle') {
     return

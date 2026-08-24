@@ -1,4 +1,5 @@
 import { CHAT_STREAM_COLLECTION } from '../constants'
+import { generateStreamId } from './streamId'
 
 // ─── AI 对话流式展示 ─────────────────────────────────────────────
 // chat 云函数把 AI 回复的增量节流写入 chatStream 集合的一条记录（见
@@ -16,19 +17,9 @@ export interface ChatStreamWatcher {
   close: () => void
 }
 
-// 生成一个前端持有的流式记录主键，随请求一起传给 chat 云函数：前端要在
-// 云函数真正建好这条数据库记录之前就能确定 watch 哪条记录，所以不能用云函数
-// 自己生成的 _id，必须由前端先生成好再传下去。
-export function generateStreamId(): string {
-  // #ifdef MP-WEIXIN
-  return `s${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`
-  // #endif
-
-  // 非微信小程序（如字节跳动小程序）没有对应的原生数据库实时推送能力，返回空串——
-  // chat 云函数收到空 streamId 会跳过建流式记录，整体退化为"等 callFunction
-  // 整体返回"这一条路径，不影响功能，只是没有中途增量展示。
-  return ''
-}
+// streamId 生成逻辑跟 chat 没有实质耦合，ttsStream.ts 也要用同一个，
+// 已经提到 streamId.ts 里，这里保留 re-export 避免调用方 import 路径改动。
+export { generateStreamId }
 
 // 监听一条流式记录的增量。streamId 为空串时直接返回一个空操作的 watcher，
 // 调用方不需要为"当前平台是否支持流式"写任何特判代码。

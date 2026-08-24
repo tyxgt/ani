@@ -47,6 +47,10 @@ const MAX_HISTORY_ROUNDS = 5
 // const QWEN_MODEL = 'qwen-flash-character'
 const QWEN_MODEL = 'qwen-turbo'
 
+// 内容安全兜底文案：直接复用 system prompt 里博士自己会说的话，不管是用户输入被拦截
+// 还是 AI 回复未过审被替换，展示出来的口吻都和角色人设一致，不会显得突兀。
+const SECURITY_VIOLATION_REPLY = '这个话题有点复杂，我们来聊聊地理、动物、气候和植物吧！'
+
 function generateSessionId() {
   return Date.now().toString(36) + Math.random().toString(36).substr(2)
 }
@@ -79,6 +83,25 @@ function stripMarkdown(text) {
 function stripLeadingAction(text) {
   if (!text) return text
   return text.replace(/^[（(][^）)]{0,40}[）)]\s*/, '')
+}
+
+// 微信内容安全检测：fail-closed —— 无论是明确判定违规（errCode 87014）还是接口本身
+// 异常/超时，一律按"未通过"处理，不能因为检测服务抖动就放行未审核内容。这是平台
+// 合规的强制要求，不是锦上添花的功能。version:2 + openid 可以让微信结合用户历史
+// 信誉数据判断，比 version:1 的纯文本检测更准确。
+async function checkContentSecurity(content, openid) {
+  try {
+    await cloud.openapi.security.msgSecCheck({
+      content,
+      version: 2,
+      scene: 2, // 2 = 社区场景，聊天类自由文本用这个最贴合，后续如需可调整
+      openid,
+    })
+    return true
+  } catch (err) {
+    console.warn('[chat] msgSecCheck 未通过或异常:', err && err.errCode, err && err.errMsg)
+    return false
+  }
 }
 
 // 把这一轮问答归档到 chatMessage 集合，供 getChatHistory 云函数在用户换设备/重装小程序、
@@ -478,6 +501,16 @@ exports.main = async (event, context) => {
       }
     }
 
+    // 用户输入侧检测：不合规就彻底拦截，不进模型、不落历史归档。
+    const inputPassed = await checkContentSecurity(message.trim(), OPENID)
+    if (!inputPassed) {
+      return {
+        code: -1,
+        msg: SECURITY_VIOLATION_REPLY,
+        data: null,
+      }
+    }
+
     const messages = buildMessages(history, message.trim(), entityName ? { entityType, entityName } : null)
     console.log('[chat] 构建消息完成，共', messages.length, '条')
 
@@ -494,7 +527,17 @@ exports.main = async (event, context) => {
     // 流结束前强制补一次 flush，防止尾部零碎文字卡在节流 buffer 里没写库
     await streamWriter.flush(true)
 
-    const cleanReply = stripLeadingAction(stripMarkdown(reply))
+    let cleanReply = stripLeadingAction(stripMarkdown(reply))
+
+    // AI 回复侧检测：优雅替换而不是报错，兜底文案本来就是博士自己会说的话，替换后
+    // 前端拿到的仍是正常 code:0 回复，不会突兀地弹错误提示。已知权衡：流式过程中
+    // 通过 streamWriter.onDelta 实时推送给前端的中间片段无法撤回，这里只能保证
+    // 归档内容和最终定格显示（markDone 覆盖）是安全的。
+    const replyPassed = await checkContentSecurity(cleanReply, OPENID)
+    if (!replyPassed) {
+      console.warn('[chat] AI 回复未通过内容安全审核，已替换为兜底文案')
+      cleanReply = SECURITY_VIOLATION_REPLY
+    }
 
     await persistChatTurn(OPENID, message.trim(), cleanReply)
     await streamWriter.markDone(cleanReply)
