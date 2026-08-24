@@ -13,7 +13,7 @@
       <view :class="styles.headerPlaceholder"></view>
     </view>
 
-    <scroll-view :class="styles.chatList" scroll-y :scroll-top="scrollTop" :scroll-into-view="scrollToId">
+    <scroll-view :class="styles.chatList" scroll-y :scroll-top="scrollTop">
       <view :class="styles.chatListInner">
         <template v-for="item in chatListItems" :key="item.key">
           <view v-if="item.type === 'divider'" :class="styles.dateDivider">
@@ -51,8 +51,10 @@ import { onShow } from '@dcloudio/uni-app'
 import { storeToRefs } from 'pinia'
 import PinyinText from '../../components/PinyinText'
 import MessageItem from '../../components/MessageItem'
-import { AI_BACKGROUND_URL, AI_INPUT_PANDA_URL, AI_CHAT_CLOUD_FUNCTION, GET_CHAT_HISTORY_CLOUD_FUNCTION, AI_CHAT_MAX_HISTORY_ROUNDS, AI_TYPEWRITER_SPEED, ERROR_CODE } from '../../constants'
+import { AI_BACKGROUND_URL, AI_INPUT_PANDA_URL, AI_CHAT_CLOUD_FUNCTION, GET_CHAT_HISTORY_CLOUD_FUNCTION, AI_CHAT_MAX_HISTORY_ROUNDS, ERROR_CODE } from '../../constants'
 import { callFunction } from '../../utils/cloud'
+import { generateStreamId, watchChatStream } from '../../utils/chatStream'
+import type { ChatStreamWatcher } from '../../utils/chatStream'
 import { useUserStore } from '../../stores/user'
 import { useChatStore } from '../../stores/chat'
 import type { ChatMessage, PendingAskContext, RemoteChatMessage } from '../../types'
@@ -148,8 +150,8 @@ const chatListItems = computed<ChatListItem[]>(() => {
 })
 
 const inputValue = ref('')
-const scrollTop = ref(99999)
-const scrollToId = ref('')
+const scrollTop = ref(0)
+let scrollTopSeq = 0
 const loading = ref(false)
 const sessionId = ref<string>('')
 
@@ -201,6 +203,9 @@ async function maybeSyncRemoteHistory() {
       }))
       saveMessages()
       scrollToBottom()
+      // 一次性替换成最多 200 条历史消息属于大批量更新，渲染层排版比一次
+      // 普通追加要慢，nextTick 不一定等得够，200ms 后再补一次兜底滚动。
+      setTimeout(scrollToBottom, 200)
     }
     // res.data 是空数组：真正的第一次聊天，保留本地已插入的欢迎语，不做任何事
   } catch (e) {
@@ -224,9 +229,11 @@ onShow(async () => {
   consumeAskContext()
 })
 
-let typingTimer: ReturnType<typeof setInterval> | null = null
+// 当前正在流式展示的助手消息 + 对应的数据库 watcher：sendMessage 发起请求时设置，
+// finalizeAssistantMessage/stopTyping 收尾时清空，确保任意时刻只有一个 watcher 存活。
 let currentTypingMsgIndex: number | null = null
-let fullReplyContent: string = ''
+let currentWatcher: ChatStreamWatcher | null = null
+let activeStreamId: string = ''
 
 const titleCharStyle = { fontSize: '16px', fontWeight: 'bold', color: '#333' }
 const titlePinyinStyle = { fontSize: '12px', color: '#666' }
@@ -244,58 +251,57 @@ function getTimeString(date: Date = new Date()) {
   return `${date.getHours()}:${date.getMinutes().toString().padStart(2, '0')}`
 }
 
+// scroll-top 会被 scroll-view 自动 clamp 到内容实际可滚动的最大距离，具体
+// 数值多大不重要；关键是每次调用都必须是一个新值，否则小程序认为"没变化"
+// 就不会触发滚动（之前反复赋值同一个 99999 正是一直不生效的原因）。
 function scrollToBottom() {
   nextTick(() => {
-    if (messages.value.length > 0) {
-      scrollToId.value = `msg-${messages.value[messages.value.length - 1].id}`
-    }
-    scrollTop.value = 99999
+    scrollTopSeq += 1
+    scrollTop.value = 999999999 + scrollTopSeq
   })
 }
 
+function closeCurrentWatcher() {
+  currentWatcher?.close()
+  currentWatcher = null
+  // 一并失效当前 streamId：watcher.close() 之后理论上不会再有回调，但异步场景下
+  // 不能完全排除"close() 执行时回调已经在路上"这种竞态，回调内部靠比对 activeStreamId
+  // 再兜底一层保护，避免过期回调污染已经切走的消息。
+  activeStreamId = ''
+}
+
+// 打断上一条还在流式展示中的助手消息：有部分内容就直接定格显示，完全没收到过
+// 任何内容（真没来得及展示）就丢弃这条占位气泡，跟 sanitizeRestoredMessages
+// 对"残缺 typing 消息"的兜底策略保持一致。
 function stopTyping() {
-  if (typingTimer) {
-    clearInterval(typingTimer)
-    typingTimer = null
-  }
+  closeCurrentWatcher()
   if (currentTypingMsgIndex !== null) {
-    if (fullReplyContent) {
-      messages.value[currentTypingMsgIndex].content = fullReplyContent
-      messages.value[currentTypingMsgIndex].typing = false
+    const msg = messages.value[currentTypingMsgIndex]
+    if (msg && msg.typing) {
+      if (msg.content) {
+        msg.typing = false
+      } else {
+        messages.value.splice(currentTypingMsgIndex, 1)
+      }
     }
     currentTypingMsgIndex = null
-    fullReplyContent = ''
   }
 }
 
-function typeWriter(fullContent: string, msgId: number) {
-  const msgIndex = messages.value.findIndex(m => m.id === msgId)
-  if (msgIndex === -1) return
-
-  const chars = Array.from(fullContent)
-  let charIndex = 0
-  messages.value[msgIndex].content = ''
-  messages.value[msgIndex].typing = true
-  currentTypingMsgIndex = msgIndex
-  fullReplyContent = fullContent
-
-  typingTimer = setInterval(() => {
-    if (charIndex < chars.length) {
-      messages.value[msgIndex].content += chars[charIndex]
-      charIndex++
-      if (charIndex % 3 === 0 || charIndex === chars.length) {
-        scrollToBottom()
-      }
-    } else {
-      clearInterval(typingTimer!)
-      typingTimer = null
-      messages.value[msgIndex].typing = false
+// 流式展示收尾：把消息内容定格为最终文本、关闭 watcher、落本地存储。onDone 回调
+// 和 callFunction 成功返回都会调用这里，两次调用内容理应一致，重复调用是安全的。
+function finalizeAssistantMessage(msgId: number, content: string) {
+  const idx = messages.value.findIndex(m => m.id === msgId)
+  if (idx !== -1) {
+    messages.value[idx].content = content
+    messages.value[idx].typing = false
+    if (currentTypingMsgIndex === idx) {
       currentTypingMsgIndex = null
-      fullReplyContent = ''
-      scrollToBottom()
-      saveMessages() // 打字动画播完才是真正的完整内容，这里必须再存一次，不能只指望 finally 里那次（那时内容还是空的）
     }
-  }, AI_TYPEWRITER_SPEED)
+  }
+  closeCurrentWatcher()
+  scrollToBottom()
+  saveMessages()
 }
 
 function saveMessages() {
@@ -348,10 +354,35 @@ async function sendMessage() {
     typing: true,
   }
   messages.value.push(assistantMsg)
+  currentTypingMsgIndex = messages.value.length - 1
 
   inputValue.value = ''
 
   scrollToBottom()
+
+  // 在发起 callFunction 之前就先开始 watch：不能等 callFunction 的 Promise resolve
+  // 才开始监听，那样跟现在"整体等完"没区别。chat 云函数即使还没跑到建库那一步，
+  // watch 也能在记录创建后正常收到 onChange，不需要前端等云函数确认记录已存在。
+  const streamId = generateStreamId()
+  activeStreamId = streamId
+  currentWatcher = watchChatStream(streamId, {
+    onContent(text) {
+      if (streamId !== activeStreamId) return // 过期回调（新消息已经开始/页面已经收尾），丢弃
+      const idx = messages.value.findIndex(m => m.id === assistantMsgId)
+      if (idx !== -1) {
+        messages.value[idx].content = text
+        scrollToBottom()
+      }
+    },
+    onDone(finalContent) {
+      if (streamId !== activeStreamId) return
+      finalizeAssistantMessage(assistantMsgId, finalContent)
+    },
+    onError() {
+      // 不单独弹 toast，避免和下面 callFunction 的报错分支重复弹两次；
+      // 安静地等 callFunction 的返回来统一收尾 UI。
+    },
+  })
 
   try {
     const recentHistory = messages.value.slice(-AI_CHAT_MAX_HISTORY_ROUNDS * 2).filter(m => !m.typing || m.role === 'user')
@@ -362,27 +393,34 @@ async function sendMessage() {
       sessionId: sessionId.value,
       entityType: activeAskContext.value?.entityType,
       entityName: activeAskContext.value?.entityName,
+      streamId,
     })
 
     if (res.code === 0 && res.data && res.data.reply) {
       sessionId.value = res.data.sessionId || sessionId.value
 
-      const reply = res.data.reply
-      typeWriter(reply, assistantMsgId)
+      // 兜底收尾：即使某次数据库 onChange 因网络抖动没送达，callFunction 的返回值
+      // 本身也能让消息正确定格，不会卡在"打字中"。finalizeAssistantMessage 是幂等的，
+      // 和 onDone 重复调用没有副作用。
+      finalizeAssistantMessage(assistantMsgId, res.data.reply)
     } else if (res.code === ERROR_CODE.NEED_MEMBERSHIP) {
       // 服务端二次校验拦截：理论上走不到这里（入口已隐藏、onShow 已拦截），
       // 出现说明本地会员状态短暂过期了——静默撤回占位消息，不弹任何提示，
       // 刷新会员状态后离开页面。
+      closeCurrentWatcher()
       const msgIndex = messages.value.findIndex(m => m.id === assistantMsgId)
       if (msgIndex !== -1) {
         messages.value.splice(msgIndex, 1)
+        currentTypingMsgIndex = null
       }
       await userStore.refreshMembership()
       uni.switchTab({ url: '/pages/index/index' })
     } else {
+      closeCurrentWatcher()
       const msgIndex = messages.value.findIndex(m => m.id === assistantMsgId)
       if (msgIndex !== -1) {
         messages.value.splice(msgIndex, 1)
+        currentTypingMsgIndex = null
       }
 
       // 检测默认模板响应（未部署自定义云函数代码）
@@ -401,9 +439,11 @@ async function sendMessage() {
       }
     }
   } catch (error) {
+    closeCurrentWatcher()
     const msgIndex = messages.value.findIndex(m => m.id === assistantMsgId)
     if (msgIndex !== -1) {
       messages.value.splice(msgIndex, 1)
+      currentTypingMsgIndex = null
     }
     uni.showToast({
       title: '网络开小差了，请稍后再试',

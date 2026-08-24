@@ -161,6 +161,10 @@ export const AI_CHAT_CLOUD_FUNCTION = 'chat'
 
 export const GET_CHAT_HISTORY_CLOUD_FUNCTION = 'getChatHistory'
 
+// chat 云函数把 AI 回复的流式增量节流写入这个集合的一条记录，前端用小程序数据库
+// 原生 watch() 实时监听做逐段展示（见 src/utils/chatStream.ts）
+export const CHAT_STREAM_COLLECTION = 'chatStream'
+
 export const AI_TTS_CLOUD_FUNCTION = 'tts'
 
 export const AI_SYSTEM_PROMPT = `你是一只可爱的大熊猫博士，专门为小朋友讲解地理、动物、气候、植物知识。
@@ -181,7 +185,6 @@ export const AI_SYSTEM_PROMPT = `你是一只可爱的大熊猫博士，专门�
 
 export const AI_CHAT_MAX_HISTORY_ROUNDS = 5
 
-export const AI_TYPEWRITER_SPEED = 40
 export const AI_CURSOR_BLINK_INTERVAL = 530
 
 // ─── 用户数据 ──────────────────────────────────────────────────

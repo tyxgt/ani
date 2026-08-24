@@ -227,7 +227,7 @@ function callDeepSeekStream(messages) {
 }
 */
 
-function callQwenStream(messages) {
+function callQwenStream(messages, onDelta) {
   return new Promise((resolve, reject) => {
     const options = {
       hostname: 'dashscope.aliyuncs.com',
@@ -268,6 +268,7 @@ function callQwenStream(messages) {
               const delta = data.choices[0].delta
               if (delta.content) {
                 fullReply += delta.content
+                if (onDelta) onDelta(delta.content, fullReply)
               }
             }
           } catch (e) {
@@ -288,6 +289,7 @@ function callQwenStream(messages) {
                   const delta = data.choices[0].delta
                   if (delta.content) {
                     fullReply += delta.content
+                    if (onDelta) onDelta(delta.content, fullReply)
                   }
                 }
               } catch (e) {
@@ -324,8 +326,112 @@ function callQwenStream(messages) {
   })
 }
 
+const STREAM_FLUSH_CHAR_THRESHOLD = 16
+const STREAM_FLUSH_TIME_MS = 200
+const STREAM_PUNCT_RE = /[，。！？；、,.!?;\n]/
+const STREAM_TTL_MS = 10 * 60 * 1000 // chatStream 只是"进行中展示"用的临时记录，10 分钟够覆盖一次对话，配合数据库 TTL 索引自动清理，不需要额外定时任务
+
+// 流式增量节流写库：chat 云函数内部消费 DashScope SSE 是逐 token 到达的，不能每个 token
+// 都 update 一次数据库（QPS 太高、前端 watch 展示也没必要那么高频），这里按"攒够字符数 /
+// 遇到标点 / 超过最大等待时间"三者任一触发就 flush 一次，前端通过小程序数据库原生
+// watch() 监听这条记录的增量做展示。streamId 为空（前端未传，兼容旧版本）时整个对象
+// 退化成空操作，不建任何记录，exports.main 的行为跟改造前完全一致。
+function createStreamWriter(streamId, openid, sid) {
+  if (!streamId) {
+    return { onDelta() {}, flush: async () => {}, markDone: async () => {}, markError: async () => {} }
+  }
+
+  let accumulated = ''
+  let pendingBuffer = ''
+  let lastFlushAt = Date.now()
+  let flushing = false
+  let created = false
+
+  async function ensureCreated() {
+    if (created) return
+    created = true
+    try {
+      await db.collection('chatStream').add({
+        data: {
+          _id: streamId,
+          openid,
+          sessionId: sid || '',
+          content: '',
+          status: 'streaming',
+          createdAt: db.serverDate(),
+          updatedAt: db.serverDate(),
+          expireAt: new Date(Date.now() + STREAM_TTL_MS),
+        },
+      })
+    } catch (e) {
+      console.warn('[chat] chatStream 创建失败:', e)
+    }
+  }
+
+  // 用 flushing 做互斥：同一时刻只允许一次 update() 在途，避免并发 update 之间
+  // "先发后至"互相覆盖；被跳过的增量不会丢，会累积在 pendingBuffer/accumulated
+  // 里，等下一次触发（或最终 flush(true)）时一起带上。
+  async function flush(force) {
+    if (flushing) return
+    if (!force && !pendingBuffer) return
+    const now = Date.now()
+    const hitThreshold = pendingBuffer.length >= STREAM_FLUSH_CHAR_THRESHOLD
+      || STREAM_PUNCT_RE.test(pendingBuffer)
+      || (now - lastFlushAt) >= STREAM_FLUSH_TIME_MS
+    if (!force && !hitThreshold) return
+
+    flushing = true
+    pendingBuffer = ''
+    lastFlushAt = now
+    try {
+      await ensureCreated()
+      await db.collection('chatStream').doc(streamId).update({
+        data: { content: accumulated, updatedAt: db.serverDate() },
+      })
+    } catch (e) {
+      console.warn('[chat] chatStream 更新失败:', e)
+    } finally {
+      flushing = false
+    }
+  }
+
+  function onDelta(deltaText, fullSoFar) {
+    accumulated = fullSoFar
+    pendingBuffer += deltaText
+    flush(false) // fire-and-forget，不阻塞 SSE 读取
+  }
+
+  // 用清洗后的最终文本覆盖收尾，保证前端最终定格显示的是干净文本，
+  // 流式过程中可能一闪而过的 Markdown 符号在这一刻被纠正。
+  async function markDone(finalContent) {
+    if (!created) return
+    try {
+      await db.collection('chatStream').doc(streamId).update({
+        data: { content: finalContent, status: 'done', updatedAt: db.serverDate() },
+      })
+    } catch (e) {
+      console.warn('[chat] chatStream 收尾失败:', e)
+    }
+  }
+
+  async function markError() {
+    // 记录从未建过（比如失败发生在会员/JWT 校验阶段）说明前端压根没开始 watch，
+    // 不需要补写任何状态。
+    if (!created) return
+    try {
+      await db.collection('chatStream').doc(streamId).update({
+        data: { status: 'error', updatedAt: db.serverDate() },
+      })
+    } catch (e) {
+      console.warn('[chat] chatStream 置错失败:', e)
+    }
+  }
+
+  return { onDelta, flush, markDone, markError }
+}
+
 exports.main = async (event, context) => {
-  const { message, history, sessionId, entityType, entityName } = event
+  const { message, history, sessionId, entityType, entityName, streamId } = event
 
   const payload = verifyToken(event.token)
   if (!payload) {
@@ -353,7 +459,11 @@ exports.main = async (event, context) => {
       data: null,
     }
   }
-  
+
+  // 声明在 try 外层，好让 catch 块也能拿到它去标记 chatStream 记录为 error；
+  // 会员/参数校验阶段失败时它还是 null，markError 内部会判断 created 直接跳过。
+  let streamWriter = null
+
   try {
     // 会员权限校验：唯一不可绕过的防线（前端入口隐藏可以被跳过直接调用本云函数）。
     // 查询异常同样按"非会员"处理（fail-closed），不能因为数据库故障误放行。
@@ -371,17 +481,23 @@ exports.main = async (event, context) => {
     const messages = buildMessages(history, message.trim(), entityName ? { entityType, entityName } : null)
     console.log('[chat] 构建消息完成，共', messages.length, '条')
 
+    streamWriter = createStreamWriter(streamId, OPENID, sessionId)
+
     // const reply = await callDeepSeekStream(messages)
-    const reply = await callQwenStream(messages)
+    const reply = await callQwenStream(messages, streamWriter.onDelta)
     console.log('[chat] Qwen 回复成功，长度:', reply.length)
 
     if (!reply) {
       throw new Error('Qwen 返回空内容')
     }
 
+    // 流结束前强制补一次 flush，防止尾部零碎文字卡在节流 buffer 里没写库
+    await streamWriter.flush(true)
+
     const cleanReply = stripLeadingAction(stripMarkdown(reply))
 
     await persistChatTurn(OPENID, message.trim(), cleanReply)
+    await streamWriter.markDone(cleanReply)
 
     const newSessionId = sessionId || generateSessionId()
 
@@ -395,7 +511,9 @@ exports.main = async (event, context) => {
     }
   } catch (error) {
     console.error('[chat] 调用失败:', error)
-    
+
+    if (streamWriter) await streamWriter.markError()
+
     return {
       code: -1,
       msg: error.message || 'AI对话服务暂时不可用',

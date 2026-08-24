@@ -68,11 +68,11 @@
   position: relative;
   width: 100%;
   flex: 1;
+  min-height: 0;
   box-sizing: border-box;
   z-index: 5;
   overflow-y: auto;
   padding: 16px 0;
-  margin-bottom: 50px;
 }
 
 .chatListInner {
@@ -80,7 +80,11 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
-  padding-bottom: 20px;
+  // 留白要能盖住 .inputArea 的真实高度（约 10px 内边距 + 48px 输入框主体）
+  // 加上底部安全区，这样滚到底之后被输入框遮住的只是这段留白，最后一条
+  // 消息本身永远露在输入框上方——放在可滚动内容内部才能保证跟随滚动，
+  // 不会因为 .inputArea 实际高度和外层预留空间对不上而被遮挡。
+  padding-bottom: calc(70px + env(safe-area-inset-bottom));
 }
 
 .dateDivider {
