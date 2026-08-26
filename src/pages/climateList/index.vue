@@ -26,7 +26,7 @@
           :class="styles.climateCard"
           @click="onClimateClick(item)"
         >
-          <image :class="styles.climateImg" :src="item.image" mode="aspectFill" />
+          <image :class="styles.climateImg" :src="item.image" mode="aspectFill" lazy-load="true" />
           <view :class="styles.climateInfo">
             <PinyinText
               :text="item.name"

@@ -26,7 +26,7 @@
           :class="styles.terrainCard"
           @click="onTerrainClick(item)"
         >
-          <image :class="styles.terrainImg" :src="item.image" mode="aspectFill" />
+          <image :class="styles.terrainImg" :src="item.image" mode="aspectFill" lazy-load="true" />
           <view :class="styles.terrainInfo">
             <PinyinText
               :text="item.name"

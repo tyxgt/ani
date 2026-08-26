@@ -168,6 +168,67 @@
   color: #999;
 }
 
+// 键盘 ⇄ 语音切换按钮：贴近微信那种"纯图标"切换按钮，不做成实心圆按钮
+.modeToggleBtn {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.modeToggleIcon {
+  width: 22px;
+  height: 22px;
+}
+
+// 通栏"按住 说话"按钮：顶替原来 chatInput 的 flex:1，撑满输入框剩余宽度
+.holdToTalkBtn {
+  flex: 1;
+  height: 36px;
+  border-radius: 18px;
+  background: #f0f0f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.15s;
+}
+
+.holdToTalkText {
+  font-size: 16px;
+  color: #666;
+}
+
+// 录音中：变红 + 脉冲动画，直观地告诉小朋友"正在听你说话"，不需要额外准备
+// 一套"录音中"图标。
+.holdToTalkBtnActive {
+  background: #EF4444;
+  animation: holdToTalkPulse 1s infinite ease-in-out;
+}
+
+.holdToTalkBtnActive .holdToTalkText {
+  color: #fff;
+}
+
+.holdToTalkBtnDisabled {
+  background: #e0e0e0;
+}
+
+.holdToTalkBtnDisabled .holdToTalkText {
+  color: #999;
+}
+
+@keyframes holdToTalkPulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.03);
+  }
+}
+
 .loadingItem {
   display: flex;
   align-items: flex-start;

@@ -171,6 +171,9 @@ export const AI_TTS_CLOUD_FUNCTION = 'tts'
 // 小程序数据库原生 watch() 实时监听，合成完一段就播一段（见 src/utils/ttsStream.ts）
 export const TTS_STREAM_COLLECTION = 'ttsStream'
 
+// asr 云函数：语音输入识别，调用腾讯云"一句话识别"（同步接口，不需要流式集合）
+export const AI_ASR_CLOUD_FUNCTION = 'asr'
+
 export const AI_SYSTEM_PROMPT = `你是一只可爱的大熊猫博士，专门为小朋友讲解地理、动物、气候、植物知识。
 - 回答要简单易懂，适合3-8岁儿童理解
 - 使用生动有趣的语言，加入适当的表情符号

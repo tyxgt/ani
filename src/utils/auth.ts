@@ -17,6 +17,8 @@ class AuthManager {
   private _expiresAt: number = 0
   private _vipInfo: VipInfo = { ...EMPTY_VIP_INFO }
   private _loginPromise: Promise<DouyinUserInfo | null> | null = null
+  private _lastMembershipFetchAt: number = 0
+  private _membershipInflight: Promise<VipInfo> | null = null
 
   constructor() {
     this._token = uni.getStorageSync(TOKEN_KEY) || ''
@@ -110,19 +112,41 @@ class AuthManager {
 
   // 静默刷新会员状态：不依赖 token 是否过期，随时可调用（供 tabBar 页面
   // onShow 时调用），失败时保留当前状态，不抛出到 UI。
-  async refreshMembership(): Promise<VipInfo> {
+  // 默认 30 秒内不重复真实请求（直接返回上次的缓存结果），避免频繁切 tab 时
+  // 每次都等一轮网络往返；并发调用复用同一个 inflight Promise 做去重。
+  // force=true 用于确实需要拿到最新状态的场景（如服务端二次校验拦截后），
+  // 跳过节流窗口强制发起请求。
+  async refreshMembership(force = false): Promise<VipInfo> {
     if (!this.isLoggedIn(true)) {
       return this._vipInfo
     }
-    try {
-      const result = await callFunction(GET_MEMBERSHIP_CLOUD_FUNCTION, {})
-      if (result.code === 0 && result.data) {
-        this._setVipInfo(result.data)
-      }
-    } catch (e) {
-      console.error('[Auth] 刷新会员状态失败:', e)
+
+    if (this._membershipInflight) {
+      return this._membershipInflight
     }
-    return this._vipInfo
+
+    const MIN_INTERVAL = 30_000
+    if (!force && Date.now() - this._lastMembershipFetchAt < MIN_INTERVAL) {
+      return this._vipInfo
+    }
+
+    this._membershipInflight = (async () => {
+      try {
+        const result = await callFunction(GET_MEMBERSHIP_CLOUD_FUNCTION, {})
+        if (result.code === 0 && result.data) {
+          this._setVipInfo(result.data)
+        }
+        // 只在请求成功发出后才更新时间戳，失败时不应"假节流"卡住下次重试
+        this._lastMembershipFetchAt = Date.now()
+      } catch (e) {
+        console.error('[Auth] 刷新会员状态失败:', e)
+      } finally {
+        this._membershipInflight = null
+      }
+      return this._vipInfo
+    })()
+
+    return this._membershipInflight
   }
 
   async silentLogin(): Promise<DouyinUserInfo | null> {

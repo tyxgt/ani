@@ -9,7 +9,7 @@
     <image
       v-if="message.role === 'assistant'"
       :class="styles.avatar"
-      :src="AI_PANDA_URL"
+      :src="AI_INPUT_PANDA_URL"
       mode="aspectFit"
     />
 
@@ -52,7 +52,7 @@
 import { ref, onUnmounted } from 'vue'
 import { useCssModule } from 'vue'
 import PinyinText from '../PinyinText'
-import { AI_PANDA_URL } from '../../constants'
+import { AI_INPUT_PANDA_URL } from '../../constants'
 import { speakText, stopSpeaking, isTTSSupported } from '../../utils/tts'
 import type { ChatMessage } from '../../types'
 

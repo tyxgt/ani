@@ -26,18 +26,43 @@
 
     <view :class="styles.inputArea">
       <view :class="styles.inputWrapper">
-        <image :class="styles.inputPanda" :src="AI_INPUT_PANDA_URL" mode="aspectFit" />
-        <input
-          :class="styles.chatInput"
-          v-model="inputValue"
-          type="text"
-          confirm-type="send"
-          @confirm="sendMessage"
-          :disabled="loading"
-        />
-        <view :class="[styles.sendBtn, { [styles.sendBtnDisabled]: loading }]" @click="sendMessage">
-          <text :class="styles.sendIcon">&#x27a4;</text>
+        <!-- #ifdef MP-WEIXIN -->
+        <view :class="styles.modeToggleBtn" @click="toggleInputMode">
+          <image
+            :class="styles.modeToggleIcon"
+            :src="inputMode === 'text' ? '/static/icons/mic-outline.svg' : '/static/icons/keyboard.svg'"
+            mode="aspectFit"
+          />
         </view>
+        <!-- #endif -->
+        <!-- #ifndef MP-WEIXIN -->
+        <image :class="styles.inputPanda" :src="AI_INPUT_PANDA_URL" mode="aspectFit" />
+        <!-- #endif -->
+
+        <!-- #ifdef MP-WEIXIN -->
+        <view
+          v-if="inputMode === 'voice'"
+          :class="[styles.holdToTalkBtn, { [styles.holdToTalkBtnActive]: isRecording, [styles.holdToTalkBtnDisabled]: loading || isRecognizing }]"
+          @touchstart="handleVoiceStart"
+          @touchend="handleVoiceEnd"
+          @touchcancel="handleVoiceEnd"
+        >
+          <text :class="styles.holdToTalkText">{{ isRecognizing ? '识别中...' : (isRecording ? '松开 发送' : '按住 说话') }}</text>
+        </view>
+        <!-- #endif -->
+        <template v-if="inputMode === 'text'">
+          <input
+            :class="styles.chatInput"
+            v-model="inputValue"
+            type="text"
+            confirm-type="send"
+            @confirm="sendMessage"
+            :disabled="loading"
+          />
+          <view :class="[styles.sendBtn, { [styles.sendBtnDisabled]: loading }]" @click="sendMessage">
+            <text :class="styles.sendIcon">&#x27a4;</text>
+          </view>
+        </template>
       </view>
     </view>
   </view>
@@ -55,6 +80,7 @@ import { AI_BACKGROUND_URL, AI_INPUT_PANDA_URL, AI_CHAT_CLOUD_FUNCTION, GET_CHAT
 import { callFunction } from '../../utils/cloud'
 import { generateStreamId, watchChatStream } from '../../utils/chatStream'
 import type { ChatStreamWatcher } from '../../utils/chatStream'
+import { startVoiceRecording, stopVoiceRecording, VOICE_RECORDING_TOO_SHORT } from '../../utils/asr'
 import { useUserStore } from '../../stores/user'
 import { useChatStore } from '../../stores/chat'
 import type { ChatMessage, PendingAskContext, RemoteChatMessage } from '../../types'
@@ -154,6 +180,9 @@ const scrollTop = ref(0)
 let scrollTopSeq = 0
 const loading = ref(false)
 const sessionId = ref<string>('')
+const isRecording = ref(false)
+const isRecognizing = ref(false)
+const inputMode = ref<'text' | 'voice'>('text')
 
 const userStore = useUserStore()
 const { isLoggedIn, isVip } = storeToRefs(userStore)
@@ -217,16 +246,31 @@ async function maybeSyncRemoteHistory() {
 // 页面级兜底：非会员不允许停留在这个页面（入口已经在 tabBar/详情页隐藏，
 // 这里防的是页面实例被缓存住、或者非常规方式直接跳转过来的情况）。
 // 静默跳走，不做任何提示。
-onShow(async () => {
-  if (isLoggedIn.value) {
-    await userStore.refreshMembership()
-  }
+//
+// 性能优化：不再 await 会员状态刷新的网络请求——切 tab 进来时先用本地已缓存
+// 的 isVip 做一次同步判断（瞬时、不等网络），把历史同步/滚动这些视觉更新
+// 立刻做完；网络刷新放到后台异步进行，刷新完再兜底判断一次，覆盖"本地缓存
+// 过期/服务端已吊销会员"的边缘情况。userStore.refreshMembership 内部有 30
+// 秒节流，频繁切 tab 不会重复发请求。
+onShow(() => {
   if (isLoggedIn.value && !isVip.value) {
     uni.switchTab({ url: '/pages/index/index' })
     return
   }
-  await maybeSyncRemoteHistory()
+  maybeSyncRemoteHistory()
   consumeAskContext()
+  // 兜底：不管上面两步有没有触发滚动（大多数"本地已有历史、无待处理问博士
+  // 上下文"的常规切 tab 场景都不会），tabBar 页面除首次进入外只触发 onShow、
+  // 不会重新挂载，每次被切入显示都要强制滚到底部，否则会停留在上次的位置。
+  scrollToBottom()
+
+  if (isLoggedIn.value) {
+    userStore.refreshMembership().then(() => {
+      if (isLoggedIn.value && !isVip.value) {
+        uni.switchTab({ url: '/pages/index/index' })
+      }
+    })
+  }
 })
 
 // 当前正在流式展示的助手消息 + 对应的数据库 watcher：sendMessage 发起请求时设置，
@@ -312,21 +356,77 @@ function saveMessages() {
   }
 }
 
+// 未登录时的引导弹窗：发消息、长按说话共用同一套提示文案和跳转逻辑
+function promptLogin() {
+  uni.showModal({
+    title: '提示',
+    content: '登录后才能和大熊猫博士聊天哦~',
+    confirmText: '去登录',
+    success: (res) => {
+      if (res.confirm) {
+        uni.switchTab({ url: '/pages/mine/index' })
+      }
+    },
+  })
+}
+
+// #ifdef MP-WEIXIN
+// 键盘 ⇄ 语音切换：正在录音/识别中不允许切走，避免中途出现奇怪的半态 UI。
+function toggleInputMode() {
+  if (isRecording.value || isRecognizing.value) return
+  inputMode.value = inputMode.value === 'text' ? 'voice' : 'text'
+}
+
+// 按住说话按下：开始录音，跟 sendMessage 的登录态/loading 校验逻辑保持一致。
+function handleVoiceStart() {
+  if (loading.value || isRecording.value || isRecognizing.value) return
+
+  if (!isLoggedIn.value) {
+    promptLogin()
+    return
+  }
+
+  isRecording.value = true
+  startVoiceRecording()
+}
+
+// 按住说话松开：结束录音并发起识别，识别成功直接调 sendMessage() 发出去
+// （跟微信语音消息一样，松手即发送，不需要用户再确认一次）。发送成功/失败
+// 都停留在语音模式，不自动跳回键盘，方便用户直接再按一次重新说。
+async function handleVoiceEnd() {
+  if (!isRecording.value) return
+
+  isRecording.value = false
+  isRecognizing.value = true
+
+  try {
+    const text = await stopVoiceRecording()
+    if (text) {
+      inputValue.value = text
+      await sendMessage() // sendMessage 内部会自己 trim/校验/清空 inputValue
+    } else {
+      uni.showToast({ title: '没有听清，请再说一次', icon: 'none', duration: 2000 })
+    }
+  } catch (error) {
+    const message = error instanceof Error ? error.message : ''
+    if (message === VOICE_RECORDING_TOO_SHORT) {
+      uni.showToast({ title: '说话时间太短啦', icon: 'none', duration: 2000 })
+    } else {
+      console.error('[Chat] 语音识别失败:', error)
+      uni.showToast({ title: '语音识别失败，请重试', icon: 'none', duration: 2000 })
+    }
+  } finally {
+    isRecognizing.value = false
+  }
+}
+// #endif
+
 async function sendMessage() {
   const content = inputValue.value.trim()
   if (!content || loading.value) return
 
   if (!isLoggedIn.value) {
-    uni.showModal({
-      title: '提示',
-      content: '登录后才能和大熊猫博士聊天哦~',
-      confirmText: '去登录',
-      success: (res) => {
-        if (res.confirm) {
-          uni.switchTab({ url: '/pages/mine/index' })
-        }
-      },
-    })
+    promptLogin()
     return
   }
 
@@ -413,7 +513,8 @@ async function sendMessage() {
         messages.value.splice(msgIndex, 1)
         currentTypingMsgIndex = null
       }
-      await userStore.refreshMembership()
+      // force=true：跳过节流窗口，确保离开前状态被刷新为最新
+      await userStore.refreshMembership(true)
       uni.switchTab({ url: '/pages/index/index' })
     } else {
       closeCurrentWatcher()

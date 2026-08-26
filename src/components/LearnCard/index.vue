@@ -2,7 +2,7 @@
   <view :class="styles.card" :style="{ borderColor: item.borderColor }" @click="onClick">
     <view :class="styles.imgWrap">
       <view v-if="!loaded" :class="styles.skeleton" />
-      <image :class="styles.img" :src="item.image" mode="aspectFill" @load="onLoad" />
+      <image :class="styles.img" :src="item.image" mode="aspectFill" lazy-load="true" @load="onLoad" />
     </view>
     <view :class="styles.info">
       <view :class="styles.nameRow">

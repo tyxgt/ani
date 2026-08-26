@@ -87,9 +87,10 @@ export const useUserStore = defineStore('user', () => {
 
   // 静默刷新会员状态：不弹任何提示，供 tabBar 页面 onShow 调用。
   // 未登录时直接跳过（不需要也不应该触发登录流程）。
-  async function refreshMembership(): Promise<void> {
+  // force 透传给 authManager：默认走 30 秒节流，确实需要最新状态时传 true。
+  async function refreshMembership(force = false): Promise<void> {
     if (!isLoggedIn.value) return
-    await authManager.refreshMembership()
+    await authManager.refreshMembership(force)
     refreshState()
   }
 

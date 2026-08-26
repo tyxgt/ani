@@ -262,6 +262,12 @@ function scheduleDraw() {
 
 // ─── Map data internals ──────────────────────────────────────
 let projectedFeatures: ProjectedFeature[] = [];
+// 性能优化：projectedFeatures 只依赖画布尺寸（project 函数由 canvasW/canvasH
+// 决定），页面重新 mount 时如果画布尺寸和上次一致就直接复用，跳过整轮坐标
+// 投影 + computeAngle + getPolygonBBox 计算；这些变量是模块级的，在会话内
+// 跨 mount 存活，resize 时 canvasW/canvasH 变化会让 cacheKey 变化，缓存自动
+// 失效并重算。
+let projectedCacheKey: string | null = null;
 
 /** Projection function: (lon, lat) → { x, y } in CSS-pixel drawing space */
 let project: (lon: number, lat: number) => ProjectedPoint = () => ({ x: 0, y: 0 });
@@ -304,6 +310,9 @@ let touchState: {
 // 地图形状的几何中心（所有顶点的经纬度均值），由 preprojectFeatures 计算
 let geoMeanLon = 0;
 let geoMeanLat = 0;
+// 几何中心只依赖静态的 regionData，和画布尺寸无关，算一次永久有效，
+// 不需要在每次 resize/重新 mount 时重算。
+let geoCenterComputed = false;
 
 // ══════════════════════════════════════════════════════════════
 //  Initialisation
@@ -342,6 +351,7 @@ function getVisibleCenter(w: number, h: number) {
 }
 
 function computeGeoCenter() {
+  if (geoCenterComputed) return;
   const features = (regionData as any).features || [];
   let minLon = Infinity,
     maxLon = -Infinity,
@@ -363,9 +373,16 @@ function computeGeoCenter() {
     });
   geoMeanLon = (minLon + maxLon) / 2;
   geoMeanLat = (minLat + maxLat) / 2;
+  geoCenterComputed = true;
 }
 
 function preprojectFeatures() {
+  // 画布尺寸没变时直接复用上次的投影结果，跳过整轮坐标投影 + computeAngle +
+  // getPolygonBBox；resize 后 canvasW/canvasH 变化，cacheKey 自然不同，会正常重算。
+  const cacheKey = `${canvasW}x${canvasH}`;
+  if (projectedCacheKey === cacheKey && projectedFeatures.length > 0) {
+    return;
+  }
   const features = (regionData as any).features || [];
   projectedFeatures = features
     .filter((f: any) => regionColors[f.properties?.name])
@@ -404,6 +421,7 @@ function preprojectFeatures() {
         bbox: getPolygonBBox(polygons),
       };
     });
+  projectedCacheKey = cacheKey;
 }
 
 /** 计算多边形的主轴角度 */
@@ -1150,16 +1168,16 @@ function onTouchEnd(e: any) {
 // ─── Lifecycle ───────────────────────────────────────────────
 
 onMounted(() => {
+  // 去掉之前硬编码的 300ms 延迟：initCanvas 内部已有基于画布尺寸为 0 的
+  // 重试兜底（最多 3 次、间隔 200ms），不需要这层额外等待。
   nextTick(() => {
-    setTimeout(() => {
-      initCanvas();
-      // #ifdef H5
-      window.addEventListener("resize", handleResize);
-      // #endif
-      // #ifndef H5
-      uni.onWindowResize(handleResize);
-      // #endif
-    }, 300);
+    initCanvas();
+    // #ifdef H5
+    window.addEventListener("resize", handleResize);
+    // #endif
+    // #ifndef H5
+    uni.onWindowResize(handleResize);
+    // #endif
   });
 });
 
