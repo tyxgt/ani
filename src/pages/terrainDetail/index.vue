@@ -2,7 +2,7 @@
   <AuthGate>
   <view :class="styles.detailPage" :style="{ '--detail-bg': detail.pageBg }">
     <!-- 自定义导航栏 -->
-    <view :class="styles.detailNavHeader">
+    <view :class="styles.detailNavHeader" :style="navHeaderStyle">
       <view :class="styles.backBtn" @click="goBack" @tap="goBack">
         <image :class="styles.backIcon" src="/static/icons/back.svg" mode="aspectFit" />
       </view>
@@ -25,7 +25,7 @@
       </view>
 
       <!-- 标题与拼音 -->
-      <view :class="styles.titleSection">
+      <!-- <view :class="styles.titleSection">
         <PinyinText
           :text="detail.name"
           :char-style="{
@@ -35,7 +35,7 @@
           }"
           :pinyin-style="{ fontSize: '16px', color: '#81C784' }"
         />
-      </view>
+      </view> -->
 
       <!-- 4 个属性卡片 -->
       <view :class="styles.attributeCards">
@@ -159,11 +159,14 @@ import LoadingSpinner from '../../components/LoadingSpinner'
 import { TERRAIN_DETAILS } from '../../data/learnDetails'
 import { callFunction } from '../../utils/cloud'
 import { TERRAIN_DISPLAY_CONFIG, AI_CHAT_ENABLED } from '../../constants'
+import { getCustomNavStyle } from '../../utils/navBar'
 import { useUserStore } from '../../stores/user'
 import { useChatStore } from '../../stores/chat'
 import type { TerrainItem } from '../../types'
 
 const { isVip } = storeToRefs(useUserStore())
+
+const navHeaderStyle = getCustomNavStyle()
 
 const detail = ref<TerrainItem>(TERRAIN_DETAILS['山地'])
 const loading = ref(false)

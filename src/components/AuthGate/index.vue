@@ -13,10 +13,20 @@
     <view v-else-if="manualLogin" :class="styles.gate">
       <view :class="styles.loginModalContent">
         <text :class="styles.loginModalIcon">🐼</text>
-        <text :class="styles.loginModalTitle">未登录</text>
-        <text :class="styles.loginModalDesc">请登录后查看个人中心</text>
+        <view :class="styles.loginModalTitle">
+          <PinyinText text="未登录" display-mode="vertical"
+            :charStyle="{ fontSize: '40rpx', fontWeight: 'bold', color: '#2C3E50' }"
+            :pinyinStyle="{ fontSize: '26rpx', color: '#5D6D7E' }" />
+        </view>
+        <view :class="styles.loginModalDesc">
+          <PinyinText text="请登录后查看个人中心"
+            :charStyle="{ fontSize: '28rpx', color: '#999' }"
+            :pinyinStyle="{ fontSize: '20rpx', color: '#999' }" />
+        </view>
         <view :class="styles.loginModalBtn" @click="handleManualLogin">
-          <text :class="styles.loginModalBtnText">{{ submitting ? '登录中...' : '登录' }}</text>
+          <PinyinText :text="submitting ? '登录中' : '登录'" display-mode="vertical"
+            :charStyle="{ fontSize: '32rpx', fontWeight: 'bold', color: '#fff' }"
+            :pinyinStyle="{ fontSize: '22rpx', color: '#fff' }" />
         </view>
       </view>
     </view>
@@ -24,10 +34,20 @@
     <view v-else :class="styles.loginModal" @click="goLogin">
       <view :class="styles.loginModalContent" @click.stop>
         <text :class="styles.loginModalIcon">🐼</text>
-        <text :class="styles.loginModalTitle">请先登录</text>
-        <text :class="styles.loginModalDesc">登录后即可查看全部内容</text>
+        <view :class="styles.loginModalTitle">
+          <PinyinText text="请先登录" display-mode="vertical"
+            :charStyle="{ fontSize: '40rpx', fontWeight: 'bold', color: '#2C3E50' }"
+            :pinyinStyle="{ fontSize: '26rpx', color: '#5D6D7E' }" />
+        </view>
+        <view :class="styles.loginModalDesc">
+          <PinyinText text="登录后即可查看全部内容"
+            :charStyle="{ fontSize: '28rpx', color: '#999' }"
+            :pinyinStyle="{ fontSize: '20rpx', color: '#999' }" />
+        </view>
         <view :class="styles.loginModalBtn" @click="goLogin">
-          <text :class="styles.loginModalBtnText">去登录</text>
+          <PinyinText text="去登录" display-mode="vertical"
+            :charStyle="{ fontSize: '32rpx', fontWeight: 'bold', color: '#fff' }"
+            :pinyinStyle="{ fontSize: '22rpx', color: '#fff' }" />
         </view>
       </view>
     </view>
@@ -38,6 +58,7 @@
 import { useCssModule, ref } from 'vue'
 import { storeToRefs } from 'pinia'
 import LoadingSpinner from '../LoadingSpinner'
+import PinyinText from '../PinyinText'
 import { useUserStore } from '../../stores/user'
 
 // manualLogin=true（用于"我的"页）：未登录时显示登录按钮，由用户手动点击触发登录。

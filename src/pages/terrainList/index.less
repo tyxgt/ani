@@ -14,24 +14,22 @@
 // ─── 顶部导航栏 ────────────────────────────────────────────────
 .listNavHeader {
   box-sizing: border-box;
-  width: 80%;
+  width: 100%;
   position: relative;
   z-index: 10;
   display: flex;
   align-items: center;
-  justify-content: space-evenly;
-  border-radius: 30px;
+  justify-content: center;
   padding: 4px 10px;
-  margin-top: env(safe-area-inset-top);
-  margin-left: auto;
-  margin-right: auto;
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(10px);
+  // 顶部偏移 + 左右安全区内边距由行内 style（getCustomNavStyle）负责
 
   .backBtn {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
     width: 30px;
     height: 30px;
-    margin-right: 6px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -56,12 +54,15 @@
       width: 10px;
       flex-shrink: 0;
     }
+
+    :deep(.char),
+    :deep(.pinyin) {
+      text-shadow: 0 1px 3px rgba(255, 255, 255, 0.9);
+    }
   }
 
   .headerPlaceholder {
-    width: 30px;
-    margin-left: 6px;
-    flex-shrink: 0;
+    display: none;
   }
 }
 

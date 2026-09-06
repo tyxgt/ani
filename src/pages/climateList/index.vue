@@ -2,7 +2,7 @@
   <AuthGate>
   <view :class="styles.climateListPage">
     <!-- 自定义导航栏 -->
-    <view :class="styles.listNavHeader">
+    <view :class="styles.listNavHeader" :style="navHeaderStyle">
       <view :class="styles.backBtn" @click="goBack" @tap="goBack">
         <image :class="styles.backIcon" src="/static/icons/back.svg" mode="aspectFit" />
       </view>
@@ -53,7 +53,10 @@ import PinyinText from '../../components/PinyinText'
 import CardSkeleton from '../../components/CardSkeleton'
 import { CLIMATE_DETAILS } from '../../data/learnDetails'
 import { callFunction } from '../../utils/cloud'
+import { getCustomNavStyle } from '../../utils/navBar'
 import type { ClimateItem } from '../../types'
+
+const navHeaderStyle = getCustomNavStyle()
 
 const climateList = ref<ClimateItem[]>([])
 const loading = ref(true)

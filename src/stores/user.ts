@@ -68,6 +68,10 @@ export const useUserStore = defineStore('user', () => {
         try {
           userInfo.value = typeof stored === 'string' ? JSON.parse(stored) : stored
         } catch {}
+      } else {
+        // storage 里也没有（比如刚 logout 清掉了）——必须把内存里的旧用户信息也清掉，
+        // 否则退出登录后页面仍会渲染上一个用户的昵称。
+        userInfo.value = null
       }
     }
 

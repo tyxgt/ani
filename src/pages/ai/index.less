@@ -21,23 +21,26 @@
 
 .aiHeader {
   box-sizing: border-box;
-  width: 80%;
+  // .aiPage 有左右 20px 内边距，这里用负外边距把导航头撑满整屏，
+  // 便于行内 style 的左右安全区内边距按真实屏幕边缘计算
+  width: calc(100% + 40px);
+  margin-left: -20px;
   position: relative;
   z-index: 10;
   display: flex;
   align-items: center;
-  justify-content: space-evenly;
-  border-radius: 30px;
+  justify-content: center;
   padding: 4px 10px;
-  margin-top: env(safe-area-inset-top);
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(10px);
+  // 顶部偏移 + 左右安全区内边距由行内 style（getCustomNavStyle）负责
 }
 
 .backBtn {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
   width: 30px;
   height: 30px;
-  margin-right: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -61,6 +64,11 @@
   :deep(.charGroup) {
     width: 10px;
     flex-shrink: 0;
+  }
+
+  :deep(.char),
+  :deep(.pinyin) {
+    text-shadow: 0 1px 3px rgba(255, 255, 255, 0.9);
   }
 }
 

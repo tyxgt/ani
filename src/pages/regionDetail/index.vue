@@ -2,7 +2,7 @@
   <AuthGate>
   <view :class="styles.regionDetailPage">
     <!-- 自定义导航栏头部 -->
-    <view :class="styles.regionNavHeader">
+    <view :class="styles.regionNavHeader" :style="navHeaderStyle">
       <view :class="styles.backBtn" @click="goBack">
         <image :class="styles.backIcon" src="/static/icons/back.svg" mode="aspectFit" />
       </view>
@@ -122,7 +122,10 @@ import PinyinText from '../../components/PinyinText'
 import { REGION_IMAGE_URLS } from '../../constants'
 import { REGION_DETAILS } from '../../data/regionDetail'
 import { callFunction } from '../../utils/cloud'
+import { getCustomNavStyle } from '../../utils/navBar'
 import type { RegionDetail } from '../../types'
+
+const navHeaderStyle = getCustomNavStyle()
 
 const regionDetail = ref<RegionDetail>(REGION_DETAILS['西南地区'])
 const loading = ref(true)

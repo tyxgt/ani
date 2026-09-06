@@ -1,76 +1,113 @@
 <template>
-  <AuthGate :manualLogin="true">
-    <view :class="styles.minePage">
-      <view :class="styles.content">
-        <view :class="styles.userSection">
-          <view :class="styles.userInfo">
-            <PinyinText v-if="douyinUserInfo?.nickName" :text="douyinUserInfo.nickName"
-              :charStyle="{ fontSize: '48rpx', fontWeight: 'bold', color: '#2C3E50' }"
-              :pinyinStyle="{ fontSize: '28rpx', color: '#5D6D7E' }" />
-            <text v-else :class="styles.loginTip" @click="openProfileModal">
-              点击登录
-            </text>
-            <view v-if="userCode" :class="styles.userCode" @click="copyUserCode">
-              <text :class="styles.userCodeLabel">ID：</text>
-              <text :class="styles.userCodeValue">{{ userCode }}</text>
-            </view>
+  <view :class="styles.minePage">
+    <view :class="styles.content">
+      <view :class="styles.userSection">
+        <view :class="styles.userInfo">
+          <PinyinText v-if="douyinUserInfo?.nickName" :text="douyinUserInfo.nickName"
+            :charStyle="{ fontSize: '48rpx', fontWeight: 'bold', color: '#2C3E50' }"
+            :pinyinStyle="{ fontSize: '28rpx', color: '#5D6D7E' }" />
+          <view v-else :class="styles.loginTip" @click="openProfileModal">
+            <PinyinText text="点击登录" display-mode="vertical"
+              :charStyle="{ fontSize: '36rpx', fontWeight: '500', color: '#4A90D9' }"
+              :pinyinStyle="{ fontSize: '24rpx', color: '#4A90D9' }" />
           </view>
-        </view>
-
-        <view :class="styles.menuCard">
-          <view :class="styles.menuItem" v-for="item in displayMenuList" :key="item.id" @click="handleMenuClick(item)">
-            <view :class="[styles.menuIcon, iconStyleMap[item.icon]]">
-              <image v-if="item.icon === 'settings'" src="/static/icons/settings.svg" mode="aspectFit"
-                :class="styles.iconImage" />
-              <image v-else-if="item.icon === 'about'" src="/static/icons/about.svg" mode="aspectFit"
-                :class="styles.iconImage" />
-              <image v-else-if="item.icon === 'feedback'" src="/static/icons/feedback.svg" mode="aspectFit"
-                :class="styles.iconImage" />
-              <image v-else-if="item.icon === 'share'" src="/static/icons/share.svg" mode="aspectFit"
-                :class="styles.iconImage" />
-              <image v-else-if="item.icon === 'logout'" src="/static/icons/settings.svg" mode="aspectFit"
-                :class="styles.iconImage" />
-            </view>
-            <view :class="styles.menuText">
-              <PinyinText :text="item.name"  display-mode="vertical"
-                :charStyle="{ fontSize: '40rpx', color: '#666' }"
-                :pinyinStyle="{ fontSize: '34rpx', color: '#666' }"
-                charGroupWidth="80rpx" />
-            </view>
-            <text :class="styles.arrow">›</text>
+          <view v-if="userCode" :class="styles.userCode" @click="copyUserCode">
+            <text :class="styles.userCodeLabel">ID：</text>
+            <text :class="styles.userCodeValue">{{ userCode }}</text>
           </view>
         </view>
       </view>
 
-      <!-- 登录/完善个人信息弹窗（登录本身已完成，这里负责昵称头像） -->
-      <view v-if="showProfileModal" :class="styles.loginModal" @click="closeProfileModal">
-        <view :class="styles.loginModalContent" @click.stop>
-          <text :class="styles.loginModalTitle">登录</text>
-          <!-- #ifdef MP-WEIXIN -->
-          <view :class="styles.nicknameField">
-            <input type="nickname" :class="styles.nicknameInput" placeholder="请输入昵称" :value="tempNickName"
-              @input="onNicknameInput" @blur="onNicknameInput" />
+      <view :class="styles.menuCard">
+        <view :class="styles.menuItem" v-for="item in displayMenuList" :key="item.id" @click="handleMenuClick(item)">
+          <view :class="[styles.menuIcon, iconStyleMap[item.icon]]">
+            <image v-if="item.icon === 'settings'" src="/static/icons/settings.svg" mode="aspectFit"
+              :class="styles.iconImage" />
+            <image v-else-if="item.icon === 'about'" src="/static/icons/about.svg" mode="aspectFit"
+              :class="styles.iconImage" />
+            <image v-else-if="item.icon === 'feedback'" src="/static/icons/feedback.svg" mode="aspectFit"
+              :class="styles.iconImage" />
+            <image v-else-if="item.icon === 'share'" src="/static/icons/share.svg" mode="aspectFit"
+              :class="styles.iconImage" />
+            <image v-else-if="item.icon === 'logout'" src="/static/icons/settings.svg" mode="aspectFit"
+              :class="styles.iconImage" />
           </view>
-          <!-- #endif -->
-          <!-- #ifndef MP-WEIXIN -->
-          <view :class="styles.nicknameField">
-            <input type="text" :class="styles.nicknameInput" placeholder="请输入昵称" :value="tempNickName"
-              @input="onNicknameInputH5" />
+          <view :class="styles.menuText">
+            <PinyinText :text="item.name"  display-mode="vertical"
+              :charStyle="{ fontSize: '40rpx', color: '#666' }"
+              :pinyinStyle="{ fontSize: '34rpx', color: '#666' }"
+              charGroupWidth="80rpx" />
           </view>
-          <!-- #endif -->
-          <view :class="styles.loginModalBtn" @click="confirmProfile">
-            <text :class="styles.loginModalBtnText">确认</text>
-          </view>
-          <text :class="styles.loginModalSkip" @click="skipProfile">跳过</text>
+          <text :class="styles.arrow">›</text>
         </view>
       </view>
     </view>
-  </AuthGate>
+
+    <!-- 登录/完善个人信息弹窗（登录本身已完成，这里负责昵称头像） -->
+    <view v-if="showProfileModal" :class="styles.loginModal" @click="closeProfileModal">
+      <view :class="styles.loginModalContent" @click.stop>
+        <view :class="styles.loginModalTitleBox">
+          <PinyinText text="登录" display-mode="vertical"
+            :charStyle="{ fontSize: '40rpx', fontWeight: 'bold', color: '#2C3E50' }"
+            :pinyinStyle="{ fontSize: '26rpx', color: '#5D6D7E' }" />
+        </view>
+        <!-- #ifdef MP-WEIXIN -->
+        <view :class="styles.nicknameField">
+          <input type="nickname" :class="styles.nicknameInput" placeholder="请输入昵称" :value="tempNickName"
+            @input="onNicknameInput" @blur="onNicknameInput" />
+        </view>
+        <!-- #endif -->
+        <!-- #ifndef MP-WEIXIN -->
+        <view :class="styles.nicknameField">
+          <input type="text" :class="styles.nicknameInput" placeholder="请输入昵称" :value="tempNickName"
+            @input="onNicknameInputH5" />
+        </view>
+        <!-- #endif -->
+        <view :class="styles.loginModalBtn" @click="confirmProfile">
+          <PinyinText text="确认" display-mode="vertical"
+            :charStyle="{ fontSize: '32rpx', fontWeight: 'bold', color: '#fff' }"
+            :pinyinStyle="{ fontSize: '22rpx', color: '#fff' }" />
+        </view>
+        <view :class="styles.loginModalSkip" @click="skipProfile">
+          <PinyinText text="跳过" display-mode="vertical"
+            :charStyle="{ fontSize: '28rpx', color: '#999' }"
+            :pinyinStyle="{ fontSize: '20rpx', color: '#999' }" />
+        </view>
+      </view>
+    </view>
+
+    <!-- 退出登录确认弹窗（自定义，替代原生 uni.showModal，以支持拼音） -->
+    <view v-if="showLogoutConfirm" :class="styles.loginModal" @click="cancelLogout">
+      <view :class="styles.loginModalContent" @click.stop>
+        <view :class="styles.loginModalTitleBox">
+          <PinyinText text="提示" display-mode="vertical"
+            :charStyle="{ fontSize: '40rpx', fontWeight: 'bold', color: '#2C3E50' }"
+            :pinyinStyle="{ fontSize: '26rpx', color: '#5D6D7E' }" />
+        </view>
+        <view :class="styles.confirmDesc">
+          <PinyinText text="确定要退出登录吗？下次进入需要重新登录。"
+            :charStyle="{ fontSize: '28rpx', color: '#666' }"
+            :pinyinStyle="{ fontSize: '20rpx', color: '#999' }" />
+        </view>
+        <view :class="styles.confirmBtnRow">
+          <view :class="[styles.confirmBtn, styles.confirmBtnCancel]" @click="cancelLogout">
+            <PinyinText text="取消" display-mode="vertical"
+              :charStyle="{ fontSize: '30rpx', color: '#666' }"
+              :pinyinStyle="{ fontSize: '20rpx', color: '#999' }" />
+          </view>
+          <view :class="[styles.confirmBtn, styles.confirmBtnOk]" @click="confirmLogout">
+            <PinyinText text="确定" display-mode="vertical"
+              :charStyle="{ fontSize: '30rpx', fontWeight: 'bold', color: '#fff' }"
+              :pinyinStyle="{ fontSize: '20rpx', color: '#fff' }" />
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
   <CustomTabBar current="/pages/mine/index" />
 </template>
 
 <script setup lang="ts">
-import AuthGate from "../../components/AuthGate";
 import { ref, computed, useCssModule } from "vue";
 import { onShow } from "@dcloudio/uni-app";
 import { storeToRefs } from "pinia";
@@ -107,15 +144,20 @@ onShow(() => {
 const showProfileModal = ref(false)
 const tempNickName = ref('')
 
-// 退出登录：清除本地 token 与用户信息，回到可手动登录状态，不自动重登
+// 退出登录确认弹窗状态
+const showLogoutConfirm = ref(false)
+
+// 未登录时不显示"退出登录"项；登录后才追加
 const displayMenuList = computed<MenuItem[]>(() => {
   const baseList = [...MENU_LIST]
-  baseList.push({
-    id: 999,
-    name: '退出登录',
-    icon: 'logout',
-    action: 'logout',
-  })
+  if (isLoggedIn.value) {
+    baseList.push({
+      id: 999,
+      name: '退出登录',
+      icon: 'logout',
+      action: 'logout',
+    })
+  }
   return baseList
 })
 
@@ -170,8 +212,27 @@ const confirmProfile = async () => {
   }
 }
 
-const skipProfile = () => {
+const skipProfile = async () => {
   showProfileModal.value = false
+  // 未登录时点"跳过"：走一次无昵称的静默登录，让用户能直接进入应用，
+  // 后续可再从"点击登录"补昵称。已登录时只需关闭弹窗。
+  if (!isLoggedIn.value) {
+    try {
+      await store.login('')
+    } catch (e) {
+      console.error('[Mine] 跳过昵称登录失败:', e)
+    }
+  }
+}
+
+const cancelLogout = () => {
+  showLogoutConfirm.value = false
+}
+
+const confirmLogout = () => {
+  store.logout()
+  showLogoutConfirm.value = false
+  uni.showToast({ title: '已退出登录', icon: 'none' })
 }
 
 const handleMenuClick = (item: { action: string; name: string }) => {
@@ -209,17 +270,7 @@ const handleMenuClick = (item: { action: string; name: string }) => {
       });
       break;
     case "logout":
-      uni.showModal({
-        title: "提示",
-        content: "确定要退出登录吗？下次进入需要重新登录。",
-        success: (res) => {
-          if (res.confirm) {
-            store.logout()
-            uni.showToast({ title: '已退出登录', icon: 'none' })
-            // 不再自动重新登录，用户手动点 AuthGate 的"登录"按钮才会重新登录
-          }
-        },
-      })
+      showLogoutConfirm.value = true
       break;
   }
 };

@@ -3,7 +3,7 @@
   <view :class="styles.aiPage">
     <image :class="styles.bgImage" :src="AI_BACKGROUND_URL" mode="aspectFill" />
 
-    <view :class="styles.aiHeader">
+    <view :class="styles.aiHeader" :style="navHeaderStyle">
       <view :class="styles.backBtn" @click="goBack">
         <image :class="styles.backIcon" src="/static/icons/back.svg" mode="aspectFit" />
       </view>
@@ -78,6 +78,7 @@ import PinyinText from '../../components/PinyinText'
 import MessageItem from '../../components/MessageItem'
 import { AI_BACKGROUND_URL, AI_INPUT_PANDA_URL, AI_CHAT_CLOUD_FUNCTION, GET_CHAT_HISTORY_CLOUD_FUNCTION, AI_CHAT_MAX_HISTORY_ROUNDS, ERROR_CODE } from '../../constants'
 import { callFunction } from '../../utils/cloud'
+import { getCustomNavStyle } from '../../utils/navBar'
 import { generateStreamId, watchChatStream } from '../../utils/chatStream'
 import type { ChatStreamWatcher } from '../../utils/chatStream'
 import { startVoiceRecording, stopVoiceRecording, VOICE_RECORDING_TOO_SHORT } from '../../utils/asr'
@@ -113,6 +114,8 @@ function sanitizeRestoredMessages(list: ChatMessage[]): ChatMessage[] {
     .map(msg => (msg.typing ? { ...msg, typing: false } : msg))
     .filter(msg => msg.role !== 'assistant' || msg.content)
 }
+
+const navHeaderStyle = getCustomNavStyle()
 
 const messages = ref<ChatMessage[]>([])
 

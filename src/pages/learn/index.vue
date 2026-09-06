@@ -1,7 +1,7 @@
 <template>
   <AuthGate>
   <view :class="styles.learnPage">
-    <view :class="styles.header">
+    <view :class="styles.header" :style="navHeaderStyle">
       <view :class="styles.titleRow">
         <image
           :class="styles.pageTitle"
@@ -60,6 +60,7 @@ import {
 } from '../../constants'
 import { TERRAIN_DETAILS, CLIMATE_DETAILS } from '../../data/learnDetails'
 import { preloadLearnData, invalidateLearnData } from '../../utils/preload'
+import { getCustomNavStyle } from '../../utils/navBar'
 import { useUserStore } from '../../stores/user'
 import type { LearnCardItem, KnowledgeCategory } from '../../types'
 
@@ -67,8 +68,10 @@ const categories = ref<KnowledgeCategory[]>(KNOWLEDGE_CATEGORIES)
 const animals = ref(KNOWLEDGE_ANIMALS)
 const terrains = ref(Object.values(TERRAIN_DETAILS))
 const climates = ref(Object.values(CLIMATE_DETAILS))
-const activeCategory = ref(3)
+const activeCategory = ref(1)
 const loading = ref(true)
+
+const navHeaderStyle = getCustomNavStyle()
 
 // ─── 登录态变化触发的数据重载 ────────────────────────────────────
 // 登录成功（isLoggedIn false→true）后清空预加载缓存并重新拉取数据。
